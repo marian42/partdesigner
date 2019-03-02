@@ -21,6 +21,7 @@
 window.onload = () => {
 	var part = new Part();
 	part.randomize();
+	console.log(part.toString());
 
     var el = document.getElementById('canvas') as HTMLCanvasElement;
     var renderer = new MeshRenderer(el);

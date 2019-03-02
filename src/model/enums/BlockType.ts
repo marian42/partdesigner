@@ -6,7 +6,7 @@
 	Axle
 }
 
-function IsAttachment(blockType: BlockType): boolean {
+function isAttachment(blockType: BlockType): boolean {
 	return blockType != BlockType.AxleHole
 		&& blockType != BlockType.PinHole
 		&& blockType != BlockType.Solid;

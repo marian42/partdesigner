@@ -25,6 +25,18 @@
 		return this.x * other.x + this.y * other.y + this.z * other.z;
 	}
 
+	public cross(other: Vector3): Vector3 {
+		return new Vector3(this.y * other.z - this.z * other.y, this.z * other.x - this.x * other.z, this.x * other.y - this.y * other.x);
+	}
+
+	public magnitude(): number {
+		return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2) + Math.pow(this.z, 2));
+	}
+
+	public normalized(): Vector3 {
+		return this.times(1 / this.magnitude());
+	}
+
 	public toString(): string {
 		return "(" + this.x + ", " + this.y + ", " + this.z + ")";
 	}

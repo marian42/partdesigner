@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "outFile": "app.js",
+        "sourceMap": true
+    },
+	"compileOnSave": true,
+    "include": [
+        "**/*.ts"
+    ]
+}

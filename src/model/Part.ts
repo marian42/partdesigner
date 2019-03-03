@@ -22,7 +22,6 @@ class Part {
 		var result = new VectorDictionary<SmallBlock>();
 
 		for (let position of this.blocks.keys()) {
-			console.log(position);
 			let block = this.blocks.get(position);
 			for (let local of CUBE) {
 				if (block.forward().dot(local) == 1) {

@@ -51,3 +51,13 @@ function min<T>(array: T[], selector: (item: T) => number): number {
 	}
 	return minValue;
 }
+
+function sign(a: number): number {
+	if (a == 0) {
+		return 0;
+	} else if (a < 0) {
+		return -1;
+	} else {
+		return 1;
+	}
+}

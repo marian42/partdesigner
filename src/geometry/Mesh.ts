@@ -5,6 +5,27 @@ class Mesh {
         this.triangles = triangles;
     }
 
+    public createPositionBuffer(gl: WebGLRenderingContext): WebGLBuffer {
+        let positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        var positions: number[] = [];
+
+        for (let triangle of this.triangles) {
+            positions.push(triangle.v1.x);
+            positions.push(triangle.v1.y);
+            positions.push(triangle.v1.z);
+            positions.push(triangle.v2.x);
+            positions.push(triangle.v2.y);
+            positions.push(triangle.v2.z);
+            positions.push(triangle.v3.x);
+            positions.push(triangle.v3.y);
+            positions.push(triangle.v3.z);
+        }
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+        return positionBuffer;
+    }
+
     private createSTLFile(): ArrayBuffer {
         let size = 84 + 50 * this.triangles.length;
         var buffer = new ArrayBuffer(size);

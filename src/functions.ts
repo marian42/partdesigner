@@ -18,6 +18,24 @@ function inverseTetrahedralNumber(s: number): number {
 	return Math.floor(f / 2.08008382305 + 0.69336127435 / f - 1);
 }
 
+function tinyIndexToWorld(p: number): number {
+	let i = Math.floor((p + 1) / 3);
+	let j = p - i * 3;
+
+	var f = 0.5 * i;
+	if (j == 0) {
+		f += EDGE_MARGIN;
+	} else if (j == 1) {
+		f += 0.5 - EDGE_MARGIN;
+	}
+
+	return f;
+}
+
+function tinyBlockToWorld(position: Vector3): Vector3 {
+	return new Vector3(tinyIndexToWorld(position.x), tinyIndexToWorld(position.y), tinyIndexToWorld(position.z));
+}
+
 let DEG_TO_RAD = Math.PI / 180;
 
 function min<T>(array: T[], selector: (item: T) => number): number {

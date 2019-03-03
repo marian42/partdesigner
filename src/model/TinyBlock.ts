@@ -24,7 +24,13 @@
 		return this.localPositon().dot(this.up()) == 0 && this.localPositon().dot(this.up()) == 0;
 	}
 
+	public getCylinderOrigin(): Vector3 {
+		return this.forward().times(tinyIndexToWorld(this.forward().dot(this.position)))
+			.plus(this.right().times((this.smallBlockPosition().dot(this.right()) + (1 - this.localX())) * 0.5))
+			.plus(this.up().times((this.smallBlockPosition().dot(this.up()) + (1 - this.localY())) * 0.5));
+	}
+
 	constructor(position: Vector3, source: SmallBlock) {
 		super(source.quadrant, position, source);
 	}
-} 
+}

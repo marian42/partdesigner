@@ -1,7 +1,11 @@
-﻿body {
+﻿html, body {
     font-family: 'Segoe UI', sans-serif;
+    margin: 0px;
+    height: 100%;
+    overflow: hidden;
 }
 
-span {
-    font-style: italic;
+canvas {
+    width: 100%;
+    height: 100%;
 }

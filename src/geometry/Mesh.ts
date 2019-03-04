@@ -11,15 +11,9 @@ class Mesh {
         var positions: number[] = [];
 
         for (let triangle of this.triangles) {
-            positions.push(triangle.v1.x);
-            positions.push(triangle.v1.y);
-            positions.push(triangle.v1.z);
-            positions.push(triangle.v2.x);
-            positions.push(triangle.v2.y);
-            positions.push(triangle.v2.z);
-            positions.push(triangle.v3.x);
-            positions.push(triangle.v3.y);
-            positions.push(triangle.v3.z);
+            this.pushVector(positions, triangle.v1);
+            this.pushVector(positions, triangle.v2);
+            this.pushVector(positions, triangle.v3);
         }
 
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
@@ -32,17 +26,19 @@ class Mesh {
         var normals: number[] = [];
 
         for (let triangle of this.triangles) {
-            let normal = triangle.normal();
-
             for (var i = 0; i < 3; i++) {
-                normals.push(normal.x);
-                normals.push(normal.y);
-                normals.push(normal.z);
+                this.pushVector(normals, triangle.normal());
             }
         }
 
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
         return normalBuffer;
+    }
+
+    private pushVector(array: number[], vector: Vector3) {
+        array.push(vector.x);
+        array.push(vector.y);
+        array.push(vector.z);
     }
 
     private createSTLFile(): ArrayBuffer {

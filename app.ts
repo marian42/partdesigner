@@ -1,4 +1,6 @@
-﻿window.onload = () => {
+﻿let gl: WebGLRenderingContext;
+
+window.onload = () => {
 	var part = new Part();
 	part.randomize();
 	console.log(part.toString());
@@ -7,7 +9,7 @@
     var canvas = document.getElementById('canvas') as HTMLCanvasElement;
 	var camera = new Camera(canvas);
 	
-	var meshRenderer = new MeshRenderer(camera.gl);
+	var meshRenderer = new MeshRenderer();
 	meshRenderer.setMesh(mesh);
 
 	camera.renderers.push(meshRenderer);

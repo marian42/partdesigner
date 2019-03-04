@@ -1,6 +1,4 @@
 class MeshRenderer {
-    gl: WebGLRenderingContext;
-
     shader: Shader;
 
     positions: WebGLBuffer;
@@ -8,9 +6,7 @@ class MeshRenderer {
 
     mesh: Mesh;
 
-    constructor(gl: WebGLRenderingContext) {
-        this.gl = gl;
-
+    constructor() {
         this.shader = new Shader(gl, VERTEX_SHADER, FRAGMENT_SHADER);
 
         this.shader.setAttribute(gl, "vertexPosition");
@@ -21,12 +17,11 @@ class MeshRenderer {
 
     public setMesh(mesh: Mesh) {
         this.mesh = mesh;
-        this.positions = mesh.createPositionBuffer(this.gl);
-        this.normals = mesh.createNormalBuffer(this.gl);
+        this.positions = mesh.createPositionBuffer();
+        this.normals = mesh.createNormalBuffer();
     }
 
     public render(camera: Camera) {
-        let gl = this.gl;
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
         gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);

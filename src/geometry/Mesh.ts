@@ -5,7 +5,7 @@ class Mesh {
         this.triangles = triangles;
     }
 
-    public createPositionBuffer(gl: WebGLRenderingContext): WebGLBuffer {
+    public createPositionBuffer(): WebGLBuffer {
         let positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         var positions: number[] = [];
@@ -26,7 +26,7 @@ class Mesh {
         return positionBuffer;
     }
 
-    public createNormalBuffer(gl: WebGLRenderingContext): WebGLBuffer {
+    public createNormalBuffer(): WebGLBuffer {
         let normalBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
         var normals: number[] = [];

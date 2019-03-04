@@ -1,6 +1,5 @@
 class Camera {
     private canvas: HTMLCanvasElement;
-    public gl: WebGLRenderingContext;
 
     public renderers: MeshRenderer[] = [];
     
@@ -8,9 +7,9 @@ class Camera {
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
-		this.gl = canvas.getContext("webgl") as WebGLRenderingContext;
+		gl = canvas.getContext("webgl") as WebGLRenderingContext;
 
-		if (this.gl == null) {
+		if (gl == null) {
 			throw new Error("WebGL is not supported.");
         }
 
@@ -28,7 +27,6 @@ class Camera {
     }
 
     public render() {
-        let gl = this.gl;
         gl.clearColor(0.9, 0.9, 0.9, 1.0);
         gl.clearDepth(1.0);
         gl.enable(gl.DEPTH_TEST);

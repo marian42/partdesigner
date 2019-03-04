@@ -1,18 +1,39 @@
 const vertexSource = `
     attribute vec4 vertexPosition;
+    attribute vec4 normal;
 
     uniform mat4 modelViewMatrix;
     uniform mat4 projectionMatrix;
 
+    varying vec3 v2fNormal;
+
     void main() {
-      gl_Position = projectionMatrix * modelViewMatrix * vertexPosition;
+        v2fNormal = normal.xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vertexPosition;
     }
   `;
 
 
 const fragmentSource = `
+    precision mediump float;
+
+    const vec3 lightDirection = vec3(-0.7, 0.7, 0.14);
+    const float ambient = 0.2;
+    const float diffuse = 0.8;
+    const float specular = 0.3;
+    const vec3 albedo = vec3(1.0, 1.0, 0.0);
+    const vec3 viewDirection = vec3(0.0, 0.0, 1.0);
+
+    varying vec3 v2fNormal;
+
     void main() {
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+        
+        vec3 color = albedo * (ambient
+             + diffuse * (0.5 + 0.5 * dot(lightDirection, v2fNormal))
+             + specular * pow(max(0.0, dot(reflect(-lightDirection, v2fNormal), viewDirection)), 2.0)); 
+
+        gl_FragColor = vec4(color.r, color.g, color.b, 1.0);
     }
 `;
 
@@ -23,10 +44,12 @@ class MeshRenderer {
     vertexCount: number;
 
     attributeVertexPosition: number;
+    attributeVertexNormal: number;
     attributeProjectionMatrix: WebGLUniformLocation;
     attributeModelViewMatrix: WebGLUniformLocation;
 
     positions: WebGLBuffer;
+    normals: WebGLBuffer;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -39,12 +62,14 @@ class MeshRenderer {
         this.shaderProgram = this.createShaderProgram(vertexSource, fragmentSource);
 
         this.attributeVertexPosition = this.gl.getAttribLocation(this.shaderProgram, 'vertexPosition');
+        this.attributeVertexNormal = this.gl.getAttribLocation(this.shaderProgram, 'normal');
         this.attributeProjectionMatrix = this.gl.getUniformLocation(this.shaderProgram, 'projectionMatrix');
         this.attributeModelViewMatrix = this.gl.getUniformLocation(this.shaderProgram, 'modelViewMatrix');
     }
 
     public setMesh(mesh: Mesh) {
         this.positions = mesh.createPositionBuffer(this.gl);
+        this.normals = mesh.createNormalBuffer(this.gl);
         this.vertexCount = mesh.triangles.length * 3;
     }
 
@@ -68,6 +93,10 @@ class MeshRenderer {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
         gl.vertexAttribPointer(this.attributeVertexPosition, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.attributeVertexPosition);
+        
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.normals);
+        gl.vertexAttribPointer(this.attributeVertexNormal, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(this.attributeVertexNormal);
       
         gl.useProgram(this.shaderProgram);
       
@@ -87,6 +116,7 @@ class MeshRenderer {
         this.gl.compileShader(shader);
 
         if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
+            console.log(source);
             throw new Error('An error occurred compiling the shaders: ' +  this.gl.getShaderInfoLog(shader));
         }
 

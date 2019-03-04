@@ -26,6 +26,25 @@ class Mesh {
         return positionBuffer;
     }
 
+    public createNormalBuffer(gl: WebGLRenderingContext): WebGLBuffer {
+        let normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+        var normals: number[] = [];
+
+        for (let triangle of this.triangles) {
+            let normal = triangle.normal();
+
+            for (var i = 0; i < 3; i++) {
+                normals.push(normal.x);
+                normals.push(normal.y);
+                normals.push(normal.z);
+            }
+        }
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+        return normalBuffer;
+    }
+
     private createSTLFile(): ArrayBuffer {
         let size = 84 + 50 * this.triangles.length;
         var buffer = new ArrayBuffer(size);

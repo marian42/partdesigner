@@ -38,10 +38,9 @@ const fragmentSource = `
 `;
 
 class MeshRenderer {
-    canvas: HTMLCanvasElement;
     gl: WebGLRenderingContext;
+
     shaderProgram: WebGLShader;
-    vertexCount: number;
 
     attributeVertexPosition: number;
     attributeVertexNormal: number;
@@ -51,45 +50,27 @@ class MeshRenderer {
     positions: WebGLBuffer;
     normals: WebGLBuffer;
 
-    constructor(canvas: HTMLCanvasElement) {
-        this.canvas = canvas;
-		this.gl = canvas.getContext("webgl") as WebGLRenderingContext;
+    mesh: Mesh;
 
-		if (this.gl == null) {
-			throw new Error("WebGL is not supported.");
-        }
-        
+    constructor(gl: WebGLRenderingContext) {
+        this.gl = gl;
+
         this.shaderProgram = this.createShaderProgram(vertexSource, fragmentSource);
 
-        this.attributeVertexPosition = this.gl.getAttribLocation(this.shaderProgram, 'vertexPosition');
-        this.attributeVertexNormal = this.gl.getAttribLocation(this.shaderProgram, 'normal');
-        this.attributeProjectionMatrix = this.gl.getUniformLocation(this.shaderProgram, 'projectionMatrix');
-        this.attributeModelViewMatrix = this.gl.getUniformLocation(this.shaderProgram, 'modelViewMatrix');
+        this.attributeVertexPosition = gl.getAttribLocation(this.shaderProgram, 'vertexPosition');
+        this.attributeVertexNormal = gl.getAttribLocation(this.shaderProgram, 'normal');
+        this.attributeProjectionMatrix = gl.getUniformLocation(this.shaderProgram, 'projectionMatrix');
+        this.attributeModelViewMatrix = gl.getUniformLocation(this.shaderProgram, 'modelViewMatrix');
     }
 
     public setMesh(mesh: Mesh) {
+        this.mesh = mesh;
         this.positions = mesh.createPositionBuffer(this.gl);
         this.normals = mesh.createNormalBuffer(this.gl);
-        this.vertexCount = mesh.triangles.length * 3;
     }
 
-    private getProjectionMatrix(near = 0.1, far = 1000, fov = 45, aspectRatio = 4 / 3): number[] {
-        return [
-            1 / (Math.tan(fov * DEG_TO_RAD / 2) * aspectRatio), 0, 0, 0,
-            0, 1 / Math.tan(fov * DEG_TO_RAD / 2), 0, 0,
-            0, 0, -(far + near)/(far - near), -1,
-            0, 0, -0.2, 0
-        ];
-    }
-
-    public drawScene() {
+    public render(camera: Camera) {
         let gl = this.gl;
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.clearDepth(1.0);
-        gl.enable(gl.DEPTH_TEST);
-        gl.depthFunc(gl.LEQUAL);      
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
         gl.vertexAttribPointer(this.attributeVertexPosition, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.attributeVertexPosition);
@@ -100,14 +81,14 @@ class MeshRenderer {
       
         gl.useProgram(this.shaderProgram);
       
-        gl.uniformMatrix4fv(this.attributeProjectionMatrix, false, this.getProjectionMatrix());
+        gl.uniformMatrix4fv(this.attributeProjectionMatrix, false, camera.getProjectionMatrix());
         gl.uniformMatrix4fv(this.attributeModelViewMatrix, false,
            [1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, -10, 1]);
       
-        gl.drawArrays(gl.TRIANGLES, 0, this.vertexCount);
+        gl.drawArrays(gl.TRIANGLES, 0, this.mesh.triangles.length);
       }
     
     private loadShader(type: number, source: string): WebGLShader {

@@ -2,8 +2,6 @@ class Camera {
     private canvas: HTMLCanvasElement;
 
     public renderers: MeshRenderer[] = [];
-    
-    private aspectRatio: number;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -17,13 +15,8 @@ class Camera {
         this.onResize();
     }
 
-    public getProjectionMatrix(near = 0.1, far = 1000, fov = 45): number[] {
-        return [
-            1 / (Math.tan(fov * DEG_TO_RAD / 2) * this.aspectRatio), 0, 0, 0,
-            0, 1 / Math.tan(fov * DEG_TO_RAD / 2), 0, 0,
-            0, 0, -(far + near)/(far - near), -1,
-            0, 0, -0.2, 0
-        ];
+    public getProjectionMatrix(): Matrix4 {
+       return Matrix4.getProjection();
     }
 
     public render() {
@@ -41,7 +34,6 @@ class Camera {
     public onResize() {
         this.canvas.width = this.canvas.clientWidth;
         this.canvas.height = this.canvas.clientHeight;
-        this.aspectRatio = 1;
         this.render();
     }
 }

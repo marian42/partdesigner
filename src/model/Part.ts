@@ -163,13 +163,13 @@ class Part {
 				min.z = position.z;
 			}
 			if (position.x > max.x) {
-				min.x = position.x;
+				max.x = position.x;
 			}
 			if (position.y > max.y) {
-				min.y = position.y;
+				max.y = position.y;
 			}
 			if (position.z > max.z) {
-				min.z = position.z;
+				max.z = position.z;
 			}
 		}
 		return min.plus(max).plus(new Vector3(1, 1, 1)).times(0.5);

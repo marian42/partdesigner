@@ -21,10 +21,11 @@ const FRAGMENT_SHADER = `
     const float ambient = 0.2;
     const float diffuse = 0.8;
     const float specular = 0.3;
-    const vec3 albedo = vec3(1.0, 1.0, 0.0);
     const vec3 viewDirection = vec3(0.0, 0.0, 1.0);
 
     varying vec3 v2fNormal;
+
+    uniform vec3 albedo;
 
     void main() {
         gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);

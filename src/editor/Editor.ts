@@ -8,7 +8,6 @@ enum MouseMode {
 class Editor {
 	camera: Camera;
 	meshRenderer: MeshRenderer;
-	arrowRenderer: MeshRenderer;
 	part: Part;
 	canvas: HTMLCanvasElement;
 
@@ -21,6 +20,8 @@ class Editor {
 	mouseMode = MouseMode.None;
 	lastMousePosition: [number, number];
 
+	arrows: Arrows;
+
 	constructor() {
 		this.part = new Part();
 		this.part.randomize();
@@ -30,11 +31,10 @@ class Editor {
 		this.camera = new Camera(this.canvas);
 		
 		this.meshRenderer = new MeshRenderer();
+		this.meshRenderer.color = new Vector3(0.6, 0.6, 0.6);
 		this.camera.renderers.push(this.meshRenderer);
 
-		this.arrowRenderer = new MeshRenderer();
-		this.arrowRenderer.setMesh(Arrows.getMesh(20));
-		this.camera.renderers.push(this.arrowRenderer);
+		this.arrows = new Arrows(this.camera);
 
 		this.updateMesh();
 		this.camera.render();
@@ -50,6 +50,8 @@ class Editor {
 		let mesh = new PartMeshGenerator(this.part).getMesh();
 		this.meshRenderer.setMesh(mesh);
 		this.center = this.part.getCenter().times(-0.5);
+		this.arrows.position = this.center.times(-1);
+		this.arrows.updateTransforms();
 		this.updateTransform();
 	}
 

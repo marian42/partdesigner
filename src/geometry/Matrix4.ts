@@ -27,6 +27,15 @@ class Matrix4 {
 		return new Matrix4(result as NumberArray16);
 	}
 
+	public transpose() {
+		return new Matrix4([
+			this.elements[0], this.elements[4], this.elements[8], this.elements[12],
+			this.elements[1], this.elements[5], this.elements[9], this.elements[13],
+			this.elements[2], this.elements[6], this.elements[10], this.elements[14],
+			this.elements[3], this.elements[7], this.elements[10], this.elements[15]
+		]);
+	}
+
 	public static getProjection(near = 0.1, far = 1000, fov = 45): Matrix4 {
 		let aspectRatio = gl.canvas.width / gl.canvas.height;
         return new Matrix4([

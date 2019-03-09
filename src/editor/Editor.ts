@@ -13,7 +13,7 @@ class Editor {
 
 	translation: Vector3 = new Vector3(0, 0, 0);
 	center: Vector3;
-	rotation: [number, number] = [0, 0];
+	rotation: Quaternion = Quaternion.identity();
 
 	mouseMode = MouseMode.None;
 	lastMousePosition: [number, number];
@@ -47,7 +47,7 @@ class Editor {
 	updateTransform() {
 		this.meshRenderer.transform = 
 			Matrix4.getTranslation(this.center)
-			.times(Matrix4.getRotation(new Vector3(0, this.rotation[0], this.rotation[1])))
+			.times(this.rotation.toMatrix())
 			.times(Matrix4.getTranslation(this.translation));
 	}
 
@@ -73,7 +73,7 @@ class Editor {
 				this.camera.render();
 				break;
 			case MouseMode.Right:
-				this.rotation = [this.rotation[0] - event.movementX * 2, this.rotation[1] + event.movementY * 2];
+				this.rotation = this.rotation.times(Quaternion.euler(new Vector3(-event.movementY * 0.5, -event.movementX * 0.5, 0)));
 				this.updateTransform();
 				this.camera.render();
 				break;

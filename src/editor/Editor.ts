@@ -35,6 +35,7 @@ class Editor {
 		this.camera.renderers.push(this.meshRenderer);
 
 		this.arrows = new Arrows(this.camera);
+		this.camera.renderers.push(this.arrows);
 
 		this.updateMesh();
 		this.camera.render();

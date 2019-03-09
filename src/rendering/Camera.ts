@@ -1,5 +1,5 @@
 class Camera {
-    public renderers: MeshRenderer[] = [];
+    public renderers: Renderer[] = [];
 
     public transform: Matrix4 = Matrix4.getIdentity();
 

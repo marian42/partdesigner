@@ -1,4 +1,4 @@
-class MeshRenderer {
+class MeshRenderer implements Renderer {
     shader: Shader;
 
     positions: WebGLBuffer;

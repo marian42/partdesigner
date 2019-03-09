@@ -5,16 +5,16 @@ const ARROW_TIP = 0.15;
 
 const ARROW_DISTANCE = 0.5;
 
-class Arrows {
+class Arrows implements Renderer {
 	xNegative: MeshRenderer;
 	xPositive: MeshRenderer;
 	yNegative: MeshRenderer;
 	yPositive: MeshRenderer;
 	zNegative: MeshRenderer;
 	zPositive: MeshRenderer;
+	meshRenderers: MeshRenderer[] = [];
 
 	position: Vector3;
-
 
 	constructor(camera: Camera) {
 		let mesh = Arrows.getMesh(20);
@@ -22,32 +22,43 @@ class Arrows {
 		this.xNegative = new MeshRenderer();
 		this.xNegative.setMesh(mesh);
 		this.xNegative.color = new Vector3(1, 0, 0);
-		camera.renderers.push(this.xNegative);
+		this.meshRenderers.push(this.xNegative);
 		this.xPositive = new MeshRenderer();
 		this.xPositive.setMesh(mesh);
 		this.xPositive.color = this.xNegative.color;
-		camera.renderers.push(this.xPositive);
+		this.meshRenderers.push(this.xPositive);
 		
 		this.yNegative = new MeshRenderer();
 		this.yNegative.setMesh(mesh);
 		this.yNegative.color = new Vector3(0, 1, 0);
-		camera.renderers.push(this.yNegative);
+		this.meshRenderers.push(this.yNegative);
 		this.yPositive = new MeshRenderer();
 		this.yPositive.setMesh(mesh);
 		this.yPositive.color = this.yNegative.color;
-		camera.renderers.push(this.yPositive);
+		this.meshRenderers.push(this.yPositive);
 		
 		this.zNegative = new MeshRenderer();
 		this.zNegative.setMesh(mesh);
 		this.zNegative.color = new Vector3(0, 0, 1);
-		camera.renderers.push(this.zNegative);
+		this.meshRenderers.push(this.zNegative);
 		this.zPositive = new MeshRenderer();
 		this.zPositive.setMesh(mesh);
 		this.zPositive.color = this.zNegative.color;
-		camera.renderers.push(this.zPositive);
+		this.meshRenderers.push(this.zPositive);
 
 		this.position = Vector3.zero();
 		this.updateTransforms();
+	}
+
+	public render(camera: Camera) {
+		gl.depthFunc(gl.ALWAYS);
+		for (let renderer of this.meshRenderers) {
+			renderer.render(camera);
+		}
+		gl.depthFunc(gl.LESS);
+		for (let renderer of this.meshRenderers) {
+			renderer.render(camera);
+		}
 	}
 
 	public updateTransforms() {

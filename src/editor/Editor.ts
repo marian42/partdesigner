@@ -14,6 +14,8 @@ class Editor {
 	translation: Vector3 = new Vector3(0, 0, 0);
 	center: Vector3;
 	rotation: Quaternion = Quaternion.identity();
+	zoom: number = 5;
+	zoomStep = 0.93;
 
 	mouseMode = MouseMode.None;
 	lastMousePosition: [number, number];
@@ -35,6 +37,7 @@ class Editor {
 		this.canvas.addEventListener("mouseup", (event: MouseEvent) => this.onMouseUp(event));
 		this.canvas.addEventListener("mousemove", (event: MouseEvent) => this.onMouseMove(event));
 		this.canvas.addEventListener("contextmenu", (event: Event) => event.preventDefault());
+		this.canvas.addEventListener("wheel", (event: MouseWheelEvent) => this.onScroll(event));
 	}
 
 	updateMesh() {
@@ -49,6 +52,7 @@ class Editor {
 			Matrix4.getTranslation(this.center)
 			.times(this.rotation.toMatrix())
 			.times(Matrix4.getTranslation(this.translation));
+		this.camera.position = new Vector3(0, 0, -this.zoom);
 	}
 
 	onMouseDown(event: MouseEvent) {
@@ -78,5 +82,11 @@ class Editor {
 				this.camera.render();
 				break;
 		}
+	}
+
+	onScroll(event: MouseWheelEvent) {
+		this.zoom *= event.deltaY < 0 ? this.zoomStep : 1 / this.zoomStep;
+		this.updateTransform();
+		this.camera.render();
 	}
 }

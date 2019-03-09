@@ -1,13 +1,10 @@
 class Camera {
-    private canvas: HTMLCanvasElement;
-
     public renderers: MeshRenderer[] = [];
 
     public position: Vector3;
 
     constructor(canvas: HTMLCanvasElement) {
-        this.canvas = canvas;
-		gl = canvas.getContext("webgl") as WebGLRenderingContext;
+        gl = canvas.getContext("webgl") as WebGLRenderingContext;
 
 		if (gl == null) {
 			throw new Error("WebGL is not supported.");
@@ -37,8 +34,8 @@ class Camera {
     }
     
     public onResize() {
-        this.canvas.width = this.canvas.clientWidth;
-        this.canvas.height = this.canvas.clientHeight;
+        gl.canvas.width = gl.canvas.clientWidth;
+        gl.canvas.height = gl.canvas.clientHeight;
         this.render();
     }
 }

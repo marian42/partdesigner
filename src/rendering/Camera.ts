@@ -14,7 +14,7 @@ class Camera {
         }
 
         window.addEventListener("resize", (e: Event) => this.onResize());
-        this.position = new Vector3(0, 0, -7);
+        this.position = new Vector3(0, 0, -5);
         this.onResize();
     }
 
@@ -25,8 +25,10 @@ class Camera {
     public render() {
         gl.clearColor(0.9, 0.9, 0.9, 1.0);
         gl.clearDepth(1.0);
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         gl.enable(gl.DEPTH_TEST);
-        gl.depthFunc(gl.LEQUAL);      
+        gl.depthFunc(gl.LEQUAL);
+        //gl.enable(gl.CULL_FACE);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		
 		for (var renderer of this.renderers) {

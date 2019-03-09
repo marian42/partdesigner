@@ -52,6 +52,10 @@
 		return tetrahedralNumber(layer3D) + triangularNumber(layer2D) + this.x;
 	}
 
+	public copy(): Vector3 {
+		return new Vector3(this.x, this.y, this.z);
+	}
+
 	public static fromNumber(value: number): Vector3 {
 		let layer3D = inverseTetrahedralNumber(value);
 		value -= tetrahedralNumber(layer3D);

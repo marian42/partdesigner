@@ -147,4 +147,31 @@ class Part {
 		}
 		return part;
 	}
+
+	public getCenter(): Vector3 {
+		let min = this.blocks.keys()[0].copy();
+		let max = min.copy();
+
+		for (var position of this.blocks.keys()) {
+			if (position.x < min.x) {
+				min.x = position.x;
+			}
+			if (position.y < min.y) {
+				min.y = position.y;
+			}
+			if (position.z < min.z) {
+				min.z = position.z;
+			}
+			if (position.x > max.x) {
+				min.x = position.x;
+			}
+			if (position.y > max.y) {
+				min.y = position.y;
+			}
+			if (position.z > max.z) {
+				min.z = position.z;
+			}
+		}
+		return min.plus(max).plus(new Vector3(1, 1, 1)).times(0.5);
+	}
 }

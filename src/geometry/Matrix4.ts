@@ -27,7 +27,8 @@ class Matrix4 {
 		return new Matrix4(result as NumberArray16);
 	}
 
-	public static getProjection(near = 0.1, far = 1000, fov = 45, aspectRatio = 4/3): Matrix4 {
+	public static getProjection(near = 0.1, far = 1000, fov = 45): Matrix4 {
+		let aspectRatio = gl.canvas.width / gl.canvas.height;
         return new Matrix4([
             1 / (Math.tan(fov * DEG_TO_RAD / 2) * aspectRatio), 0, 0, 0,
             0, 1 / Math.tan(fov * DEG_TO_RAD / 2), 0, 0,

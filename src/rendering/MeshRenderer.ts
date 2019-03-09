@@ -39,6 +39,6 @@ class MeshRenderer {
         gl.uniformMatrix4fv(this.shader.attributes["projectionMatrix"], false, camera.getProjectionMatrix().elements);
         gl.uniformMatrix4fv(this.shader.attributes["modelViewMatrix"], false, this.transform.times(Matrix4.getTranslation(camera.position)).elements);
       
-        gl.drawArrays(gl.TRIANGLES, 0, this.mesh.triangles.length);
+        gl.drawArrays(gl.TRIANGLES, 0, this.mesh.triangles.length * 3);
     }
 }

@@ -67,4 +67,12 @@
 	
 		return new Vector3(x, y, z);
 	}
+
+	public static zero(): Vector3 {
+		return new Vector3(0, 0, 0);
+	}
+
+	public static one(): Vector3 {
+		return new Vector3(1, 1, 1);
+	}
 }

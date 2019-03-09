@@ -8,6 +8,7 @@ enum MouseMode {
 class Editor {
 	camera: Camera;
 	meshRenderer: MeshRenderer;
+	arrowRenderer: MeshRenderer;
 	part: Part;
 	canvas: HTMLCanvasElement;
 
@@ -30,6 +31,11 @@ class Editor {
 		
 		this.meshRenderer = new MeshRenderer();
 		this.camera.renderers.push(this.meshRenderer);
+
+		this.arrowRenderer = new MeshRenderer();
+		this.arrowRenderer.setMesh(Arrows.getMesh(20));
+		this.camera.renderers.push(this.arrowRenderer);
+
 		this.updateMesh();
 		this.camera.render();
 
@@ -53,6 +59,8 @@ class Editor {
 			.times(this.rotation.toMatrix())
 			.times(Matrix4.getTranslation(this.translation));
 		this.camera.position = new Vector3(0, 0, -this.zoom);
+
+		this.arrowRenderer.transform = this.meshRenderer.transform;
 	}
 
 	onMouseDown(event: MouseEvent) {

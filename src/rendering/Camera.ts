@@ -1,7 +1,7 @@
 class Camera {
     public renderers: MeshRenderer[] = [];
 
-    public position: Vector3;
+    public transform: Matrix4 = Matrix4.getIdentity();
 
     constructor(canvas: HTMLCanvasElement) {
         gl = canvas.getContext("webgl") as WebGLRenderingContext;
@@ -11,7 +11,6 @@ class Camera {
         }
 
         window.addEventListener("resize", (e: Event) => this.onResize());
-        this.position = new Vector3(0, 0, -5);
         this.onResize();
     }
 

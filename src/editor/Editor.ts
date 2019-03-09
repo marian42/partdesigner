@@ -54,13 +54,10 @@ class Editor {
 	}
 
 	updateTransform() {
-		this.meshRenderer.transform = 
+		this.camera.transform = 
 			Matrix4.getTranslation(this.center)
 			.times(this.rotation.toMatrix())
-			.times(Matrix4.getTranslation(this.translation));
-		this.camera.position = new Vector3(0, 0, -this.zoom);
-
-		this.arrowRenderer.transform = this.meshRenderer.transform;
+			.times(Matrix4.getTranslation(this.translation.plus(new Vector3(0, 0, -this.zoom))));
 	}
 
 	onMouseDown(event: MouseEvent) {

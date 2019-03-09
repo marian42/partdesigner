@@ -16,35 +16,23 @@ class Arrows implements Renderer {
 
 	position: Vector3;
 
+	private createRenderer(mesh: Mesh, color: Vector3): MeshRenderer {
+		let renderer = new MeshRenderer();
+		renderer.setMesh(mesh);
+		renderer.color = color;
+		this.meshRenderers.push(renderer);
+		return renderer;
+	}
+
 	constructor(camera: Camera) {
 		let mesh = Arrows.getMesh(20);
 
-		this.xNegative = new MeshRenderer();
-		this.xNegative.setMesh(mesh);
-		this.xNegative.color = new Vector3(1, 0, 0);
-		this.meshRenderers.push(this.xNegative);
-		this.xPositive = new MeshRenderer();
-		this.xPositive.setMesh(mesh);
-		this.xPositive.color = this.xNegative.color;
-		this.meshRenderers.push(this.xPositive);
-		
-		this.yNegative = new MeshRenderer();
-		this.yNegative.setMesh(mesh);
-		this.yNegative.color = new Vector3(0, 1, 0);
-		this.meshRenderers.push(this.yNegative);
-		this.yPositive = new MeshRenderer();
-		this.yPositive.setMesh(mesh);
-		this.yPositive.color = this.yNegative.color;
-		this.meshRenderers.push(this.yPositive);
-		
-		this.zNegative = new MeshRenderer();
-		this.zNegative.setMesh(mesh);
-		this.zNegative.color = new Vector3(0, 0, 1);
-		this.meshRenderers.push(this.zNegative);
-		this.zPositive = new MeshRenderer();
-		this.zPositive.setMesh(mesh);
-		this.zPositive.color = this.zNegative.color;
-		this.meshRenderers.push(this.zPositive);
+		this.xNegative = this.createRenderer(mesh, new Vector3(1, 0, 0));
+		this.xPositive = this.createRenderer(mesh, new Vector3(1, 0, 0));
+		this.yNegative = this.createRenderer(mesh, new Vector3(0, 1, 0));
+		this.yPositive = this.createRenderer(mesh, new Vector3(0, 1, 0));
+		this.zNegative = this.createRenderer(mesh, new Vector3(0, 0, 1));
+		this.zPositive = this.createRenderer(mesh, new Vector3(0, 0, 1));
 
 		this.position = Vector3.zero();
 		this.updateTransforms();

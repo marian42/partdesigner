@@ -8,7 +8,7 @@ const VERTEX_SHADER = `
     varying vec3 v2fNormal;
 
     void main() {
-        v2fNormal = normal.xyz;
+        v2fNormal = (modelViewMatrix * vec4(normal.xyz, 0.0)).xyz;
         gl_Position = projectionMatrix * modelViewMatrix * vertexPosition;
     }
 `;

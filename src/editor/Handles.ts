@@ -26,6 +26,7 @@ class Handles implements Renderer {
 	meshRenderers: MeshRenderer[] = [];
 
 	position: Vector3;
+	block: Vector3;
 	camera: Camera;
 
 	handleAlpha: Vector3 = Vector3.one();
@@ -197,7 +198,15 @@ class Handles implements Renderer {
 		}
 	}
 
+	private snap() {
+		this.block = this.position.plus(Vector3.one().times(-0.25)).times(2).floor();
+		this.position = this.block.plus(Vector3.one()).times(0.5);
+		this.updateTransforms();
+		this.camera.render();
+	}
+
 	onMouseUp() {
 		this.grabbedAxis = Axis.None;
+		this.snap();
 	}
 }

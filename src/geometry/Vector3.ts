@@ -53,6 +53,10 @@
 		return this.x == other.x && this.y == other.y && this.z == other.z;
 	}
 
+	public floor(): Vector3 {
+		return new Vector3(Math.floor(this.x), Math.floor(this.y), Math.floor(this.z));
+	}
+
 	public toNumber(): number {
 		let layer3D = this.x + this.y + this.z;
 		let layer2D = layer3D - this.y;

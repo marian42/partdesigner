@@ -3,9 +3,9 @@ const ARROW_RADIUS_OUTER = 0.15;
 const ARROW_LENGTH = 0.35;
 const ARROW_TIP = 0.15;
 
-const ARROW_DISTANCE = 0.5;
+const HANDLE_DISTANCE = 0.5;
 
-class Arrows implements Renderer {
+class Handles implements Renderer {
 	xNegative: MeshRenderer;
 	xPositive: MeshRenderer;
 	yNegative: MeshRenderer;
@@ -26,7 +26,7 @@ class Arrows implements Renderer {
 	}
 
 	constructor(camera: Camera) {
-		let mesh = Arrows.getMesh(20);
+		let mesh = Handles.getArrowMesh(20);
 
 		this.xNegative = this.createRenderer(mesh, new Vector3(1, 0, 0));
 		this.xPositive = this.createRenderer(mesh, new Vector3(1, 0, 0));
@@ -53,23 +53,23 @@ class Arrows implements Renderer {
 
 	public updateTransforms() {
 		this.xPositive.transform = Quaternion.euler(new Vector3(0, -90, 0)).toMatrix()
-			.times(Matrix4.getTranslation(this.position.plus(new Vector3(ARROW_DISTANCE, 0, 0))));
+			.times(Matrix4.getTranslation(this.position.plus(new Vector3(HANDLE_DISTANCE, 0, 0))));
 		this.xNegative.transform = Quaternion.euler(new Vector3(0, 90, 0)).toMatrix()
-			.times(Matrix4.getTranslation(this.position.plus(new Vector3(-ARROW_DISTANCE, 0, 0))));
+			.times(Matrix4.getTranslation(this.position.plus(new Vector3(-HANDLE_DISTANCE, 0, 0))));
 		this.yPositive.transform = Quaternion.euler(new Vector3(90, 0, 0)).toMatrix()
-			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, ARROW_DISTANCE, 0))));
+			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, HANDLE_DISTANCE, 0))));
 		this.yNegative.transform = Quaternion.euler(new Vector3(-90, 0, 0)).toMatrix()
-			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, -ARROW_DISTANCE, 0))));
-		this.zPositive.transform = Matrix4.getTranslation(this.position.plus(new Vector3(0, 0, ARROW_DISTANCE)));
+			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, -HANDLE_DISTANCE, 0))));
+		this.zPositive.transform = Matrix4.getTranslation(this.position.plus(new Vector3(0, 0, HANDLE_DISTANCE)));
 		this.zNegative.transform = Quaternion.euler(new Vector3(180, 0, 0)).toMatrix()
-			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, 0, -ARROW_DISTANCE))));		
+			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, 0, -HANDLE_DISTANCE))));		
 	}
 
 	private static getVector(angle: number, radius: number, z: number): Vector3 {
 		return new Vector3(radius * Math.cos(angle), radius * Math.sin(angle), z);
 	}
 	
-	public static getMesh(subdivisions: number): Mesh {
+	public static getArrowMesh(subdivisions: number): Mesh {
 		let triangles: Triangle[] = [];
 
 		for (let i = 0; i < subdivisions; i++) {
@@ -77,30 +77,30 @@ class Arrows implements Renderer {
 			let angle2 = (i + 1) / subdivisions * 2 * Math.PI;
 
 			// Base
-			triangles.push(new Triangle(Arrows.getVector(angle1, ARROW_RADIUS_INNER, 0), Vector3.zero(), Arrows.getVector(angle2, ARROW_RADIUS_INNER, 0)));
+			triangles.push(new Triangle(Handles.getVector(angle1, ARROW_RADIUS_INNER, 0), Vector3.zero(), Handles.getVector(angle2, ARROW_RADIUS_INNER, 0)));
 			// Side
 			triangles.push(new Triangle(
-				Arrows.getVector(angle1, ARROW_RADIUS_INNER, 0),
-				Arrows.getVector(angle2, ARROW_RADIUS_INNER, 0),
-				Arrows.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH)));
+				Handles.getVector(angle1, ARROW_RADIUS_INNER, 0),
+				Handles.getVector(angle2, ARROW_RADIUS_INNER, 0),
+				Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH)));
 			triangles.push(new Triangle(
-				Arrows.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH),
-				Arrows.getVector(angle1, ARROW_RADIUS_INNER, 0),
-				Arrows.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH)));
+				Handles.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH),
+				Handles.getVector(angle1, ARROW_RADIUS_INNER, 0),
+				Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH)));
 			// Tip base
 			triangles.push(new Triangle(
-				Arrows.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH),
-				Arrows.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH),
-				Arrows.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH)));
+				Handles.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH),
+				Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH),
+				Handles.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH)));
 			triangles.push(new Triangle(
-				Arrows.getVector(angle1, ARROW_RADIUS_OUTER, ARROW_LENGTH),
-				Arrows.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH),
-				Arrows.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH)));
+				Handles.getVector(angle1, ARROW_RADIUS_OUTER, ARROW_LENGTH),
+				Handles.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH),
+				Handles.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH)));
 			// Tip
 			triangles.push(new Triangle(
 				new Vector3(0, 0, ARROW_LENGTH + ARROW_TIP),
-				Arrows.getVector(angle1, ARROW_RADIUS_OUTER, ARROW_LENGTH),
-				Arrows.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH)));
+				Handles.getVector(angle1, ARROW_RADIUS_OUTER, ARROW_LENGTH),
+				Handles.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH)));
 		}
 
 		return new Mesh(triangles);

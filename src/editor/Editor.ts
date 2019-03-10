@@ -20,7 +20,7 @@ class Editor {
 	mouseMode = MouseMode.None;
 	lastMousePosition: [number, number];
 
-	arrows: Arrows;
+	arrows: Handles;
 
 	constructor() {
 		this.part = new Part();
@@ -34,7 +34,7 @@ class Editor {
 		this.meshRenderer.color = new Vector3(0.6, 0.6, 0.6);
 		this.camera.renderers.push(this.meshRenderer);
 
-		this.arrows = new Arrows(this.camera);
+		this.arrows = new Handles(this.camera);
 		this.camera.renderers.push(this.arrows);
 
 		this.updateMesh();

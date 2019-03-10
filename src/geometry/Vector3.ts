@@ -49,6 +49,10 @@
 		return new Vector3(this.x, this.y, this.z);
 	}
 
+	public equals(other: Vector3): boolean {
+		return this.x == other.x && this.y == other.y && this.z == other.z;
+	}
+
 	public toNumber(): number {
 		let layer3D = this.x + this.y + this.z;
 		let layer2D = layer3D - this.y;

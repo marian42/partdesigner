@@ -28,6 +28,8 @@ class Handles implements Renderer {
 	position: Vector3;
 	camera: Camera;
 
+	handleAlpha: Vector3 = Vector3.one();
+
 	grabbedAxis: Axis = Axis.None;
 	grabbedPosition: number;
 
@@ -55,11 +57,23 @@ class Handles implements Renderer {
 	}
 
 	public render(camera: Camera) {
+		this.xPositive.alpha = this.handleAlpha.x;
+		this.xNegative.alpha = this.handleAlpha.x;
+		this.yPositive.alpha = this.handleAlpha.y;
+		this.yNegative.alpha = this.handleAlpha.y;
+		this.zPositive.alpha = this.handleAlpha.z;
+		this.zNegative.alpha = this.handleAlpha.z;
+
+		gl.colorMask(false, false, false, false);
 		gl.depthFunc(gl.ALWAYS);
 		for (let renderer of this.meshRenderers) {
 			renderer.render(camera);
 		}
-		gl.depthFunc(gl.LESS);
+		gl.depthFunc(gl.LEQUAL);
+		for (let renderer of this.meshRenderers) {
+			renderer.render(camera);
+		}
+		gl.colorMask(true, true, true, true);
 		for (let renderer of this.meshRenderers) {
 			renderer.render(camera);
 		}
@@ -132,22 +146,25 @@ class Handles implements Renderer {
 		throw new Error("Unknown axis: " + axis);
 	}
 
-	onMouseDown(event: MouseEvent) {
+	private getMouseHandle(event: MouseEvent): [Axis, number] {
 		var mouseRay = this.camera.getScreenToWorldRay(event.x, event.y);
-		
-		this.grabbedAxis = Axis.None;
 		for (let axis of [Axis.X, Axis.Y, Axis.Z]) {
 			var axisRay = this.getRay(axis);
 			if (mouseRay.getDistanceToRay(axisRay) < GRAB_RADIUS) {
 				var position = axisRay.getClosestToRay(mouseRay);
 				if (Math.abs(position) > GRAB_START && Math.abs(position) < GRAB_END) {
-					this.grabbedAxis = axis;
-					this.grabbedPosition = position;
-					return true;
+					return [axis, position];
 				}
 			}
 		}
-		return false;
+		return [Axis.None, 0];
+	}
+
+	onMouseDown(event: MouseEvent): boolean {
+		var handleData = this.getMouseHandle(event);
+		this.grabbedAxis = handleData[0];
+		this.grabbedPosition = handleData[1];		
+		return this.grabbedAxis != Axis.None;
 	}
 
 	onMouseMove(event: MouseEvent) {
@@ -159,6 +176,13 @@ class Handles implements Renderer {
 			this.position = this.position.plus(axisRay.direction.times(mousePosition - this.grabbedPosition));
 			this.updateTransforms();
 			this.camera.render();
+		} else {
+			var axis = this.getMouseHandle(event)[0];
+			var newAlpha = new Vector3(axis == Axis.X ? 1 : 0.8, axis == Axis.Y ? 1 : 0.8, axis == Axis.Z ? 1 : 0.8);
+			if (!newAlpha.equals(this.handleAlpha)) {
+				this.handleAlpha = newAlpha;
+				this.camera.render();
+			}
 		}
 	}
 

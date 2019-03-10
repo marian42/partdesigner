@@ -7,6 +7,7 @@ class MeshRenderer implements Renderer {
     mesh: Mesh;
     transform: Matrix4;
     color: Vector3 = new Vector3(1, 0, 0);
+    alpha: number = 1;
 
     constructor() {
         this.shader = new Shader(gl, VERTEX_SHADER, FRAGMENT_SHADER);
@@ -16,6 +17,7 @@ class MeshRenderer implements Renderer {
         this.shader.setUniform(gl, "projectionMatrix");
         this.shader.setUniform(gl, "modelViewMatrix");
         this.shader.setUniform(gl, "albedo");
+        this.shader.setUniform(gl, "alpha");
 
         this.transform = Matrix4.getIdentity();
     }
@@ -40,6 +42,7 @@ class MeshRenderer implements Renderer {
         gl.uniformMatrix4fv(this.shader.attributes["projectionMatrix"], false, camera.getProjectionMatrix().elements);
         gl.uniformMatrix4fv(this.shader.attributes["modelViewMatrix"], false, this.transform.times(camera.transform).elements);
         gl.uniform3f(this.shader.attributes["albedo"], this.color.x, this.color.y, this.color.z);
+        gl.uniform1f(this.shader.attributes["alpha"], this.alpha);
       
         gl.drawArrays(gl.TRIANGLES, 0, this.mesh.triangles.length * 3);
     }

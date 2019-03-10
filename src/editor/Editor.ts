@@ -84,6 +84,7 @@ class Editor {
 
 	onMouseMove(event: MouseEvent) {
 		switch (this.mouseMode) {
+			case MouseMode.None:
 			case MouseMode.Left:
 				this.handles.onMouseMove(event);
 				break;

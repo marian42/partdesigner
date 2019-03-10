@@ -26,14 +26,13 @@ const FRAGMENT_SHADER = `
     varying vec3 v2fNormal;
 
     uniform vec3 albedo;
+    uniform float alpha;
 
     void main() {
-        gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
-        
         vec3 color = albedo * (ambient
              + diffuse * (0.5 + 0.5 * dot(lightDirection, v2fNormal))
              + specular * pow(max(0.0, dot(reflect(-lightDirection, v2fNormal), viewDirection)), 2.0)); 
 
-        gl_FragColor = vec4(color.r, color.g, color.b, 1.0);
+        gl_FragColor = vec4(color.r, color.g, color.b, alpha);
     }
 `;

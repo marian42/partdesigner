@@ -26,8 +26,14 @@ class Mesh {
         var normals: number[] = [];
 
         for (let triangle of this.triangles) {
-            for (var i = 0; i < 3; i++) {
-                this.pushVector(normals, triangle.normal());
+            if (triangle instanceof TriangleWithNormals) {
+                this.pushVector(normals, triangle.n1);
+                this.pushVector(normals, triangle.n2);
+                this.pushVector(normals, triangle.n3);
+            } else {
+                for (var i = 0; i < 3; i++) {
+                    this.pushVector(normals, triangle.normal());
+                }
             }
         }
 

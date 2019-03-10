@@ -107,14 +107,20 @@ class Handles implements Renderer {
 			// Base
 			triangles.push(new Triangle(Handles.getVector(angle1, ARROW_RADIUS_INNER, 0), Vector3.zero(), Handles.getVector(angle2, ARROW_RADIUS_INNER, 0)));
 			// Side
-			triangles.push(new Triangle(
+			triangles.push(new TriangleWithNormals(
 				Handles.getVector(angle1, ARROW_RADIUS_INNER, 0),
 				Handles.getVector(angle2, ARROW_RADIUS_INNER, 0),
-				Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH)));
-			triangles.push(new Triangle(
+				Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH),
+				Handles.getVector(angle1, 1, 0),
+				Handles.getVector(angle2, 1, 0),
+				Handles.getVector(angle2, 1, 0)));
+			triangles.push(new TriangleWithNormals(
 				Handles.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH),
 				Handles.getVector(angle1, ARROW_RADIUS_INNER, 0),
-				Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH)));
+				Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH),
+				Handles.getVector(angle1, 1, 0),
+				Handles.getVector(angle1, 1, 0),
+				Handles.getVector(angle2, 1, 0)));
 			// Tip base
 			triangles.push(new Triangle(
 				Handles.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH),
@@ -125,10 +131,15 @@ class Handles implements Renderer {
 				Handles.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH),
 				Handles.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH)));
 			// Tip
-			triangles.push(new Triangle(
+			let alpha = Math.tan(ARROW_TIP / ARROW_RADIUS_OUTER);
+
+			triangles.push(new TriangleWithNormals(
 				new Vector3(0, 0, ARROW_LENGTH + ARROW_TIP),
 				Handles.getVector(angle1, ARROW_RADIUS_OUTER, ARROW_LENGTH),
-				Handles.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH)));
+				Handles.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH),
+				Handles.getVector(angle1, Math.sin(alpha), Math.cos(alpha)),
+				Handles.getVector(angle1, Math.sin(alpha), Math.cos(alpha)),
+				Handles.getVector(angle2, Math.sin(alpha), Math.cos(alpha))));
 		}
 
 		return new Mesh(triangles);

@@ -5,6 +5,17 @@ const ARROW_TIP = 0.15;
 
 const HANDLE_DISTANCE = 0.5;
 
+const GRAB_RADIUS = 0.1;
+const GRAB_START = 0.4;
+const GRAB_END = 1.1;
+
+enum Axis {
+	None,
+	X,
+	Y,
+	Z
+}
+
 class Handles implements Renderer {
 	xNegative: MeshRenderer;
 	xPositive: MeshRenderer;
@@ -16,6 +27,9 @@ class Handles implements Renderer {
 
 	position: Vector3;
 	camera: Camera;
+
+	grabbedAxis: Axis = Axis.None;
+	grabbedPosition: number;
 
 	private createRenderer(mesh: Mesh, color: Vector3): MeshRenderer {
 		let renderer = new MeshRenderer();
@@ -106,14 +120,49 @@ class Handles implements Renderer {
 		return new Mesh(triangles);
 	}
 
-	test(event: MouseEvent) {
-		var ray = this.camera.getScreenToWorldRay(event.x, event.y);
-		var xRay = new Ray(this.position, new Vector3(1, 0, 0));
+	private getRay(axis: Axis): Ray {
+		switch (axis) {
+			case Axis.X:
+				return new Ray(this.position, new Vector3(1, 0, 0));
+			case Axis.Y:
+				return new Ray(this.position, new Vector3(0, 1, 0));
+			case Axis.Z:
+				return new Ray(this.position, new Vector3(0, 0, 1));
+		}
+		throw new Error("Unknown axis: " + axis);
+	}
 
-		this.xPositive.transform = Quaternion.euler(new Vector3(0, -90, 0)).toMatrix()
-			.times(Matrix4.getTranslation(xRay.get(xRay.getClosestToRay(ray))));
+	onMouseDown(event: MouseEvent) {
+		var mouseRay = this.camera.getScreenToWorldRay(event.x, event.y);
+		
+		this.grabbedAxis = Axis.None;
+		for (let axis of [Axis.X, Axis.Y, Axis.Z]) {
+			var axisRay = this.getRay(axis);
+			if (mouseRay.getDistanceToRay(axisRay) < GRAB_RADIUS) {
+				var position = axisRay.getClosestToRay(mouseRay);
+				if (Math.abs(position) > GRAB_START && Math.abs(position) < GRAB_END) {
+					this.grabbedAxis = axis;
+					this.grabbedPosition = position;
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
-		console.log(ray.getDistanceToRay(xRay));
-		this.camera.render();
+	onMouseMove(event: MouseEvent) {
+		if (this.grabbedAxis != Axis.None) {
+			var mouseRay = this.camera.getScreenToWorldRay(event.x, event.y);
+			var axisRay = this.getRay(this.grabbedAxis);
+			var mousePosition = axisRay.getClosestToRay(mouseRay);
+
+			this.position = this.position.plus(axisRay.direction.times(mousePosition - this.grabbedPosition));
+			this.updateTransforms();
+			this.camera.render();
+		}
+	}
+
+	onMouseUp() {
+		this.grabbedAxis = Axis.None;
 	}
 }

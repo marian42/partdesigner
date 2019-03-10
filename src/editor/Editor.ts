@@ -20,7 +20,7 @@ class Editor {
 	mouseMode = MouseMode.None;
 	lastMousePosition: [number, number];
 
-	arrows: Handles;
+	handles: Handles;
 
 	constructor() {
 		this.part = new Part();
@@ -34,8 +34,8 @@ class Editor {
 		this.meshRenderer.color = new Vector3(0.6, 0.6, 0.6);
 		this.camera.renderers.push(this.meshRenderer);
 
-		this.arrows = new Handles(this.camera);
-		this.camera.renderers.push(this.arrows);
+		this.handles = new Handles(this.camera);
+		this.camera.renderers.push(this.handles);
 
 		this.updateMesh();
 		this.camera.render();
@@ -51,8 +51,8 @@ class Editor {
 		let mesh = new PartMeshGenerator(this.part).getMesh();
 		this.meshRenderer.setMesh(mesh);
 		this.center = this.part.getCenter().times(-0.5);
-		this.arrows.position = this.center.times(-1);
-		this.arrows.updateTransforms();
+		this.handles.position = this.center.times(-1);
+		this.handles.updateTransforms();
 		this.updateTransform();
 	}
 
@@ -65,7 +65,11 @@ class Editor {
 
 	onMouseDown(event: MouseEvent) {
 		switch(event.button) {
-			case 0: this.mouseMode = MouseMode.Left; break;
+			case 0: 
+				if (this.handles.onMouseDown(event)) {
+					this.mouseMode = MouseMode.Left;
+				}
+				break;
 			case 1: this.mouseMode = MouseMode.Middle; break;
 			case 2: this.mouseMode = MouseMode.Right; break;
 		}
@@ -74,11 +78,15 @@ class Editor {
 
 	onMouseUp(event: MouseEvent) {
 		this.mouseMode = MouseMode.None;
+		this.handles.onMouseUp();
 		event.preventDefault();
 	}
 
 	onMouseMove(event: MouseEvent) {
 		switch (this.mouseMode) {
+			case MouseMode.Left:
+				this.handles.onMouseMove(event);
+				break;
 			case MouseMode.Middle:
 				this.translation = this.translation.plus(new Vector3(event.movementX, -event.movementY, 0).times(0.01));
 				this.updateTransform();
@@ -90,8 +98,6 @@ class Editor {
 				this.camera.render();
 				break;
 		}
-
-		this.arrows.test(event);
 	}
 
 	onScroll(event: MouseWheelEvent) {

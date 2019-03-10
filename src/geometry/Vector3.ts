@@ -45,15 +45,15 @@
 		return "(" + this.x + ", " + this.y + ", " + this.z + ")";
 	}
 
+	public copy(): Vector3 {
+		return new Vector3(this.x, this.y, this.z);
+	}
+
 	public toNumber(): number {
 		let layer3D = this.x + this.y + this.z;
 		let layer2D = layer3D - this.y;
 	
 		return tetrahedralNumber(layer3D) + triangularNumber(layer2D) + this.x;
-	}
-
-	public copy(): Vector3 {
-		return new Vector3(this.x, this.y, this.z);
 	}
 
 	public static fromNumber(value: number): Vector3 {

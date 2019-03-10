@@ -37,4 +37,21 @@ class Camera {
         gl.canvas.height = gl.canvas.clientHeight;
         this.render();
     }
+
+    public getScreenToWorldRay(x: number, y: number): Ray {
+        x /= gl.canvas.width;
+        y /= gl.canvas.height;
+        y = 1 - y;
+        x = x * 2 - 1;
+        y = y * 2 - 1;
+
+        let projection = this.getProjectionMatrix();
+
+        let viewSpacePoint = Vector3.zero();
+        let viewSpaceDirection = new Vector3(x / projection.get(0, 0), y / projection.get(1, 1), -1).normalized();
+
+        let inverseCameraTransform = this.transform.invert();
+
+        return new Ray(inverseCameraTransform.transformPoint(viewSpacePoint), inverseCameraTransform.transformDirection(viewSpaceDirection));
+    } 
 }

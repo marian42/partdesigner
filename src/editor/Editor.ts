@@ -90,6 +90,8 @@ class Editor {
 				this.camera.render();
 				break;
 		}
+
+		this.arrows.test(event);
 	}
 
 	onScroll(event: MouseWheelEvent) {

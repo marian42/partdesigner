@@ -15,6 +15,7 @@ class Arrows implements Renderer {
 	meshRenderers: MeshRenderer[] = [];
 
 	position: Vector3;
+	camera: Camera;
 
 	private createRenderer(mesh: Mesh, color: Vector3): MeshRenderer {
 		let renderer = new MeshRenderer();
@@ -36,6 +37,7 @@ class Arrows implements Renderer {
 
 		this.position = Vector3.zero();
 		this.updateTransforms();
+		this.camera = camera;
 	}
 
 	public render(camera: Camera) {
@@ -102,5 +104,16 @@ class Arrows implements Renderer {
 		}
 
 		return new Mesh(triangles);
+	}
+
+	test(event: MouseEvent) {
+		var ray = this.camera.getScreenToWorldRay(event.x, event.y);
+		var xRay = new Ray(this.position, new Vector3(1, 0, 0));
+
+		this.xPositive.transform = Quaternion.euler(new Vector3(0, -90, 0)).toMatrix()
+			.times(Matrix4.getTranslation(xRay.get(xRay.getClosestToRay(ray))));
+
+		console.log(ray.getDistanceToRay(xRay));
+		this.camera.render();
 	}
 }

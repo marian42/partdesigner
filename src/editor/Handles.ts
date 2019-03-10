@@ -159,7 +159,7 @@ class Handles implements Renderer {
 	}
 
 	private getMouseHandle(event: MouseEvent): [Axis, number] {
-		var mouseRay = this.camera.getScreenToWorldRay(event.x, event.y);
+		var mouseRay = this.camera.getScreenToWorldRay(event);
 		for (let axis of [Axis.X, Axis.Y, Axis.Z]) {
 			var axisRay = this.getRay(axis);
 			if (mouseRay.getDistanceToRay(axisRay) < GRAB_RADIUS) {
@@ -181,7 +181,7 @@ class Handles implements Renderer {
 
 	onMouseMove(event: MouseEvent) {
 		if (this.grabbedAxis != Axis.None) {
-			var mouseRay = this.camera.getScreenToWorldRay(event.x, event.y);
+			var mouseRay = this.camera.getScreenToWorldRay(event);
 			var axisRay = this.getRay(this.grabbedAxis);
 			var mousePosition = axisRay.getClosestToRay(mouseRay);
 

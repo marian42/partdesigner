@@ -5,9 +5,71 @@
     <meta charset="utf-8" />
     <title>Part Designer</title>
     <link rel="stylesheet" href="app.css" type="text/css" />
+    <link rel="icon" href="favicon.png" type="image/png" sizes="16x16"/>
     <script src="app.js"></script>
 </head>
 <body>
-	<canvas id="canvas"></canvas>
+    <div class="sidebar">
+        <div class="area">
+            <h1>Part</h1>
+            <div class="group">
+                <div class="cell"><button>Clear</button></div>
+                <div class="cell"><button>Randomize</button></div>
+                <div class="cell"><button>Share</button></div>
+            </div>            
+            <button>Save STL</button>
+        </div>
+        <div class="area">
+            <h1>Edit Block</h1>
+            <div class="group">
+                    <span class="editorhint">Type</span>
+                    <input type="radio" id="pinhole" name="type" value="pinhole" checked>
+                    <label class="radiolabel" for="pinhole">Pin Hole</label>
+    
+                    <input type="radio" id="axlehole" name="type" value="axlehole">
+                    <label class="radiolabel" for="axlehole">Axle Hole</label>
+    
+                    <input type="radio" id="pin" name="type" value="pin">
+                    <label class="radiolabel" for="pin">Pin</label>
+    
+                    <input type="radio" id="axle" name="type" value="axle">
+                    <label class="radiolabel" for="axle">Axle</label>
+    
+                    <input type="radio" id="solid" name="type" value="solid">
+                    <label class="radiolabel" for="solid">Solid</label>
+                </div>
+            <div class="group">
+                <span class="editorhint">Orientation</span>
+                <input type="radio" id="x" name="orientation" value="x" checked>
+                <label class="radiolabel" for="x">X</label>
+            
+                <input type="radio" id="y" name="orientation" value="y">
+                <label class="radiolabel" for="y">Y</label>
+            
+                <input type="radio" id="z" name="orientation" value="z">
+                <label class="radiolabel" for="z">Z</label>
+            </div>
+            <div class="group">
+                <span class="editorhint">Size</span>            
+                <input type="radio" id="full" name="blocksize" value="full" checked>
+                <label class="radiolabel" for="full">Full Block</label>
+
+                <input type="radio" id="half" name="blocksize" value="half">
+                <label class="radiolabel" for="half">Half Block</label>
+            </div>
+            <div class="group">
+                <span class="editorhint">Edges</span>
+                <input type="radio" id="true" name="rounded" value="true" checked>
+                <label class="radiolabel" for="true">Rounded</label>
+            
+                <input type="radio" id="false" name="rounded" value="false">
+                <label class="radiolabel" for="false">Not Rounded</label>
+            </div>
+            <button>Remove</button>
+        </div>
+    </div>
+    <div class="canvas-container">
+        <canvas id="canvas"></canvas>
+    </div>
 </body>
 </html>

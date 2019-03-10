@@ -9,3 +9,128 @@ canvas {
     width: 100%;
     height: 100%;
 }
+
+.canvas-container {
+    padding-left: 500px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;    
+}
+
+.sidebar {
+    background-color: rgb(219, 219, 219);
+    width: 500px;
+    height: 100%;
+    position: fixed;
+    overflow: auto;
+}
+
+.area {
+    padding: 10px;
+}
+
+.area h1 {
+    width: 100%;
+    color: white;
+    background-color: rgb(61, 61, 61);
+    font-size: 1.1em;
+    margin: -10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-weight: normal;
+}
+
+.cell {    
+    display: table-cell;
+    width: 100%;
+    padding-right: 10px;
+}
+
+.cell:last-of-type {
+    padding-right: 0;
+}
+
+button {
+    position: relative;
+    background-color: rgb(21, 98, 212);
+    border-radius: 7px;
+    border: none;
+    padding: 10px;
+    color: white;
+    font-weight: bold;
+    text-shadow: 0px 1px 6px rgba(0,0,0,0.63);
+    transition: 0.1s;
+    font-size: 14px;
+    width: 100%;
+}
+
+button:hover {
+    background-color: rgb(47, 130, 255);
+}
+
+button:active {
+    box-shadow: inset 2px 2px 6px 0px rgba(0,0,0,0.35);
+}
+
+.group {
+    margin-bottom: 10px;
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+}
+
+label.radiolabel {
+    text-align: center;
+    font-weight: bold;
+    background-color: rgb(219, 219, 219);
+    border: 1px solid rgb(21, 98, 212);
+    color: rgb(21, 98, 212);
+    padding: 10px;
+    display: table-cell;
+    width: 100%;
+    margin-right: -6px;
+    transition: 0.1s;
+    animation-timing-function: linear;
+    font-size: 14px;
+    vertical-align: middle;
+    border-right-style: none;
+    user-select: none;
+}
+
+label.radiolabel:active {
+    box-shadow: inset 2px 2px 6px 0px rgba(0,0,0,0.35);
+}
+
+input[type=radio]:checked + label.radiolabel {
+    background-color: rgb(21, 98, 212);
+    color: white;
+    text-shadow: 0px 1px 6px rgba(0,0,0,0.63);
+}
+
+.radiolabel:hover, input[type=radio]:checked + label.radiolabel:hover {
+    border: 1px solid rgb(47, 130, 255);
+    background-color: rgb(47, 130, 255);
+    color: white;
+    text-shadow: 0px 1px 6px rgba(0,0,0,0.63);
+}
+
+.group input {
+    display: none;
+}
+
+label.radiolabel:first-of-type {
+    border-top-left-radius: 7px;
+    border-bottom-left-radius: 7px;
+}
+
+label.radiolabel:last-of-type {
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+    border-right-style: solid;
+}
+
+.editorhint {
+    display: table-cell;
+    width: 100px;
+    vertical-align: middle;
+}

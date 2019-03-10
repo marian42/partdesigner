@@ -40,7 +40,11 @@ class Camera {
         this.render();
     }
 
-    public getScreenToWorldRay(x: number, y: number): Ray {
+    public getScreenToWorldRay(event: MouseEvent): Ray {
+        var rect = gl.canvas.getBoundingClientRect();
+        var x = event.clientX - rect.left;
+        var y = event.clientY - rect.top;
+
         x = x / gl.canvas.width * 2 - 1;
         y = y / gl.canvas.height * -2 + 1;
 

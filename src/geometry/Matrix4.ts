@@ -96,7 +96,7 @@ class Matrix4 {
 			point.x * this.elements[2] + point.y * this.elements[6] + point.z * this.elements[10]);
 	}
 
-	public static getProjection(near = 0.1, far = 1000, fov = 45): Matrix4 {
+	public static getProjection(near = 0.1, far = 1000, fov = 25): Matrix4 {
 		let aspectRatio = gl.canvas.width / gl.canvas.height;
         return new Matrix4([
             1 / (Math.tan(fov * DEG_TO_RAD / 2) * aspectRatio), 0, 0, 0,

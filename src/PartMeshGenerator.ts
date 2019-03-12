@@ -124,21 +124,11 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private getNextBlock(block: TinyBlock): TinyBlock {
-        var position = block.position.plus(block.forward().times(block.mergedBlocks));
-        if (this.tinyBlocks.containsKey(position)) {
-            return this.tinyBlocks.get(position);
-        } else {
-            return null;
-        }
+        return this.tinyBlocks.getOrNull(block.position.plus(block.forward().times(block.mergedBlocks)));
     }
 
     private getPreviousBlock(block: TinyBlock): TinyBlock {
-        var position = block.position.plus(block.forward().times(-1));
-        if (this.tinyBlocks.containsKey(position)) {
-            return this.tinyBlocks.get(position);
-        } else {
-            return null;
-        }
+        return this.tinyBlocks.getOrNull(block.position.minus(block.forward()));
     }
 
     private hasOpenEnd(block: TinyBlock): boolean {

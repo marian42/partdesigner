@@ -5,9 +5,38 @@ class PartMeshGenerator extends MeshGenerator {
     constructor(part: Part) {
         super();
         this.smallBlocks = part.createSmallBlocks();
+        this.updateRounded();
         this.createTinyBlocks();
         this.renderTinyBlocks();
         this.renderTinyBlockFaces();
+    }
+
+    private updateRounded() {
+        for (var block of this.smallBlocks.values()) {
+            block.rounded = block.rounded && this.canBeRounded(block);
+            if (isAttachment(block.type)) {
+                block.rounded = true;
+            }
+        }
+    }
+
+    private canBeRounded(block: SmallBlock): boolean {
+        var next = this.smallBlocks.getOrNull(block.position.plus(block.forward()));
+        if (next != null && next.orientation == block.orientation && next.quadrant != block.quadrant) {
+            return false;
+        }
+        var previous = this.smallBlocks.getOrNull(block.position.minus(block.forward()));
+        if (previous != null && previous.orientation == block.orientation && previous.quadrant != block.quadrant) {
+            return false;
+        }
+
+        var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal()));
+        var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
+        if ((neighbor1 == null || (isAttachment(neighbor1.type) && neighbor1.forward().dot(block.right()) == 0))
+            && (neighbor2 == null || (isAttachment(neighbor2.type) && neighbor2.forward().dot(block.up()) == 0))) {
+            return true;
+        }
+        return false;
     }
 
     private createTinyBlocks() {

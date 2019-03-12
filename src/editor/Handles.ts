@@ -52,8 +52,7 @@ class Handles implements Renderer {
 		this.zNegative = this.createRenderer(mesh, new Vector3(0, 0, 1));
 		this.zPositive = this.createRenderer(mesh, new Vector3(0, 0, 1));
 
-		this.position = Vector3.zero();
-		this.updateTransforms();
+		this.setBlock(Vector3.zero());
 		this.camera = camera;
 	}
 
@@ -199,10 +198,14 @@ class Handles implements Renderer {
 	}
 
 	private snap() {
-		this.block = this.position.plus(Vector3.one().times(-0.25)).times(2).floor();
+		this.setBlock(this.position.plus(Vector3.one().times(-0.25)).times(2).floor());
+		this.camera.render();
+	}
+
+	setBlock(block: Vector3) {
+		this.block = block;
 		this.position = this.block.plus(Vector3.one()).times(0.5);
 		this.updateTransforms();
-		this.camera.render();
 	}
 
 	onMouseUp() {

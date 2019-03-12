@@ -149,6 +149,10 @@ class Part {
 	}
 
 	public getCenter(): Vector3 {
+		if (!this.blocks.any()) {
+			return Vector3.zero();
+		}
+
 		let min = this.blocks.keys()[0].copy();
 		let max = min.copy();
 

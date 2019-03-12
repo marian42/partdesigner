@@ -4,6 +4,12 @@
 	Z
 }
 
+const ORIENTATION = {
+	"x": Orientation.X,
+	"y": Orientation.Y,
+	"z": Orientation.Z
+};
+
 function forward(orientation: Orientation): Vector3 {
 	switch (orientation) {
 		case Orientation.X: {

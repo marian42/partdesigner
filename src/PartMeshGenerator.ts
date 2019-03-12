@@ -6,6 +6,7 @@ class PartMeshGenerator extends MeshGenerator {
         super();
         this.smallBlocks = part.createSmallBlocks();
         this.createTinyBlocks();
+        this.renderTinyBlocks();
         this.renderTinyBlockFaces();
     }
 
@@ -66,9 +67,6 @@ class PartMeshGenerator extends MeshGenerator {
         if (this.tinyBlocks.containsKey(block.position.plus(direction))) {
             return false;
         }
-
-        //for testing:
-        return true;
         
         if (direction.dot(block.forward()) == 0) {
             // side face
@@ -94,6 +92,78 @@ class PartMeshGenerator extends MeshGenerator {
             tinyBlockToWorld(pos.plus(v3.elementwiseMultiply(size))),
             tinyBlockToWorld(pos.plus(v4.elementwiseMultiply(size))),
             flipped);
+    }
+
+    private getNextBlock(block: TinyBlock): TinyBlock {
+        var position = block.position.plus(block.forward().times(block.mergedBlocks));
+        if (this.tinyBlocks.containsKey(position)) {
+            return this.tinyBlocks.get(position);
+        } else {
+            return null;
+        }
+    }
+
+    private getPreviousBlock(block: TinyBlock): TinyBlock {
+        var position = block.position.plus(block.forward().times(-1));
+        if (this.tinyBlocks.containsKey(position)) {
+            return this.tinyBlocks.get(position);
+        } else {
+            return null;
+        }
+    }
+
+    private hasOpenEnd(block: TinyBlock): boolean {
+        var pos = block.position;
+        return !this.tinyBlocks.containsKey(pos.plus(block.forward().times(block.mergedBlocks)))
+            && !this.tinyBlocks.containsKey(pos.plus(block.forward().times(block.mergedBlocks)).minus(block.horizontal().times(3)))
+            && !this.tinyBlocks.containsKey(pos.plus(block.forward().times(block.mergedBlocks)).minus(block.vertical().times(3)))
+            && !this.tinyBlocks.containsKey(pos.plus(block.forward().times(block.mergedBlocks)).minus(block.horizontal().times(3)).minus(block.vertical().times(3)));
+    }
+
+    private hasOpenStart(block: TinyBlock): boolean {
+        var pos = block.position;
+        return !this.tinyBlocks.containsKey(pos.minus(block.forward()))
+            && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.horizontal().times(3)))
+            && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.vertical().times(3)))
+            && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.horizontal().times(3)).minus(block.vertical().times(3)));
+    }
+
+    private renderTinyBlocks() {
+        for (let block of this.tinyBlocks.values()) {
+            if (block.merged || !block.isCenter() || isAttachment(block.type)) {
+                continue;
+            }
+
+            var nextBlock = this.getNextBlock(block);
+            var previousBlock = this.getPreviousBlock(block);
+            var distance = block.getDepth();
+
+            var hasOpenEnd = this.hasOpenEnd(block);
+            var hasOpenStart = this.hasOpenStart(block);
+
+            // Back cap
+            if (nextBlock == null) {
+                this.createCircleWithHole(block, block.hasInterior && hasOpenEnd ? INTERIOR_RADIUS : 0, 0.5 - EDGE_MARGIN, distance, false, !block.rounded);
+            }
+
+            // Front cap
+            if (previousBlock == null) {
+                this.createCircleWithHole(block, block.hasInterior && hasOpenStart ? INTERIOR_RADIUS : 0, 0.5 - EDGE_MARGIN, 0, true, !block.rounded);
+            }
+
+            if (block.rounded) {
+                // Rounded corners
+                this.createCylinder(block, 0, 0.5 - EDGE_MARGIN, distance);
+
+                // Rounded to non rounded adapter
+                if (nextBlock != null && !nextBlock.rounded) {
+                    this.createCircleWithHole(block, 0.5 - EDGE_MARGIN, 0.5 - EDGE_MARGIN, distance, true, true);
+                }
+                if (previousBlock != null && !previousBlock.rounded) {
+                    this.createCircleWithHole(block, 0.5 - EDGE_MARGIN, 0.5 - EDGE_MARGIN, 0, false, true);
+                }
+            }
+        }
     }
 
     private renderTinyBlockFaces() {

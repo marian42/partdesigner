@@ -30,6 +30,10 @@
 			.plus(this.up().times((this.smallBlockPosition().dot(this.up()) + (1 - this.localY())) * 0.5));
 	}
 
+	public getDepth(): number {
+		return tinyIndexToWorld(this.forward().dot(this.position) + this.mergedBlocks) - tinyIndexToWorld(this.forward().dot(this.position));
+	}
+
 	constructor(position: Vector3, source: SmallBlock) {
 		super(source.quadrant, position, source);
 	}

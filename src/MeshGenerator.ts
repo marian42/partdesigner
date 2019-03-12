@@ -16,7 +16,7 @@ class MeshGenerator {
     }
 
     createCircleWithHole(block: TinyBlock, innerRadius: number, outerRadius: number, offset: number, inverted = false, square = false) {
-        let center = block.getCylinderOrigin();
+        let center = block.getCylinderOrigin().plus(block.forward().times(offset));
 
         for (var i = 0; i < SUBDIVISIONS; i++) {
             let i1 = block.getOnCircle(Math.PI / 2 * i / SUBDIVISIONS);
@@ -47,11 +47,11 @@ class MeshGenerator {
     }
 
     createCircle(block: TinyBlock, radius: number, offset: number, inverted = false) {
-        let center = block.getCylinderOrigin();
+        let center = block.getCylinderOrigin().plus(block.forward().times(offset));
 
         for (var i = 0; i < SUBDIVISIONS; i++) {
-            let p1 = block.getOnCircle(Math.PI / 2 * i / SUBDIVISIONS);
-            let p2 = block.getOnCircle(Math.PI / 2 * (i + 1) / SUBDIVISIONS);
+            let p1 = block.getOnCircle(Math.PI / 2 * i / SUBDIVISIONS, radius);
+            let p2 = block.getOnCircle(Math.PI / 2 * (i + 1) / SUBDIVISIONS, radius);
 
             if (inverted) {
                 this.triangles.push(new Triangle(center.plus(p1), center, center.plus(p2)));
@@ -62,7 +62,7 @@ class MeshGenerator {
     }
 
     createCylinder(block: TinyBlock, offset: number, radius: number, distance: number, inverted = false) {
-        let center = block.getCylinderOrigin();
+        let center = block.getCylinderOrigin().plus(block.forward().times(offset));
 
         for (var i = 0; i < SUBDIVISIONS; i++) {
             let v1 = block.getOnCircle(Math.PI / 2 * i / SUBDIVISIONS);

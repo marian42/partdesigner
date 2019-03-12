@@ -22,7 +22,7 @@ function getAngle(quadrant: Quadrant): number {
 		case Quadrant.BottomLeft:
 			return 180;
 		case Quadrant.TopLeft:
-			return 279;
+			return 270;
 	}
 	throw new Error("Unknown quadrant: " + quadrant);
 }

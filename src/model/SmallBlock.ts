@@ -40,7 +40,7 @@
 	}
 
 	public vertical(): Vector3 {
-		return this.up().times(this.directionX());
+		return this.up().times(this.directionY());
 	}
 
 	private static getQuadrantFromLocal(x: number, y: number): Quadrant {
@@ -61,7 +61,7 @@
 
 	public getOnCircle(angle: number, radius = 1): Vector3 {
 		return this.right().times(Math.sin(angle + getAngle(this.quadrant) * DEG_TO_RAD) * radius).plus(
-			this.up().times(Math.sin(angle + getAngle(this.quadrant) * DEG_TO_RAD) * radius));
+			this.up().times(Math.cos(angle + getAngle(this.quadrant) * DEG_TO_RAD) * radius));
 	}
 }
  

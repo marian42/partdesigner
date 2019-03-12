@@ -26,8 +26,14 @@ class Editor {
 	createFullSizedBlocks: boolean;
 
 	constructor() {
-		this.part = new Part();
-		this.part.randomize();
+		var url = new URL(document.URL);
+		if (url.searchParams.has("part")) {
+			console.log(url.searchParams.get("part"));
+			this.part = Part.fromString(url.searchParams.get("part"));
+		} else {
+			this.part = new Part();
+			this.part.randomize();
+		}
 
 		this.editorState = new Block(Orientation.X, BlockType.PinHole, true);
 		this.createFullSizedBlocks = true;
@@ -54,6 +60,7 @@ class Editor {
 		this.canvas.addEventListener("wheel", (event: MouseWheelEvent) => this.onScroll(event));
 		document.getElementById("clear").addEventListener("click", (event: MouseEvent) => this.clear());
 		document.getElementById("randomize").addEventListener("click", (event: MouseEvent) => this.randomize());
+		document.getElementById("share").addEventListener("click", (event: MouseEvent) => this.share());
 		document.getElementById("save").addEventListener("click", (event: MouseEvent) => new PartMeshGenerator(this.part).getMesh().saveSTLFile());
 		document.getElementById("remove").addEventListener("click", (event: MouseEvent) => this.remove());
 
@@ -81,6 +88,10 @@ class Editor {
 	private randomize() {
 		this.part.randomize();
 		this.updateMesh();
+	}
+
+	private share() {
+		window.location.href = "?part=" + this.part.toString();
 	}
 
 	private remove() {
@@ -127,7 +138,6 @@ class Editor {
 		this.updateTransform();
 		this.handles.updateTransforms();
 		this.camera.render();
-		console.log(this.part.toString());
 	}
 
 	private updateTransform() {

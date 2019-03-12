@@ -3,7 +3,7 @@
 }
 
 function inverseTriangularNumber(s: number): number {
-	return (Math.floor(Math.sqrt(8 * s + 1)) - 1) / 2;
+	return Math.floor((Math.floor(Math.sqrt(8 * s + 1)) - 1) / 2);
 }
 
 function tetrahedralNumber(n: number): number {

@@ -15,6 +15,16 @@ class MeshGenerator {
         }
     }
 
+    createQuadWithNormals(v1: Vector3, v2: Vector3, v3: Vector3, v4: Vector3, n1: Vector3, n2: Vector3, n3: Vector3, n4: Vector3, flipped = false) {
+        if (!flipped) {
+            this.triangles.push(new TriangleWithNormals(v1, v2, v4, n1, n2, n4));
+            this.triangles.push(new TriangleWithNormals(v2, v3, v4, n2, n3, n4));
+        } else {
+            this.triangles.push(new TriangleWithNormals(v4, v2, v1, n4, n2, n1));
+            this.triangles.push(new TriangleWithNormals(v4, v3, v2, n4, n3, n2));
+        }
+    }
+
     createCircleWithHole(block: TinyBlock, innerRadius: number, outerRadius: number, offset: number, inverted = false, square = false) {
         let center = block.getCylinderOrigin().plus(block.forward().times(offset));
 
@@ -67,11 +77,12 @@ class MeshGenerator {
         for (var i = 0; i < SUBDIVISIONS; i++) {
             let v1 = block.getOnCircle(Math.PI / 2 * i / SUBDIVISIONS);
             let v2 = block.getOnCircle(Math.PI / 2 * (i + 1) / SUBDIVISIONS);
-            this.createQuad(
+            this.createQuadWithNormals(
                 center.plus(v1.times(radius)),
                 center.plus(v2.times(radius)),
                 center.plus(v2.times(radius)).plus(block.forward().times(distance)),
                 center.plus(v1.times(radius)).plus(block.forward().times(distance)),
+                v1, v2, v2, v1,
                 !inverted);
         }
     }

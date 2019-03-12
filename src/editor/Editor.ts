@@ -41,8 +41,8 @@ class Editor {
 
 		this.handles = new Handles(this.camera);
 		this.camera.renderers.push(this.handles);
-		this.center = this.part.getCenter().times(-0.5);
 
+		this.center = Vector3.zero();
 		this.updateMesh();
 		this.updateTransform();
 		this.camera.render();
@@ -120,6 +120,11 @@ class Editor {
 	private updateMesh() {
 		let mesh = new PartMeshGenerator(this.part).getMesh();
 		this.meshRenderer.setMesh(mesh);
+
+		var newCenter = this.part.getCenter().times(-0.5);
+		this.translation = this.translation.plus(this.rotation.toMatrix().transformDirection(this.center.minus(newCenter)));
+		this.center = newCenter;
+		this.updateTransform();
 		this.handles.updateTransforms();
 		this.camera.render();
 		console.log(this.part.toString());

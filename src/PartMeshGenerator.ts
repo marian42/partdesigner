@@ -182,6 +182,66 @@ class PartMeshGenerator extends MeshGenerator {
                     this.createCircleWithHole(block, 0.5 - EDGE_MARGIN, 0.5 - EDGE_MARGIN, 0, false, true);
                 }
             }
+            
+            // Interior
+            if (block.hasInterior) {
+                if (block.type == BlockType.PinHole) {
+                    this.renderPinHoleInterior(block);
+                } else if (block.type == BlockType.AxleHole) {
+                    // TODO
+                }
+            }
+        }
+    }
+
+    private showInteriorCap(currentBlock: SmallBlock, neighbor: SmallBlock): boolean {
+        if (neighbor == null) {
+            return false;
+        }
+        if (neighbor.orientation != currentBlock.orientation
+            || neighbor.quadrant != currentBlock.quadrant
+            || !neighbor.hasInterior) {
+            return true;
+        }
+        
+        if (currentBlock.type == BlockType.AxleHole && neighbor.type == BlockType.PinHole
+            || neighbor.type == BlockType.AxleHole && currentBlock.type == BlockType.PinHole) {
+                // Pin hole to axle hole adapter
+            return false;
+        }
+
+        return currentBlock.type != neighbor.type;
+    }
+
+    private renderPinHoleInterior(block: TinyBlock) {
+        var nextBlock = this.getNextBlock(block);
+        var previousBlock = this.getPreviousBlock(block);
+        var distance = block.getDepth();
+
+        var hasOpenEnd = this.hasOpenEnd(block);
+        var hasOpenStart = this.hasOpenStart(block);
+        var showInteriorEndCap = this.showInteriorCap(block, nextBlock) || (nextBlock == null && !hasOpenEnd);
+        var showInteriorStartCap = this.showInteriorCap(block, previousBlock) || (previousBlock == null && !hasOpenStart);
+
+        var offsetStart = (hasOpenStart ? PIN_HOLE_OFFSET : 0) + (showInteriorStartCap ? INTERIOR_END_MARGIN : 0);
+        var offsetEnd = (hasOpenEnd ? PIN_HOLE_OFFSET : 0) + (showInteriorEndCap ? INTERIOR_END_MARGIN : 0);
+        this.createCylinder(block, offsetStart, PIN_HOLE_RADIUS, distance - offsetStart - offsetEnd, true);
+
+        if (hasOpenStart) {
+            this.createCylinder(block, 0, INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
+            this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
+        }
+
+        if (hasOpenEnd) {
+            this.createCylinder(block, distance - PIN_HOLE_OFFSET, INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
+            this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, distance - PIN_HOLE_OFFSET, false);
+        }
+
+        if (showInteriorEndCap) {
+            this.createCircle(block, PIN_HOLE_RADIUS, distance - INTERIOR_END_MARGIN, false);
+        }
+        if (showInteriorStartCap) {
+            this.createCircle(block, PIN_HOLE_RADIUS, INTERIOR_END_MARGIN, true);
         }
     }
 

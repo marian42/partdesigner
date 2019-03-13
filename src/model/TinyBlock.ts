@@ -21,7 +21,7 @@
 	// Returns true if this tiny block is not inside the margin on the right and up axes
 	// Being insdide the margin along the forward axis is ok.
 	public isCenter(): boolean {
-		return this.localPositon().dot(this.up()) == 0 && this.localPositon().dot(this.up()) == 0;
+		return this.localPositon().dot(this.up()) == 0 && this.localPositon().dot(this.right()) == 0;
 	}
 
 	public getCylinderOrigin(): Vector3 {

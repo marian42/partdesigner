@@ -1,5 +1,5 @@
 class MeshGenerator {
-    private triangles: Triangle[] = [];
+    protected triangles: Triangle[] = [];
 
     getMesh(): Mesh {
         return new Mesh(this.triangles);

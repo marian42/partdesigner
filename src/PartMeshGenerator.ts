@@ -188,7 +188,7 @@ class PartMeshGenerator extends MeshGenerator {
                 if (block.type == BlockType.PinHole) {
                     this.renderPinHoleInterior(block);
                 } else if (block.type == BlockType.AxleHole) {
-                    // TODO
+                    this.renderAxleHoleInterior(block);
                 }
             }
         }
@@ -206,7 +206,7 @@ class PartMeshGenerator extends MeshGenerator {
         
         if (currentBlock.type == BlockType.AxleHole && neighbor.type == BlockType.PinHole
             || neighbor.type == BlockType.AxleHole && currentBlock.type == BlockType.PinHole) {
-                // Pin hole to axle hole adapter
+            // Pin hole to axle hole adapter
             return false;
         }
 
@@ -243,6 +243,134 @@ class PartMeshGenerator extends MeshGenerator {
         if (showInteriorStartCap) {
             this.createCircle(block, PIN_HOLE_RADIUS, INTERIOR_END_MARGIN, true);
         }
+    }
+
+    private renderAxleHoleInterior(block: TinyBlock) {
+        var nextBlock = this.getNextBlock(block);
+        var previousBlock = this.getPreviousBlock(block);
+
+        var hasOpenEnd = this.hasOpenEnd(block);
+        var hasOpenStart = this.hasOpenStart(block);
+        var showInteriorEndCap = this.showInteriorCap(block, nextBlock) || (nextBlock == null && !hasOpenEnd);
+        var showInteriorStartCap = this.showInteriorCap(block, previousBlock) || (previousBlock == null && !hasOpenStart);
+        
+        var distance = block.getDepth();
+        
+        var start = block.getCylinderOrigin().plus(showInteriorEndCap ? block.forward().times(INTERIOR_END_MARGIN) : Vector3.zero());
+        var end = start.plus(block.forward().times(distance - (showInteriorStartCap ? INTERIOR_END_MARGIN : 0) - (showInteriorEndCap ? INTERIOR_END_MARGIN : 0)));
+		var axleWingAngle = Math.asin(AXLE_HOLE_SIZE / PIN_HOLE_RADIUS);
+		var axleWingAngle2 = 90 * DEG_TO_RAD - axleWingAngle;
+		var subdivAngle = 90 / SUBDIVISIONS * DEG_TO_RAD;
+		var adjustedRadius = PIN_HOLE_RADIUS * Math.cos(subdivAngle / 2) / Math.cos(subdivAngle / 2 - (axleWingAngle - Math.floor(axleWingAngle / subdivAngle) * subdivAngle));
+		this.createQuad(
+			start.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+			start.plus(block.getOnCircle(axleWingAngle, adjustedRadius)),
+			end.plus(block.getOnCircle(axleWingAngle, adjustedRadius)),
+			end.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+			true);
+		this.createQuad(
+			start.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+			start.plus(block.getOnCircle(axleWingAngle2, adjustedRadius)),
+			end.plus(block.getOnCircle(axleWingAngle2, adjustedRadius)),
+			end.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+			false);
+
+		for (var i = 0; i < SUBDIVISIONS; i++) {
+			var angle1 = lerp(0, 90, i / SUBDIVISIONS) * DEG_TO_RAD;
+			var angle2 = lerp(0, 90, (i + 1) / SUBDIVISIONS) * DEG_TO_RAD;
+			var startAngleInside = angle1;
+			var endAngleInside = angle2;
+			var startAngleOutside = angle1;
+			var endAngleOutside = angle2;
+			var radius1Inside = PIN_HOLE_RADIUS;
+			var radius2Inside = PIN_HOLE_RADIUS;
+			var radius1Outside = PIN_HOLE_RADIUS;
+			var radius2Outside = PIN_HOLE_RADIUS;
+			if (angle1 < axleWingAngle && angle2 > axleWingAngle) {
+				endAngleInside = axleWingAngle;
+				startAngleOutside = axleWingAngle;
+				radius1Outside = adjustedRadius;
+				radius2Inside = adjustedRadius;
+			}
+			if (angle1 < axleWingAngle2 && angle2 > axleWingAngle2) {
+				startAngleInside = axleWingAngle2;
+				endAngleOutside = axleWingAngle2;
+				radius2Outside = adjustedRadius;
+				radius1Inside = adjustedRadius;
+			}
+
+			// Walls
+			if (angle1 < axleWingAngle || angle2 > axleWingAngle2) {
+				var v1 = block.getOnCircle(startAngleInside);
+				var v2 = block.getOnCircle(endAngleInside);
+				this.createQuadWithNormals(
+					start.plus(v1.times(radius1Inside)),
+					start.plus(v2.times(radius2Inside)),
+					end.plus(v2.times(radius2Inside)),
+                    end.plus(v1.times(radius1Inside)),
+					v1, v2, v2, v1, false);
+			}
+
+			// Outside caps
+			if (hasOpenStart || (previousBlock != null && previousBlock.type == BlockType.PinHole && !showInteriorStartCap)) {
+				if (angle2 > axleWingAngle && angle1 < axleWingAngle2) {
+					this.triangles.push(new Triangle(
+						start.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+						start.plus(block.getOnCircle(startAngleOutside, radius1Outside)),
+						start.plus(block.getOnCircle(endAngleOutside, radius2Outside))));
+				}
+			}
+			if (hasOpenEnd || (nextBlock != null && nextBlock.type == BlockType.PinHole && !showInteriorEndCap)) {
+				if (angle2 > axleWingAngle && angle1 < axleWingAngle2) {
+					this.triangles.push(new Triangle(
+						end.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+						end.plus(block.getOnCircle(endAngleOutside, radius2Outside)),
+						end.plus(block.getOnCircle(startAngleOutside, radius1Outside))));
+				}
+			}
+
+			// Inside caps
+			if (showInteriorEndCap && (angle1 < axleWingAngle || angle2 > axleWingAngle2)) {
+				this.triangles.push(new Triangle(
+					end,
+					end.plus(block.getOnCircle(startAngleInside, radius1Outside)),
+					end.plus(block.getOnCircle(endAngleInside, radius2Outside))));
+			}
+			if (showInteriorStartCap && (angle1 < axleWingAngle || angle2 > axleWingAngle2)) {
+				this.triangles.push(new Triangle(
+					start,
+					start.plus(block.getOnCircle(endAngleInside, radius2Outside)),
+					start.plus(block.getOnCircle(startAngleInside, radius1Outside))));
+			}
+		}
+		if (hasOpenEnd) {
+			this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, distance, false);
+		}
+
+		if (hasOpenStart) {
+			this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, 0, true);
+		}
+
+		if (showInteriorEndCap) {
+			this.triangles.push(new Triangle(
+				end.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+				end,
+				end.plus(block.getOnCircle(axleWingAngle, adjustedRadius))));
+			this.triangles.push(new Triangle(
+				end,
+				end.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+				end.plus(block.getOnCircle(axleWingAngle2, adjustedRadius))));
+		}
+		if (showInteriorStartCap) {
+			this.triangles.push(new Triangle(
+				start,
+				start.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+				start.plus(block.getOnCircle(axleWingAngle, adjustedRadius))));
+			this.triangles.push(new Triangle(
+				start.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+				start,
+				start.plus(block.getOnCircle(axleWingAngle2, adjustedRadius))));
+		}
     }
 
     private renderTinyBlockFaces() {

@@ -61,3 +61,7 @@ function sign(a: number): number {
 		return 1;
 	}
 }
+
+function lerp(a: number, b: number, t: number): number {
+	return a + t * (b - a);
+}

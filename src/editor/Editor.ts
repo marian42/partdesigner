@@ -44,6 +44,8 @@ class Editor {
 		this.meshRenderer.color = new Vector3(0.6, 0.6, 0.6);
 		this.camera.renderers.push(this.meshRenderer);
 
+		this.camera.renderers.push(new ContourPostEffect());
+
 		this.handles = new Handles(this.camera);
 		this.camera.renderers.push(this.handles);
 

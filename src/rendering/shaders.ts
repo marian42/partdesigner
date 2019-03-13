@@ -36,3 +36,51 @@ const FRAGMENT_SHADER = `
         gl_FragColor = vec4(color.r, color.g, color.b, alpha);
     }
 `;
+
+const APPLY_BUFFER_VERTEX = `
+    attribute vec2 vertexPosition;
+
+    varying vec2 v2fScreenUV;
+
+    void main() {
+        v2fScreenUV = vertexPosition / 2.0 + vec2(0.5);
+        gl_Position = vec4(vertexPosition, 0.0, 1.0);
+    }
+`;
+
+const APPLY_BUFFER_FRAGMENT = `
+    precision mediump float;
+
+    uniform sampler2D buffer;
+
+    varying vec2 v2fScreenUV;
+
+    void main() {
+        vec4 color = texture2D(buffer, v2fScreenUV);
+        gl_FragColor = vec4(color.rgb, 1);
+    }
+`
+
+const COUNTOUR_VERTEX = `
+    attribute vec2 vertexPosition;
+
+    varying vec2 v2fScreenUV;
+
+    void main() {
+        v2fScreenUV = vertexPosition;
+        gl_Position = vec4(vertexPosition, 0.0, 1.0);
+    }
+`;
+
+const CONTOUR_FRAGMENT = `
+    precision mediump float;
+
+    uniform sampler2D colorBuffer;
+
+    varying vec2 v2fScreenUV;
+
+    void main() {
+        vec4 color = texture2D(colorBuffer, v2fScreenUV);
+        gl_FragColor = vec4(color.rgb, 0);
+    }
+`

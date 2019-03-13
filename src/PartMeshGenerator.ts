@@ -431,7 +431,7 @@ class PartMeshGenerator extends MeshGenerator {
         
         var distance = block.getDepth();
         
-        var start = block.getCylinderOrigin().plus(showInteriorEndCap ? block.forward().times(INTERIOR_END_MARGIN) : Vector3.zero());
+        var start = block.getCylinderOrigin().plus(showInteriorStartCap ? block.forward().times(INTERIOR_END_MARGIN) : Vector3.zero());
         var end = start.plus(block.forward().times(distance - (showInteriorStartCap ? INTERIOR_END_MARGIN : 0) - (showInteriorEndCap ? INTERIOR_END_MARGIN : 0)));
 		var axleWingAngle = Math.asin(AXLE_HOLE_SIZE / PIN_HOLE_RADIUS);
 		var axleWingAngle2 = 90 * DEG_TO_RAD - axleWingAngle;

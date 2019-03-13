@@ -28,7 +28,6 @@ class Editor {
 	constructor() {
 		var url = new URL(document.URL);
 		if (url.searchParams.has("part")) {
-			console.log(url.searchParams.get("part"));
 			this.part = Part.fromString(url.searchParams.get("part"));
 		} else {
 			this.part = new Part();

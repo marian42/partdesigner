@@ -12,6 +12,7 @@ class PartMeshGenerator extends MeshGenerator {
         this.checkInteriors();
         this.mergeSimilarBlocks();
         this.renderTinyBlocks();
+        this.renderAttachments();
         this.renderTinyBlockFaces();
     }
 
@@ -368,6 +369,188 @@ class PartMeshGenerator extends MeshGenerator {
             }
         }
     }
+
+    private renderAttachments() {
+        for (var block of this.tinyBlocks.values()) {
+            if (block.merged || !block.isCenter()) {
+                continue;
+            }
+
+            switch (block.type) {
+                case BlockType.Pin:
+                    this.renderPin(block);
+                    break;
+                case BlockType.Axle:
+                    this.renderAxle(block);
+            }
+        }
+    }
+
+    private renderPin(block: TinyBlock) {
+        var nextBlock = this.getNextBlock(block);
+		var previousBlock = this.getPreviousBlock(block);
+
+		var distance = block.getDepth();
+
+		var startOffset = (previousBlock != null && previousBlock.type == BlockType.Axle) ? AXLE_PIN_ADAPTER_SIZE : 0;
+		var endOffset = (nextBlock != null && nextBlock.type == BlockType.Axle) ? AXLE_PIN_ADAPTER_SIZE : 0;
+
+		this.createCylinder(block, startOffset, PIN_RADIUS, distance - startOffset - endOffset);
+
+		if (nextBlock == null) {
+			this.createCircle(block, PIN_RADIUS, distance, true);
+		}
+		if (previousBlock == null) {
+			this.createCircle(block, PIN_RADIUS, 0);
+		}
+		if (nextBlock != null && !isAttachment(nextBlock.type)) {
+			this.createCircleWithHole(block, PIN_RADIUS, 0.5 - EDGE_MARGIN, distance, true, !nextBlock.rounded);
+		}
+		if (previousBlock != null && !isAttachment(previousBlock.type)) {
+			this.createCircleWithHole(block, PIN_RADIUS, 0.5 - EDGE_MARGIN, 0, false, !previousBlock.rounded);
+		}
+		if (nextBlock != null && nextBlock.type == BlockType.Axle) {
+			this.createCircleWithHole(block, PIN_RADIUS, AXLE_PIN_ADAPTER_RADIUS, distance - AXLE_PIN_ADAPTER_SIZE, true);
+			this.createCylinder(block, distance - AXLE_PIN_ADAPTER_SIZE, AXLE_PIN_ADAPTER_RADIUS, AXLE_PIN_ADAPTER_SIZE);
+		}
+		if (previousBlock != null && previousBlock.type == BlockType.Axle) {
+			this.createCircleWithHole(block, PIN_RADIUS, AXLE_PIN_ADAPTER_RADIUS, AXLE_PIN_ADAPTER_SIZE);
+			this.createCylinder(block, 0, AXLE_PIN_ADAPTER_RADIUS, AXLE_PIN_ADAPTER_SIZE);
+		}
+    }
+
+    private renderAxle(block: TinyBlock) {
+		var nextBlock = this.getNextBlock(block);
+		var previousBlock = this.getPreviousBlock(block);
+		
+		var start = block.getCylinderOrigin();
+		var end = start.plus(block.forward().times(block.getDepth()));
+
+		this.createQuad(
+            start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+            start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_OUTER)),
+            end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_OUTER)),
+            end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)), block.odd());
+		this.createQuad(
+			start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+			start.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+			end.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+			end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)), !block.odd());
+		this.createQuad(
+			end.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
+			start.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
+			start.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+			end.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)), block.odd());
+		this.createQuad(
+			end.plus(block.vertical().times(AXLE_SIZE_OUTER)),
+			start.plus(block.vertical().times(AXLE_SIZE_OUTER)),
+			start.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
+			end.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)), !block.odd());
+
+		if (nextBlock == null) {
+			this.createQuad(
+				end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+				end.plus(block.vertical().times(AXLE_SIZE_INNER)),
+				end,
+				end.plus(block.horizontal().times(AXLE_SIZE_INNER)), block.odd());
+			this.createQuad(
+				end.plus(block.horizontal().times(AXLE_SIZE_INNER)),
+				end.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
+				end.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+				end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)), block.odd());
+			this.createQuad(
+				end.plus(block.vertical().times(AXLE_SIZE_INNER)),
+				end.plus(block.vertical().times(AXLE_SIZE_OUTER)),
+				end.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
+				end.plus(block.vertical().times(AXLE_SIZE_INNER)).plus(block.horizontal().times(AXLE_SIZE_INNER)), !block.odd());
+		}
+		if (previousBlock == null) {
+			this.createQuad(
+				start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+				start.plus(block.vertical().times(AXLE_SIZE_INNER)),
+				start,
+				start.plus(block.horizontal().times(AXLE_SIZE_INNER)), !block.odd());
+			this.createQuad(
+				start.plus(block.horizontal().times(AXLE_SIZE_INNER)),
+				start.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
+				start.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+				start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)), !block.odd());
+			this.createQuad(
+				start.plus(block.vertical().times(AXLE_SIZE_INNER)),
+				start.plus(block.vertical().times(AXLE_SIZE_OUTER)),
+				start.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
+				start.plus(block.vertical().times(AXLE_SIZE_INNER)).plus(block.horizontal().times(AXLE_SIZE_INNER)), block.odd());
+		}
+
+		if (nextBlock != null && nextBlock.type != block.type && !nextBlock.rounded) {
+			this.createQuad(
+				end.plus(block.horizontal().times((0.5 - EDGE_MARGIN))),
+				end.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
+				end.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+				end.plus(block.horizontal().times((0.5 - EDGE_MARGIN))).plus(block.vertical().times(AXLE_SIZE_INNER)), block.odd());
+			this.createQuad(
+				end.plus(block.vertical().times((0.5 - EDGE_MARGIN))),
+				end.plus(block.vertical().times(AXLE_SIZE_OUTER)),
+				end.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
+				end.plus(block.vertical().times((0.5 - EDGE_MARGIN))).plus(block.horizontal().times(AXLE_SIZE_INNER)), !block.odd());
+			this.createQuad(
+				end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+				end.plus(block.horizontal().times((0.5 - EDGE_MARGIN))).plus(block.vertical().times(AXLE_SIZE_INNER)),
+				end.plus(block.horizontal().times((0.5 - EDGE_MARGIN))).plus(block.vertical().times((0.5 - EDGE_MARGIN))),
+				end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times((0.5 - EDGE_MARGIN))), !block.odd());
+		}
+		if (previousBlock != null && previousBlock.type != block.type && !previousBlock.rounded) {
+			this.createQuad(
+				start.plus(block.horizontal().times((0.5 - EDGE_MARGIN))),
+				start.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
+				start.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+				start.plus(block.horizontal().times((0.5 - EDGE_MARGIN))).plus(block.vertical().times(AXLE_SIZE_INNER)), !block.odd());
+			this.createQuad(
+				start.plus(block.vertical().times((0.5 - EDGE_MARGIN))),
+				start.plus(block.vertical().times(AXLE_SIZE_OUTER)),
+				start.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
+				start.plus(block.vertical().times((0.5 - EDGE_MARGIN))).plus(block.horizontal().times(AXLE_SIZE_INNER)), block.odd());
+			this.createQuad(
+				start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
+				start.plus(block.horizontal().times((0.5 - EDGE_MARGIN))).plus(block.vertical().times(AXLE_SIZE_INNER)),
+				start.plus(block.horizontal().times((0.5 - EDGE_MARGIN))).plus(block.vertical().times((0.5 - EDGE_MARGIN))),
+				start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times((0.5 - EDGE_MARGIN))), block.odd());
+		}
+		if (nextBlock != null && nextBlock.type != block.type && nextBlock.rounded) {
+			this.createAxleToCircleAdapter(end, block, nextBlock.type == BlockType.Pin ? AXLE_PIN_ADAPTER_RADIUS : 0.5 - EDGE_MARGIN);
+		}
+		if (previousBlock != null && previousBlock.type != block.type && previousBlock.rounded) {
+			this.createAxleToCircleAdapter(start, block, previousBlock.type == BlockType.Pin ? AXLE_PIN_ADAPTER_RADIUS : 0.5 - EDGE_MARGIN, true);
+		}
+    }
+    
+    private createAxleToCircleAdapter(center: Vector3, block: SmallBlock, radius: number, flipped = false) {
+		for (var i = 0; i < SUBDIVISIONS; i++) {
+			var focus = center.copy();
+			if (i < SUBDIVISIONS / 2 == !block.odd()) {
+				focus = focus.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_OUTER));
+			} else {
+				focus = focus.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER));
+			}
+
+			this.triangles.push(new Triangle(focus,
+				center.plus(block.getOnCircle(Math.PI / 2 * i / SUBDIVISIONS, radius)),
+				center.plus(block.getOnCircle(Math.PI / 2 * (i + 1) / SUBDIVISIONS, radius)), flipped));
+		}
+		this.triangles.push(new Triangle(
+			center.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_OUTER)),
+			center.plus(block.vertical().times(AXLE_SIZE_OUTER)),
+			center.plus(block.vertical().times(radius)), block.odd() != flipped));
+		this.triangles.push(new Triangle(
+			center.plus(block.vertical().times(AXLE_SIZE_INNER)).plus(block.horizontal().times(AXLE_SIZE_OUTER)),
+			center.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
+			center.plus(block.horizontal().times(radius)), block.odd() == flipped));
+		this.createQuad(
+			center.plus(block.vertical().times(AXLE_SIZE_INNER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
+			center.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
+			center.plus(block.getOnCircle(45 * DEG_TO_RAD, radius)),
+			center.plus(block.vertical().times(AXLE_SIZE_INNER)).plus(block.horizontal().times(AXLE_SIZE_OUTER)), block.odd() != flipped);
+	}
 
     private showInteriorCap(currentBlock: SmallBlock, neighbor: SmallBlock): boolean {
         if (neighbor == null) {

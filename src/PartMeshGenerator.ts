@@ -19,7 +19,7 @@ class PartMeshGenerator extends MeshGenerator {
     private updateRounded() {
         for (var block of this.smallBlocks.values()) {
             block.rounded = block.rounded && this.canBeRounded(block);
-            if (isAttachment(block.type)) {
+            if (block.isAttachment()) {
                 block.rounded = true;
             }
         }
@@ -28,7 +28,7 @@ class PartMeshGenerator extends MeshGenerator {
     private createDummyBlocks() {
         var addedAnything = false;
 		for (var block of this.smallBlocks.values()) {
-			if (!isAttachment(block.type)) {
+			if (!block.isAttachment()) {
 				continue;
 			}
 			var affectedPositions = [
@@ -68,8 +68,8 @@ class PartMeshGenerator extends MeshGenerator {
 
         var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal()));
         var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
-        if ((neighbor1 == null || (isAttachment(neighbor1.type) && neighbor1.forward().dot(block.right()) == 0))
-            && (neighbor2 == null || (isAttachment(neighbor2.type) && neighbor2.forward().dot(block.up()) == 0))) {
+        if ((neighbor1 == null || (neighbor1.isAttachment() && neighbor1.forward().dot(block.right()) == 0))
+            && (neighbor2 == null || (neighbor2.isAttachment() && neighbor2.forward().dot(block.up()) == 0))) {
             return true;
         }
         return false;
@@ -79,7 +79,7 @@ class PartMeshGenerator extends MeshGenerator {
         this.tinyBlocks = new VectorDictionary<TinyBlock>();
 
         for (let block of this.smallBlocks.values()) {
-            if (isAttachment(block.type)) {
+            if (block.isAttachment()) {
                 continue;
             }
 
@@ -102,12 +102,12 @@ class PartMeshGenerator extends MeshGenerator {
         }
 
         for (let block of this.smallBlocks.values()) {
-            if (!isAttachment(block.type)) {
+            if (!block.isAttachment()) {
                 continue;
             }
             for (var a = -2; a <= 2; a++) {
                 var neighbor = block.position.plus(block.forward().times(sign(a)));
-                if (!this.smallBlocks.containsKey(neighbor) || (Math.abs(a) >= 2 && isAttachment(this.smallBlocks.get(neighbor).type))) {
+                if (!this.smallBlocks.containsKey(neighbor) || (Math.abs(a) >= 2 && this.smallBlocks.get(neighbor).isAttachment())) {
                     continue;
                 }
 
@@ -121,14 +121,14 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private isTinyBlock(position: Vector3): boolean {
-        return this.tinyBlocks.containsKey(position) && !isAttachment(this.tinyBlocks.get(position).type)
+        return this.tinyBlocks.containsKey(position) && !this.tinyBlocks.get(position).isAttachment();
     }
 
     private processTinyBlocks() {
         // Disable interiors when adjacent quadrants are missing
 		for (var block of this.tinyBlocks.values()) {
 			if (block.isCenter()
-				&& !isAttachment(block.type)
+				&& !block.isAttachment()
 				&& (block.hasInterior || block.rounded)
 				&& (!this.isTinyBlock(block.position.minus(block.horizontal().times(3))) || !this.isTinyBlock(block.position.minus(block.vertical().times(3))))) {
 				for (var a = -1; a <= 1; a++) {
@@ -261,7 +261,7 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private isSmallBlock(position: Vector3): boolean {
-        return this.smallBlocks.containsKey(position) && !isAttachment(this.smallBlocks.get(position).type);
+        return this.smallBlocks.containsKey(position) && !this.smallBlocks.get(position).isAttachment();
     }
 
     private createTinyBlock(position: Vector3, source: SmallBlock) {
@@ -283,7 +283,7 @@ class PartMeshGenerator extends MeshGenerator {
             return block.localPositon().dot(block.right()) == block.directionX()
                 || block.localPositon().dot(block.up()) == block.directionY()
                 || this.smallBlocks.containsKey(block.smallBlockPosition().plus(direction)) && 
-                    (!isAttachment(this.smallBlocks.get(block.smallBlockPosition().plus(direction)).type) || this.smallBlocks.get(block.smallBlockPosition().plus(direction)).orientation == block.orientation);
+                    (!this.smallBlocks.get(block.smallBlockPosition().plus(direction)).isAttachment() || this.smallBlocks.get(block.smallBlockPosition().plus(direction)).orientation == block.orientation);
         }
     }
 
@@ -325,7 +325,7 @@ class PartMeshGenerator extends MeshGenerator {
 
     private renderTinyBlocks() {
         for (let block of this.tinyBlocks.values()) {
-            if (block.merged || !block.isCenter() || isAttachment(block.type)) {
+            if (block.merged || !block.isCenter() || block.isAttachment()) {
                 continue;
             }
 
@@ -403,10 +403,10 @@ class PartMeshGenerator extends MeshGenerator {
 		if (previousBlock == null) {
 			this.createCircle(block, PIN_RADIUS, 0);
 		}
-		if (nextBlock != null && !isAttachment(nextBlock.type)) {
+		if (nextBlock != null && !nextBlock.isAttachment()) {
 			this.createCircleWithHole(block, PIN_RADIUS, 0.5 - EDGE_MARGIN, distance, true, !nextBlock.rounded);
 		}
-		if (previousBlock != null && !isAttachment(previousBlock.type)) {
+		if (previousBlock != null && !previousBlock.isAttachment()) {
 			this.createCircleWithHole(block, PIN_RADIUS, 0.5 - EDGE_MARGIN, 0, false, !previousBlock.rounded);
 		}
 		if (nextBlock != null && nextBlock.type == BlockType.Axle) {
@@ -733,7 +733,7 @@ class PartMeshGenerator extends MeshGenerator {
 
     private renderTinyBlockFaces() {
         for (let block of this.tinyBlocks.values()) {
-            if (block.merged || isAttachment(block.type)) {
+            if (block.merged || block.isAttachment()) {
                 continue;
             }
             let size = block.forward().times(block.mergedBlocks).plus(block.right()).plus(block.up());

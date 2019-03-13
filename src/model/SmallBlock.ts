@@ -43,6 +43,10 @@
 		return this.up().times(this.directionY());
 	}
 
+	public isAttachment(): boolean {
+		return this.type == BlockType.Pin || this.type == BlockType.Axle;
+	}
+
 	private static getQuadrantFromLocal(x: number, y: number): Quadrant {
 		if (x == 0) {
 			if (y == 0) {

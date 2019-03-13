@@ -16,6 +16,8 @@ class ApplyRenderTextureToScreen implements Renderer {
     }
 
     public render(camera: Camera) {
+		gl.bindTexture(gl.TEXTURE_2D, camera.colorTexture);
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
         gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);

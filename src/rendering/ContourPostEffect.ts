@@ -7,6 +7,8 @@ class ContourPostEffect implements Renderer {
         this.shader = new Shader(gl, COUNTOUR_VERTEX, CONTOUR_FRAGMENT);
 
 		this.shader.setAttribute(gl, "vertexPosition");
+		this.shader.setUniform(gl, "depthBuffer");
+		this.shader.setUniform(gl, "resolution");
 		
 		this.positions = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
@@ -23,6 +25,11 @@ class ContourPostEffect implements Renderer {
 		
 		gl.depthFunc(gl.ALWAYS);
 		gl.depthMask(false);
+
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, camera.depthTexture);
+		gl.uniform1i(this.shader.attributes["depthBuffer"], 0);
+		gl.uniform2f(this.shader.attributes["resolution"], gl.canvas.width, gl.canvas.height);
 		
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 		gl.depthFunc(gl.LEQUAL);

@@ -3,11 +3,9 @@ class Camera {
 
     public transform: Matrix4 = Matrix4.getIdentity();
 
-    private frameBuffer: WebGLFramebuffer;
-    private colorTexture: WebGLTexture;
-    private depthTexture: WebGLTexture;
-
-    private applyRenderTextureToScreen: ApplyRenderTextureToScreen;
+    public frameBuffer: WebGLFramebuffer;
+    public colorTexture: WebGLTexture;
+    public depthTexture: WebGLTexture;
 
     constructor(canvas: HTMLCanvasElement) {
         gl = canvas.getContext("webgl") as WebGLRenderingContext;
@@ -21,7 +19,6 @@ class Camera {
         gl.canvas.width = gl.canvas.clientWidth;
         gl.canvas.height = gl.canvas.clientHeight;
         this.createBuffers();
-        this.applyRenderTextureToScreen = new ApplyRenderTextureToScreen();
     }
 
     private createBuffers() {
@@ -50,8 +47,6 @@ class Camera {
     }
 
     public render() {
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-        gl.bindTexture(gl.TEXTURE_2D, null);
         gl.clearColor(0.9, 0.9, 0.9, 1.0);
         gl.clearDepth(1.0);
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -59,15 +54,10 @@ class Camera {
         gl.depthFunc(gl.LEQUAL);
         gl.enable(gl.CULL_FACE);
         gl.enable(gl.BLEND);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 		for (var renderer of this.renderers) {
 			renderer.render(this);
         }
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.bindTexture(gl.TEXTURE_2D, this.colorTexture);
-        this.applyRenderTextureToScreen.render(this);
     }
     
     public onResize() {

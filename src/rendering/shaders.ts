@@ -57,17 +57,17 @@ const APPLY_BUFFER_FRAGMENT = `
 
     void main() {
         vec4 color = texture2D(buffer, v2fScreenUV);
-        gl_FragColor = vec4(color.rgb, 1);
+        gl_FragColor = vec4(color.rgb, 1.0);
     }
 `
 
 const COUNTOUR_VERTEX = `
     attribute vec2 vertexPosition;
 
-    varying vec2 v2fScreenUV;
+    varying vec2 uv;
 
     void main() {
-        v2fScreenUV = vertexPosition;
+        uv = vertexPosition / 2.0 + vec2(0.5);
         gl_Position = vec4(vertexPosition, 0.0, 1.0);
     }
 `;
@@ -75,12 +75,27 @@ const COUNTOUR_VERTEX = `
 const CONTOUR_FRAGMENT = `
     precision mediump float;
 
-    uniform sampler2D colorBuffer;
+    uniform sampler2D depthBuffer;
+    uniform vec2 resolution;
 
-    varying vec2 v2fScreenUV;
+    varying vec2 uv;
 
+    float getDepth(vec2 uv) {
+        return texture2D(depthBuffer, uv).r;
+    }
+
+    const float DEPTH_THRESHOLD = 0.0005;
+    
     void main() {
-        vec4 color = texture2D(colorBuffer, v2fScreenUV);
-        gl_FragColor = vec4(color.rgb, 0);
+        vec2 pixelSize = vec2(1.0 / resolution.x, 1.0 / resolution.y);
+
+        float d1 = getDepth(uv);
+        float d2 = getDepth(uv + vec2(pixelSize.x, 0.0));
+        float d3 = getDepth(uv + vec2(0, pixelSize.y));
+        float d4 = getDepth(uv + vec2(pixelSize.x, pixelSize.y));
+        float contour = abs(d1 - d2) > DEPTH_THRESHOLD ? 1.0 : 0.0;
+        contour = max(contour, abs(d1 - d3) > DEPTH_THRESHOLD ? 1.0 : 0.0);
+        contour = max(contour, abs(d1 - d4) > DEPTH_THRESHOLD ? 1.0 : 0.0);
+        gl_FragColor = vec4(vec3(0.0), contour);
     }
 `

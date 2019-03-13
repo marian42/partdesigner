@@ -65,3 +65,13 @@ function sign(a: number): number {
 function lerp(a: number, b: number, t: number): number {
 	return a + t * (b - a);
 }
+
+function countInArray<T>(items: T[], selector: (item: T) => boolean): number {
+	var result = 0;
+	for (var item of items) {
+		if (selector(item)) {
+			result++;
+		}
+	}
+	return result;
+}

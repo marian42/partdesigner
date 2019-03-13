@@ -5,6 +5,7 @@ class PartMeshGenerator extends MeshGenerator {
     constructor(part: Part) {
         super();
         this.smallBlocks = part.createSmallBlocks();
+        this.createDummyBlocks();
         this.updateRounded();
         this.createTinyBlocks();
         this.renderTinyBlocks();
@@ -18,6 +19,37 @@ class PartMeshGenerator extends MeshGenerator {
                 block.rounded = true;
             }
         }
+    }
+
+    private createDummyBlocks() {
+        var addedAnything = false;
+		for (var block of this.smallBlocks.values()) {
+			if (!isAttachment(block.type)) {
+				continue;
+			}
+			var affectedPositions = [
+				block.position,
+				block.position.minus(block.horizontal()),
+				block.position.minus(block.vertical()),
+				block.position.minus(block.horizontal()).minus(block.vertical())
+            ];
+			for (var forwardDirection = -1; forwardDirection <= 1; forwardDirection += 2) {
+				var count = countInArray(affectedPositions, (p) => this.smallBlocks.containsKey(p.plus(block.forward().times(forwardDirection))));
+				if (count != 0 && count != 4) {
+					var source = new Block(block.orientation, BlockType.Solid, true);
+					for (var position of affectedPositions) {
+						var targetPosition = position.plus(block.forward().times(forwardDirection));
+						if (!this.smallBlocks.containsKey(targetPosition)) {
+							this.smallBlocks.set(targetPosition, new SmallBlock(this.smallBlocks.get(position).quadrant, targetPosition, source));
+						}
+					}
+					addedAnything = true;
+				}
+			}
+		}
+		if (addedAnything) {
+			this.createDummyBlocks();
+		}
     }
 
     private canBeRounded(block: SmallBlock): boolean {

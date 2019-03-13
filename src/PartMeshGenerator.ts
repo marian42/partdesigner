@@ -8,6 +8,9 @@ class PartMeshGenerator extends MeshGenerator {
         this.createDummyBlocks();
         this.updateRounded();
         this.createTinyBlocks();
+        this.processTinyBlocks();
+        this.checkInteriors();
+        this.mergeSimilarBlocks();
         this.renderTinyBlocks();
         this.renderTinyBlockFaces();
     }
@@ -114,6 +117,146 @@ class PartMeshGenerator extends MeshGenerator {
                 }
             }
         }
+    }
+
+    private isTinyBlock(position: Vector3): boolean {
+        return this.tinyBlocks.containsKey(position) && !isAttachment(this.tinyBlocks.get(position).type)
+    }
+
+    private processTinyBlocks() {
+        // Disable interiors when adjacent quadrants are missing
+		for (var block of this.tinyBlocks.values()) {
+			if (block.isCenter()
+				&& !isAttachment(block.type)
+				&& (block.hasInterior || block.rounded)
+				&& (!this.isTinyBlock(block.position.minus(block.horizontal().times(3))) || !this.isTinyBlock(block.position.minus(block.vertical().times(3))))) {
+				for (var a = -1; a <= 1; a++) {
+					for (var b = -1; b <= 1; b++) {
+						var position = block.position.plus(block.right().times(a)).plus(block.up().times(b));
+						if (this.tinyBlocks.containsKey(position)) {
+							this.tinyBlocks.get(position).rounded = false;
+							this.tinyBlocks.get(position).hasInterior = false;
+						}
+					}
+				}
+			}
+		}
+
+		// Offset rounded to non rounded transitions to make them flush
+		for (var smallBlock of this.smallBlocks.values()) {
+			var forward = smallBlock.forward();
+			var right = smallBlock.right();
+			var up = smallBlock.up();
+
+			var nextBlock = this.smallBlocks.getOrNull(smallBlock.position.plus(smallBlock.forward()));
+			if (smallBlock.rounded && nextBlock != null && !nextBlock.rounded) {
+				for (var a = -2; a <= 2; a++) {
+					for (var b = -2; b <= 2; b++) {
+						var from = smallBlock.position.times(3).plus(right.times(a)).plus(up.times(b)).plus(forward);
+						var to = from.plus(forward);
+						if (!this.tinyBlocks.containsKey(to)) {
+							continue;
+						}
+						if (!this.tinyBlocks.containsKey(from)) {
+							this.tinyBlocks.remove(to);
+							continue;
+						}
+						if (smallBlock.orientation == nextBlock.orientation) {
+							if (Math.abs(a) < 2 && Math.abs(b) < 2) {
+								this.tinyBlocks.get(to).rounded = true;
+							}
+						} else {
+							this.createTinyBlock(to, this.tinyBlocks.get(from));
+						}
+					}
+				}
+			}
+			var previousBlock = this.smallBlocks.getOrNull(smallBlock.position.minus(smallBlock.forward()));
+			if (smallBlock.rounded && previousBlock != null && !previousBlock.rounded) {
+				for (var a = -2; a <= 2; a++) {
+					for (var b = -2; b <= 2; b++) {
+						var from = smallBlock.position.times(3).plus(right.times(a)).plus(up.times(b)).minus(forward);
+						var to = from.minus(forward);
+						if (!this.tinyBlocks.containsKey(to)) {
+							continue;
+						}
+						if (!this.tinyBlocks.containsKey(from)) {
+							this.tinyBlocks.remove(to);
+							continue;
+						}
+						if (smallBlock.orientation == previousBlock.orientation) {
+							if (Math.abs(a) < 2 && Math.abs(b) < 2) {
+								this.tinyBlocks.get(to).rounded = true;
+							}
+						} else {
+							this.createTinyBlock(to, this.tinyBlocks.get(from));
+						}
+					}
+				}
+			}
+		}
+    }
+
+    // Sets HasInterior to false for all tiny blocks that do not form coherent blocks with their neighbors
+	private checkInteriors() {
+        for (var block of this.tinyBlocks.values()) {
+			if (!block.isCenter()) {
+				continue;
+			}
+			for (var a = 0; a <= 1; a++) {
+				for (var b = 0; b <= 1; b++) {
+					if (a == 0 && b == 0) {
+						continue;
+					}
+					var neighborPos = block.position.minus(block.horizontal().times(2 * a)).minus(block.vertical().times(2 * b));
+					if (!this.tinyBlocks.containsKey(neighborPos)) {
+						block.hasInterior = false;
+					} else {
+						var neighbor = this.tinyBlocks.get(neighborPos);
+						if (block.orientation != neighbor.orientation
+							|| !neighbor.hasInterior
+							|| block.type != neighbor.type
+							|| neighbor.localX() != block.localX() - a * block.directionX()
+							|| neighbor.localY() != block.localY() - b * block.directionY()) {
+							block.hasInterior = false;
+						}
+					}
+				}
+			}
+		}
+    }
+
+    private mergeSimilarBlocks() {
+        for (var block of this.tinyBlocks.values()) {
+			if (block.merged) {
+				continue;
+			}
+			var amount = 0;
+			while (true) {
+				var pos = block.position.plus(block.forward().times(amount + 1));
+				if (!this.tinyBlocks.containsKey(pos)) {
+					break;
+				}
+				var nextBlock = this.tinyBlocks.get(pos);
+				if (nextBlock.orientation != block.orientation
+					|| nextBlock.quadrant != block.quadrant
+					|| nextBlock.type != block.type
+					|| nextBlock.hasInterior != block.hasInterior
+					|| nextBlock.rounded != block.rounded
+					|| this.isTinyBlock(block.position.plus(block.right())) != this.isTinyBlock(nextBlock.position.plus(block.right()))
+					|| this.isTinyBlock(block.position.minus(block.right())) != this.isTinyBlock(nextBlock.position.minus(block.right()))
+					|| this.isTinyBlock(block.position.plus(block.up())) != this.isTinyBlock(nextBlock.position.plus(block.up()))
+					|| this.isTinyBlock(block.position.minus(block.up())) != this.isTinyBlock(nextBlock.position.minus(block.up()))) {
+						break;
+				}
+				amount += nextBlock.mergedBlocks;
+				nextBlock.merged = true;
+				if (nextBlock.mergedBlocks != 1) {
+					break;
+				}
+			}
+			block.mergedBlocks += amount;
+		}
     }
 
     private isSmallBlock(position: Vector3): boolean {

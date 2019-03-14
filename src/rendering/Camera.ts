@@ -13,11 +13,11 @@ class Camera {
 		if (gl == null) {
 			throw new Error("WebGL is not supported.");
         }
-        gl.getExtension('WEBGL_depth_texture');       
+        gl.getExtension('WEBGL_depth_texture');
 
-        window.addEventListener("resize", (e: Event) => this.onResize());        
-        gl.canvas.width = gl.canvas.clientWidth;
-        gl.canvas.height = gl.canvas.clientHeight;
+        window.addEventListener("resize", (e: Event) => this.onResize());
+        gl.canvas.width = gl.canvas.clientWidth * window.devicePixelRatio;
+        gl.canvas.height = gl.canvas.clientHeight * window.devicePixelRatio;
         this.createBuffers();
     }
 
@@ -61,8 +61,8 @@ class Camera {
     }
     
     public onResize() {
-        gl.canvas.width = gl.canvas.clientWidth;
-        gl.canvas.height = gl.canvas.clientHeight;
+        gl.canvas.width = gl.canvas.clientWidth * window.devicePixelRatio;
+        gl.canvas.height = gl.canvas.clientHeight * window.devicePixelRatio;
         this.createBuffers();
         this.render();
     }
@@ -72,8 +72,8 @@ class Camera {
         var x = event.clientX - rect.left;
         var y = event.clientY - rect.top;
 
-        x = x / gl.canvas.width * 2 - 1;
-        y = y / gl.canvas.height * -2 + 1;
+        x = x / gl.canvas.clientWidth * 2 - 1;
+        y = y / gl.canvas.clientHeight * -2 + 1;
 
         let projection = this.getProjectionMatrix();
         let viewSpacePoint = Vector3.zero();

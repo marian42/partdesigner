@@ -37,6 +37,16 @@ const FRAGMENT_SHADER = `
     }
 `;
 
+const NORMAL_FRAGMENT_SHADER = `
+    precision mediump float;
+
+    varying vec3 v2fNormal;
+
+    void main() {
+        gl_FragColor = vec4(vec3(0.5) + 0.5 * v2fNormal, 1.0);
+    }
+`;
+
 const APPLY_BUFFER_VERTEX = `
     attribute vec2 vertexPosition;
 
@@ -76,6 +86,7 @@ const CONTOUR_FRAGMENT = `
     precision mediump float;
 
     uniform sampler2D depthBuffer;
+    uniform sampler2D normalBuffer;
     uniform vec2 resolution;
 
     varying vec2 uv;
@@ -84,18 +95,37 @@ const CONTOUR_FRAGMENT = `
         return texture2D(depthBuffer, uv).r;
     }
 
+    vec3 getNormal(vec2 uv) {
+        return normalize(texture2D(normalBuffer, uv).rgb - vec3(0.5));
+    }
+
     const float DEPTH_THRESHOLD = 0.0005;
+    const float NORMAL_THRESHOLD = 0.5;
     
+    bool isContour(vec2 uv, float referenceDepth, vec3 referenceNormal) {
+        float depth = getDepth(uv);
+
+        if (abs(depth - referenceDepth) > 0.001) {
+            return true;
+        }
+
+        vec3 normal = getNormal(uv);
+        if (dot(normal, referenceNormal) < NORMAL_THRESHOLD) {
+            return true;
+        }
+
+        return false;
+    }
+
     void main() {
         vec2 pixelSize = vec2(1.0 / resolution.x, 1.0 / resolution.y);
 
-        float d1 = getDepth(uv);
-        float d2 = getDepth(uv + vec2(pixelSize.x, 0.0));
-        float d3 = getDepth(uv + vec2(0, pixelSize.y));
-        float d4 = getDepth(uv + vec2(pixelSize.x, pixelSize.y));
-        float contour = abs(d1 - d2) > DEPTH_THRESHOLD ? 1.0 : 0.0;
-        contour = max(contour, abs(d1 - d3) > DEPTH_THRESHOLD ? 1.0 : 0.0);
-        contour = max(contour, abs(d1 - d4) > DEPTH_THRESHOLD ? 1.0 : 0.0);
-        gl_FragColor = vec4(vec3(0.0), contour);
+        float depth = getDepth(uv);
+        vec3 normal = getNormal(uv);
+        
+        bool contour = isContour(uv + vec2(pixelSize.x, 0), depth, normal)
+            || isContour(uv + vec2(0, pixelSize.y), depth, normal)
+            || isContour(uv + pixelSize, depth, normal);
+        gl_FragColor = vec4(vec3(0.0), contour ? 1.0 : 0.0);
     }
 `

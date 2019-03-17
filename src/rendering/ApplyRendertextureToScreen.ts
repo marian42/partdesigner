@@ -23,6 +23,10 @@ class ApplyRenderTextureToScreen implements Renderer {
         gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);
       
         gl.useProgram(this.shader.program);
+
+        gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, camera.colorTexture);
+		gl.uniform1i(this.shader.attributes["buffer"], 0);		
 		
 		gl.depthFunc(gl.ALWAYS);
 		gl.depthMask(false);

@@ -16,8 +16,8 @@ class Camera {
         gl.getExtension('WEBGL_depth_texture');
 
         window.addEventListener("resize", (e: Event) => this.onResize());
-        gl.canvas.width = gl.canvas.clientWidth * window.devicePixelRatio;
-        gl.canvas.height = gl.canvas.clientHeight * window.devicePixelRatio;
+        gl.canvas.width = Math.round(gl.canvas.clientWidth * window.devicePixelRatio);
+        gl.canvas.height = Math.round(gl.canvas.clientHeight * window.devicePixelRatio);
         this.createBuffers();
     }
 
@@ -61,8 +61,8 @@ class Camera {
     }
     
     public onResize() {
-        gl.canvas.width = gl.canvas.clientWidth * window.devicePixelRatio;
-        gl.canvas.height = gl.canvas.clientHeight * window.devicePixelRatio;
+        gl.canvas.width = Math.round(gl.canvas.clientWidth * window.devicePixelRatio);
+        gl.canvas.height = Math.round(gl.canvas.clientHeight * window.devicePixelRatio);
         this.createBuffers();
         this.render();
     }

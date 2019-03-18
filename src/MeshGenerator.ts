@@ -20,8 +20,8 @@ class MeshGenerator {
             this.triangles.push(new TriangleWithNormals(v1, v2, v4, n1, n2, n4));
             this.triangles.push(new TriangleWithNormals(v2, v3, v4, n2, n3, n4));
         } else {
-            this.triangles.push(new TriangleWithNormals(v4, v2, v1, n4, n2, n1));
-            this.triangles.push(new TriangleWithNormals(v4, v3, v2, n4, n3, n2));
+            this.triangles.push(new TriangleWithNormals(v4, v2, v1, n4.times(-1), n2.times(-1), n1.times(-1)));
+            this.triangles.push(new TriangleWithNormals(v4, v3, v2, n4.times(-1), n3.times(-1), n2.times(-1)));
         }
     }
 

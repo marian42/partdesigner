@@ -99,13 +99,13 @@ const CONTOUR_FRAGMENT = `
         return normalize(texture2D(normalBuffer, uv).rgb - vec3(0.5));
     }
 
-    const float DEPTH_THRESHOLD = 0.0005;
+    const float DEPTH_THRESHOLD = 0.00008;
     const float NORMAL_THRESHOLD = 0.5;
     
     bool isContour(vec2 uv, float referenceDepth, vec3 referenceNormal) {
         float depth = getDepth(uv);
 
-        if (abs(depth - referenceDepth) > 0.001) {
+        if (abs(depth - referenceDepth) > DEPTH_THRESHOLD) {
             return true;
         }
 
@@ -122,10 +122,19 @@ const CONTOUR_FRAGMENT = `
 
         float depth = getDepth(uv);
         vec3 normal = getNormal(uv);
+
+        float contour = 0.0;
+
+        for (float x = -2.0; x < 2.0; x++) {
+            for (float y = -2.0; y < 2.0; y++) {
+                if ((x == 0.0 && y == 0.0) || !isContour(uv + pixelSize * vec2(x, y), depth, normal)) {
+                    continue;
+                }
+                float dst = 1.0 - (x * x + y * y) / 6.0;
+                contour = max(contour, dst);
+            }
+        }
         
-        bool contour = isContour(uv + vec2(pixelSize.x, 0), depth, normal)
-            || isContour(uv + vec2(0, pixelSize.y), depth, normal)
-            || isContour(uv + pixelSize, depth, normal);
-        gl_FragColor = vec4(vec3(0.0), contour ? 1.0 : 0.0);
+        gl_FragColor = vec4(vec3(0.0, 0.0, 0.0), clamp(contour * 2.0, 0.0, 1.0));
     }
 `

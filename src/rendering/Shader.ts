@@ -8,7 +8,10 @@ class Shader {
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            console.log(source);
+            var lines = source.split("\n");
+            for (var index = 0; index < lines.length; index++) {
+                console.log((index + 1) + ": " + lines[index]);
+            }
             throw new Error('An error occurred compiling the shaders: ' +  gl.getShaderInfoLog(shader));
         }
 

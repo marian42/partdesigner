@@ -10,7 +10,7 @@ class Camera {
     public depthTexture: WebGLTexture;
 
     constructor(canvas: HTMLCanvasElement) {
-        gl = canvas.getContext("webgl") as WebGLRenderingContext;
+        gl = canvas.getContext("webgl", { "alpha": false }) as WebGLRenderingContext;
 
 		if (gl == null) {
 			throw new Error("WebGL is not supported.");

@@ -9,6 +9,8 @@ const GRAB_RADIUS = 0.1;
 const GRAB_START = 0.4;
 const GRAB_END = 1.1;
 
+const UNSELECTED_ALPHA = 0.5;
+
 enum Axis {
 	None,
 	X,
@@ -189,7 +191,7 @@ class Handles implements Renderer {
 			this.camera.render();
 		} else {
 			var axis = this.getMouseHandle(event)[0];
-			var newAlpha = new Vector3(axis == Axis.X ? 1 : 0.8, axis == Axis.Y ? 1 : 0.8, axis == Axis.Z ? 1 : 0.8);
+			var newAlpha = new Vector3(axis == Axis.X ? 1 : UNSELECTED_ALPHA, axis == Axis.Y ? 1 : UNSELECTED_ALPHA, axis == Axis.Z ? 1 : UNSELECTED_ALPHA);
 			if (!newAlpha.equals(this.handleAlpha)) {
 				this.handleAlpha = newAlpha;
 				this.camera.render();

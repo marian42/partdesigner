@@ -16,6 +16,6 @@ class Triangle {
     }
 
     normal(): Vector3 {
-        return this.v2.minus(this.v1).cross(this.v3.minus(this.v1)).normalized();
+        return this.v3.minus(this.v1).cross(this.v2.minus(this.v1)).normalized();
     }
 }

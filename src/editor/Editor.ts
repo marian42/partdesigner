@@ -41,10 +41,8 @@ class Editor {
 		this.camera = new Camera(this.canvas);
 		
 		this.partRenderer = new FrameBufferRenderer();
-		this.partRenderer.color = new Vector3(0.6, 0.6, 0.6);
 		this.camera.renderers.push(this.partRenderer);
 
-		this.camera.renderers.push(new ApplyRenderTextureToScreen());
 		this.camera.renderers.push(new ContourPostEffect());
 
 		this.handles = new Handles(this.camera);

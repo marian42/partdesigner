@@ -4,9 +4,7 @@ class Camera {
     public transform: Matrix4 = Matrix4.getIdentity();
 
     public frameBuffer: WebGLFramebuffer;
-    public normalFrameBuffer: WebGLFramebuffer;
-    public colorTexture: WebGLTexture;
-    public normalTexture: WebGLTexture;
+    public renderTexture: WebGLTexture;
     public depthTexture: WebGLTexture;
 
     constructor(canvas: HTMLCanvasElement) {
@@ -24,20 +22,13 @@ class Camera {
     }
 
     private createBuffers() {
-        this.colorTexture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, this.colorTexture);
+        this.renderTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.renderTexture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         
-        this.normalTexture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, this.normalTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
         this.depthTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);        
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, gl.canvas.width, gl.canvas.height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
@@ -47,12 +38,7 @@ class Camera {
         
         this.frameBuffer = gl.createFramebuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.colorTexture, 0);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthTexture, 0);
-        
-        this.normalFrameBuffer = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.normalFrameBuffer);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.normalTexture, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.renderTexture, 0);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthTexture, 0);
     }
 
@@ -61,7 +47,7 @@ class Camera {
     }
 
     public render() {
-        gl.clearColor(0.9, 0.9, 0.9, 1.0);
+        gl.clearColor(0.5, 0.5, 1.0, 1.0);
         gl.clearDepth(1.0);
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         gl.enable(gl.DEPTH_TEST);

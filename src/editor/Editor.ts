@@ -7,7 +7,7 @@ enum MouseMode {
 
 class Editor {
 	camera: Camera;
-	partRenderer: FrameBufferRenderer;
+	partRenderer: NormalDepthRenderer;
 	part: Part;
 	canvas: HTMLCanvasElement;
 
@@ -40,7 +40,7 @@ class Editor {
 		this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
 		this.camera = new Camera(this.canvas);
 		
-		this.partRenderer = new FrameBufferRenderer();
+		this.partRenderer = new NormalDepthRenderer();
 		this.camera.renderers.push(this.partRenderer);
 
 		this.camera.renderers.push(new ContourPostEffect());

@@ -3,12 +3,10 @@ class Camera {
 
     public transform: Matrix4 = Matrix4.getIdentity();
 
-    public frameBuffer: WebGLFramebuffer;
     public renderTexture: WebGLTexture;
-    public depthTexture: WebGLTexture;
 
     constructor(canvas: HTMLCanvasElement) {
-        gl = canvas.getContext("webgl", { "alpha": false }) as WebGLRenderingContext;
+        gl = canvas.getContext("webgl") as WebGLRenderingContext;
 
 		if (gl == null) {
 			throw new Error("WebGL is not supported.");
@@ -18,28 +16,23 @@ class Camera {
         window.addEventListener("resize", (e: Event) => this.onResize());
         gl.canvas.width = Math.round(gl.canvas.clientWidth * window.devicePixelRatio);
         gl.canvas.height = Math.round(gl.canvas.clientHeight * window.devicePixelRatio);
-        this.createBuffers();
+        this.createTexture();
     }
 
-    private createBuffers() {
+    private createTexture() {
         this.renderTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.renderTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texImage2D(
+            gl.TEXTURE_2D, 0, gl.RGBA,
+            gl.canvas.width, gl.canvas.height, 0,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            null
+        );
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        
-        this.depthTexture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);        
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, gl.canvas.width, gl.canvas.height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        
-        this.frameBuffer = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.renderTexture, 0);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthTexture, 0);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     }
 
     public getProjectionMatrix(): Matrix4 {
@@ -53,17 +46,22 @@ class Camera {
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LEQUAL);
         gl.enable(gl.CULL_FACE);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 		for (var renderer of this.renderers) {
 			renderer.render(this);
         }
+        gl.colorMask(false, false, false, true);
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);        
+        gl.colorMask(true, true, true, true);
     }
     
     public onResize() {
         gl.canvas.width = Math.round(gl.canvas.clientWidth * window.devicePixelRatio);
         gl.canvas.height = Math.round(gl.canvas.clientHeight * window.devicePixelRatio);
-        this.createBuffers();
+        this.createTexture();
         this.render();
     }
 

@@ -1,4 +1,4 @@
-class FrameBufferRenderer implements Renderer {
+class NormalDepthRenderer implements Renderer {
     shader: Shader;
 
     positions: WebGLBuffer;
@@ -26,12 +26,7 @@ class FrameBufferRenderer implements Renderer {
         this.normals = mesh.createNormalBuffer();
     }
 
-    public render(camera: Camera) {        
-        gl.bindFramebuffer(gl.FRAMEBUFFER, camera.frameBuffer);
-        gl.bindTexture(gl.TEXTURE_2D, null);
-
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        
+    public render(camera: Camera) {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
         gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);
@@ -46,7 +41,5 @@ class FrameBufferRenderer implements Renderer {
         gl.uniformMatrix4fv(this.shader.attributes["modelViewMatrix"], false, this.transform.times(camera.transform).elements);
       
         gl.drawArrays(gl.TRIANGLES, 0, this.mesh.triangles.length * 3);
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
 }

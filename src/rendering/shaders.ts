@@ -75,7 +75,7 @@ const CONTOUR_FRAGMENT = `
     }
 
     const float DEPTH_THRESHOLD = 0.01;
-    const float NORMAL_THRESHOLD = 0.2;
+    const float NORMAL_THRESHOLD = 0.8;
 
     bool isContour(vec2 uv, float referenceDepth, vec3 referenceNormal) {
         vec4 normalAndDepth = getNormalAndDepth(uv);

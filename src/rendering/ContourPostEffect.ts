@@ -17,6 +17,9 @@ class ContourPostEffect implements Renderer {
     }
 
     public render(camera: Camera) {
+		gl.bindTexture(gl.TEXTURE_2D, camera.renderTexture);      
+		gl.copyTexImage2D(gl.TEXTURE_2D, 0,	gl.RGBA, 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, 0);
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
         gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);

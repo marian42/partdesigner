@@ -29,7 +29,7 @@ class ContourPostEffect implements Renderer {
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, camera.renderTexture);
 		gl.uniform1i(this.shader.attributes["depthBuffer"], 0);
-		gl.uniform2f(this.shader.attributes["resolution"], gl.canvas.width, gl.canvas.height);
+		gl.uniform2f(this.shader.attributes["resolution"], gl.drawingBufferWidth, gl.drawingBufferHeight);
 		
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 		gl.depthFunc(gl.LEQUAL);

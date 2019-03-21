@@ -8,7 +8,7 @@ class Camera {
     public renderTexture: WebGLTexture;
 
     constructor(canvas: HTMLCanvasElement) {
-        gl = canvas.getContext("webgl") as WebGLRenderingContext;
+        gl = canvas.getContext("webgl", {"antialias": false}) as WebGLRenderingContext;
 
 		if (gl == null) {
 			throw new Error("WebGL is not supported.");
@@ -38,7 +38,7 @@ class Camera {
     }
 
     public getProjectionMatrix(): Matrix4 {
-       return Matrix4.getOrthographicProjection(400, this.size);
+       return Matrix4.getOrthographicProjection(30, this.size);
     }
 
     public render() {

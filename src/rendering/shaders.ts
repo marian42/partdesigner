@@ -44,7 +44,7 @@ const BUFFER_FRAGMENT_SHADER = `
 
     void main() {
         vec3 normal = vec3(0.5) + 0.5 * normalize(v2fNormal);
-        gl_FragColor = vec4(normal.xy, 50.0 * (1.0 - gl_FragCoord.z), 1.0);
+        gl_FragColor = vec4(normal.xy, gl_FragCoord.z, 1.0);
     }
 `;
 
@@ -70,12 +70,12 @@ const CONTOUR_FRAGMENT = `
     vec4 getNormalAndDepth(vec2 uv) {
         vec4 sample = texture2D(buffer, uv);
         vec3 normal = vec3(sample.xy * 2.0 - vec2(1.0), 0.0);
-        normal.z = sqrt(1.0 - normal.x * normal.x - normal.y * normal.y);
+        normal.z = sqrt(max(0.0, 1.0 - normal.x * normal.x - normal.y * normal.y));
         return vec4(normalize(normal), abs(sample.z));
     }
 
     const float DEPTH_THRESHOLD = 0.01;
-    const float NORMAL_THRESHOLD = 0.8;
+    const float NORMAL_THRESHOLD = 0.5;
 
     bool isContour(vec2 uv, float referenceDepth, vec3 referenceNormal) {
         vec4 normalAndDepth = getNormalAndDepth(uv);
@@ -117,6 +117,7 @@ const CONTOUR_FRAGMENT = `
         vec3 normal = normalAndDepth.xyz;
 
         float contour = 0.0;
+        int count = 0;
 
         for (float x = -2.0; x < 2.0; x++) {
             for (float y = -2.0; y < 2.0; y++) {
@@ -124,8 +125,12 @@ const CONTOUR_FRAGMENT = `
                     continue;
                 }
                 float dst = 1.0 - (x * x + y * y) / 6.0;
+                count++;
                 contour = max(contour, dst);
             }
+        }
+        if (count == 1) {
+            contour = 0.0;
         }
         vec3 fragment = getFragmentColor(normal, depth);
 

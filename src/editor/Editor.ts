@@ -145,7 +145,7 @@ class Editor {
 		this.camera.transform = 
 			Matrix4.getTranslation(this.center)
 			.times(this.rotation.toMatrix())
-			.times(Matrix4.getTranslation(this.translation.plus(new Vector3(0, 0, -100))));
+			.times(Matrix4.getTranslation(this.translation.plus(new Vector3(0, 0, -15))));
 	}
 
 	private onMouseDown(event: MouseEvent) {

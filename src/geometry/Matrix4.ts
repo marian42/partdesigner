@@ -111,7 +111,7 @@ class Matrix4 {
         return new Matrix4([
             2 / size / aspectRatio, 0, 0, 0,
             0, 2 / size, 0, 0,
-            0, 0, -2 / far, 0,
+            0, 0, -1 / far, 0,
             0, 0, 0, 1
         ]);
 	}

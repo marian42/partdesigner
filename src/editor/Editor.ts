@@ -13,7 +13,8 @@ class Editor {
 
 	translation: Vector3 = new Vector3(0, 0, 0);
 	center: Vector3;
-	rotation: Quaternion = Quaternion.identity();
+	rotationX: number = 45;
+	rotationY: number = -20;
 	zoom: number = 5;
 	zoomStep = 0.9;
 
@@ -135,17 +136,21 @@ class Editor {
 		this.partRenderer.setMesh(mesh);
 
 		var newCenter = this.part.getCenter().times(-0.5);
-		this.translation = this.translation.plus(this.rotation.toMatrix().transformDirection(this.center.minus(newCenter)));
+		this.translation = this.translation.plus(this.getRotation().transformDirection(this.center.minus(newCenter)));
 		this.center = newCenter;
 		this.updateTransform();
 		this.handles.updateTransforms();
 		this.camera.render();
 	}
 
+	private getRotation(): Matrix4 {
+		return Matrix4.getRotation(new Vector3(0, this.rotationX, this.rotationY));
+	}
+
 	private updateTransform() {
 		this.camera.transform = 
 			Matrix4.getTranslation(this.center)
-			.times(this.rotation.toMatrix())
+			.times(this.getRotation())
 			.times(Matrix4.getTranslation(this.translation.plus(new Vector3(0, 0, -15))));
 	}
 
@@ -180,7 +185,9 @@ class Editor {
 				this.camera.render();
 				break;
 			case MouseMode.Right:
-				this.rotation = this.rotation.times(Quaternion.euler(new Vector3(-event.movementY * 0.5, -event.movementX * 0.5, 0)));
+				this.rotationX -= event.movementX * 0.6;
+				this.rotationY = clamp(-90, 90, this.rotationY - event.movementY * 0.6);
+				
 				this.updateTransform();
 				this.camera.render();
 				break;

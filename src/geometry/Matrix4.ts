@@ -106,6 +106,16 @@ class Matrix4 {
         ]);
 	}
 
+	public static getOrthographicProjection(far = 1000, size = 5): Matrix4 {
+		let aspectRatio = gl.canvas.width / gl.canvas.height;
+        return new Matrix4([
+            2 / size / aspectRatio, 0, 0, 0,
+            0, 2 / size, 0, 0,
+            0, 0, -2 / far, 0,
+            0, 0, 0, 1
+        ]);
+	}
+
 	public static getIdentity(): Matrix4 {
 		return new Matrix4([
 			1, 0, 0, 0,

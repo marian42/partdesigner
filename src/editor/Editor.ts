@@ -14,8 +14,8 @@ class Editor {
 	translation: Vector3 = new Vector3(0, 0, 0);
 	center: Vector3;
 	rotation: Quaternion = Quaternion.identity();
-	zoom: number = 20;
-	zoomStep = 0.93;
+	zoom: number = 5;
+	zoomStep = 0.9;
 
 	mouseMode = MouseMode.None;
 	lastMousePosition: [number, number];
@@ -51,6 +51,7 @@ class Editor {
 		this.center = Vector3.zero();
 		this.updateMesh();
 		this.updateTransform();
+		this.camera.size = this.zoom;
 		this.camera.render();
 
 		this.canvas.addEventListener("mousedown", (event: MouseEvent) => this.onMouseDown(event));
@@ -144,7 +145,7 @@ class Editor {
 		this.camera.transform = 
 			Matrix4.getTranslation(this.center)
 			.times(this.rotation.toMatrix())
-			.times(Matrix4.getTranslation(this.translation.plus(new Vector3(0, 0, -this.zoom))));
+			.times(Matrix4.getTranslation(this.translation.plus(new Vector3(0, 0, -100))));
 	}
 
 	private onMouseDown(event: MouseEvent) {
@@ -173,7 +174,7 @@ class Editor {
 				this.handles.onMouseMove(event);
 				break;
 			case MouseMode.Middle:
-				this.translation = this.translation.plus(new Vector3(event.movementX, -event.movementY, 0).times(0.01));
+				this.translation = this.translation.plus(new Vector3(event.movementX, -event.movementY, 0).times(this.camera.size / gl.drawingBufferHeight));
 				this.updateTransform();
 				this.camera.render();
 				break;
@@ -187,7 +188,7 @@ class Editor {
 
 	private onScroll(event: MouseWheelEvent) {
 		this.zoom *= event.deltaY < 0 ? this.zoomStep : 1 / this.zoomStep;
-		this.updateTransform();
+		this.camera.size = this.zoom;
 		this.camera.render();
 	}
 }

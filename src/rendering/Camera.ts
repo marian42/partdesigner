@@ -3,6 +3,8 @@ class Camera {
 
     public transform: Matrix4 = Matrix4.getIdentity();
 
+    public size = 5;
+
     public renderTexture: WebGLTexture;
 
     constructor(canvas: HTMLCanvasElement) {
@@ -36,7 +38,7 @@ class Camera {
     }
 
     public getProjectionMatrix(): Matrix4 {
-       return Matrix4.getProjection();
+       return Matrix4.getOrthographicProjection(400, this.size);
     }
 
     public render() {
@@ -73,12 +75,10 @@ class Camera {
         x = x / gl.canvas.clientWidth * 2 - 1;
         y = y / gl.canvas.clientHeight * -2 + 1;
 
-        let projection = this.getProjectionMatrix();
-        let viewSpacePoint = Vector3.zero();
-        let viewSpaceDirection = new Vector3(x / projection.get(0, 0), y / projection.get(1, 1), -1).normalized();
-
+        let viewSpacePoint = new Vector3(x * this.size / 2 * gl.drawingBufferWidth / gl.drawingBufferHeight, y * this.size / 2, 0);
+        let viewSpaceDirection = new Vector3(0, 0, -1);
         let inverseCameraTransform = this.transform.invert();
 
         return new Ray(inverseCameraTransform.transformPoint(viewSpacePoint), inverseCameraTransform.transformDirection(viewSpaceDirection));
-    } 
+    }
 }

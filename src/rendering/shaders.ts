@@ -17,7 +17,7 @@ const VERTEX_SHADER = `
 const FRAGMENT_SHADER = `
     precision mediump float;
 
-    const vec3 lightDirection = vec3(-0.7, 0.7, 0.14);
+    const vec3 lightDirection = vec3(-0.7, -0.7, 0.14);
     const float ambient = 0.2;
     const float diffuse = 0.8;
     const float specular = 0.3;

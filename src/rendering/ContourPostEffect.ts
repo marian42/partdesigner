@@ -7,7 +7,8 @@ class ContourPostEffect implements Renderer {
         this.shader = new Shader(gl, COUNTOUR_VERTEX, CONTOUR_FRAGMENT);
 
 		this.shader.setAttribute(gl, "vertexPosition");
-		this.shader.setUniform(gl, "buffer");
+		this.shader.setUniform(gl, "normalTexture");
+		this.shader.setUniform(gl, "depthTexture");
 		this.shader.setUniform(gl, "resolution");
 		
 		this.positions = gl.createBuffer();
@@ -17,9 +18,6 @@ class ContourPostEffect implements Renderer {
     }
 
     public render(camera: Camera) {
-		gl.bindTexture(gl.TEXTURE_2D, camera.renderTexture);      
-		gl.copyTexImage2D(gl.TEXTURE_2D, 0,	gl.RGBA, 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, 0);
-
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
         gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);
@@ -30,8 +28,11 @@ class ContourPostEffect implements Renderer {
 		gl.depthMask(false);
 
 		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, camera.renderTexture);
-		gl.uniform1i(this.shader.attributes["depthBuffer"], 0);
+		gl.bindTexture(gl.TEXTURE_2D, camera.normalTexture);
+		gl.uniform1i(this.shader.attributes["normalTexture"], 0);		
+		gl.activeTexture(gl.TEXTURE1);
+		gl.bindTexture(gl.TEXTURE_2D, camera.depthTexture);
+		gl.uniform1i(this.shader.attributes["depthTexture"], 1);
 		gl.uniform2f(this.shader.attributes["resolution"], gl.drawingBufferWidth, gl.drawingBufferHeight);
 		
         gl.drawArrays(gl.TRIANGLES, 0, 6);

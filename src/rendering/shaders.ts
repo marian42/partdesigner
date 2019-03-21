@@ -37,14 +37,14 @@ const FRAGMENT_SHADER = `
     }
 `;
 
-const BUFFER_FRAGMENT_SHADER = `
+const NORMAL_FRAGMENT_SHADER = `
     precision mediump float;
 
     varying vec3 v2fNormal;
 
     void main() {
         vec3 normal = vec3(0.5) + 0.5 * normalize(v2fNormal);
-        gl_FragColor = vec4(normal.xy, gl_FragCoord.z, 1.0);
+        gl_FragColor = vec4(normal, 1.0);
     }
 `;
 
@@ -62,59 +62,46 @@ const COUNTOUR_VERTEX = `
 const CONTOUR_FRAGMENT = `
     precision mediump float;
 
-    uniform sampler2D buffer;
+    uniform sampler2D normalTexture;
+    uniform sampler2D depthTexture;
     uniform vec2 resolution;
 
     varying vec2 uv;
-
-    vec4 getNormalAndDepth(vec2 uv) {
-        vec4 sample = texture2D(buffer, uv);
-        vec3 normal = vec3(sample.xy * 2.0 - vec2(1.0), 0.0);
-        normal.z = sqrt(max(0.0, 1.0 - normal.x * normal.x - normal.y * normal.y));
-        return vec4(normalize(normal), abs(sample.z));
-    }
-
-    const float DEPTH_THRESHOLD = 0.01;
+    
     const float NORMAL_THRESHOLD = 0.5;
 
-    bool isContour(vec2 uv, float referenceDepth, vec3 referenceNormal) {
-        vec4 normalAndDepth = getNormalAndDepth(uv);
+    vec3 getNormal(vec2 uv) {
+        vec4 sample = texture2D(normalTexture, uv);
+        return 2.0 * sample.xyz - vec3(1.0);
+    }
 
-        if (abs(normalAndDepth.a - referenceDepth) > DEPTH_THRESHOLD) {
+    float getDepth(vec2 uv) {
+        return texture2D(depthTexture, uv).r;
+    }
+
+    bool isContour(vec2 uv, float referenceDepth, vec3 referenceNormal) {
+        float depth = getDepth(uv);
+        vec3 normal = getNormal(uv);
+        float angle = abs(referenceNormal.z);
+        
+        float threshold = mix(0.005, 0.0001, pow(-referenceNormal.z, 0.5));
+
+        if (abs(depth - referenceDepth) > threshold) {
             return true;
         }
 
-        if (abs(dot(normalAndDepth.xyz, referenceNormal)) < NORMAL_THRESHOLD) {
+        if (abs(dot(normal, referenceNormal)) < NORMAL_THRESHOLD) {
             return true;
         }
 
         return false;
     }
 
-    const vec3 lightDirection = vec3(-0.7, 0.7, 0.14);
-    const float ambient = 0.2;
-    const float diffuse = 0.6;
-    const float specular = 0.7;
-    const vec3 viewDirection = vec3(0.0, 0.0, 1.0);
-    const vec3 clearColor = vec3(0.9);
-    const vec3 albedo = vec3(0.6, 0.6, 0.6);
-    
-    vec3 getFragmentColor(vec3 normal, float depth) {
-        if (depth > 0.9999) {
-            return clearColor;
-        }
-
-        return albedo * (ambient
-            + diffuse * (0.5 + 0.5 * dot(lightDirection, normal))
-            + specular * pow(max(0.0, dot(reflect(-lightDirection, normal), viewDirection)), 2.0));
-    }
-
     void main() {
         vec2 pixelSize = vec2(1.0 / resolution.x, 1.0 / resolution.y);
 
-        vec4 normalAndDepth = getNormalAndDepth(uv);
-        float depth = normalAndDepth.a;
-        vec3 normal = normalAndDepth.xyz;
+        float depth = getDepth(uv);
+        vec3 normal = getNormal(uv);
 
         float contour = 0.0;
         int count = 0;
@@ -132,8 +119,7 @@ const CONTOUR_FRAGMENT = `
         if (count == 1) {
             contour = 0.0;
         }
-        vec3 fragment = getFragmentColor(normal, depth);
 
-        gl_FragColor = vec4(mix(fragment, vec3(0.0), contour), 1.0);
+        gl_FragColor = vec4(vec3(0.0), contour);
     }
 `

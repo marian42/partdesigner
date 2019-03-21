@@ -41,6 +41,7 @@ class Editor {
 		this.camera = new Camera(this.canvas);
 		
 		this.partRenderer = new NormalDepthRenderer();
+		this.partRenderer.color = new Vector3(0.6, 0.6, 0.6);
 		this.camera.renderers.push(this.partRenderer);
 
 		this.camera.renderers.push(new ContourPostEffect());

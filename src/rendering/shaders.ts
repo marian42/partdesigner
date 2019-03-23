@@ -106,14 +106,14 @@ const CONTOUR_FRAGMENT = `
         float contour = 0.0;
         float count = 0.0;
 
-        for (float x = -2.0; x <= 2.0; x++) {
-            for (float y = -2.0; y <= 2.0; y++) {
+        for (float x = -1.0; x <= 1.0; x++) {
+            for (float y = -1.0; y <= 1.0; y++) {
                 if ((x != 0.0 || y != 0.0) && isContour(uv + pixelSize * vec2(x, y), depth, normal)) {
                     count++;
                 }
             }
         }
-        contour = count == 1.0 ? 0.0 : clamp(0.0, 1.0, (count - 2.0) / 10.0);
+        contour = count == 1.0 ? 0.0 : clamp(0.0, 1.0, (count - 0.2) / 5.0);
 
         gl_FragColor = vec4(vec3(0.0), contour);
     }

@@ -10,17 +10,17 @@
 </head>
 <body>
     <div class="sidebar">
-        <div class="area">
-            <h1>Part</h1>
+        <details open>
+            <summary>Part</summary>
             <div class="group">
                 <div class="cell"><button id="clear">Clear</button></div>
                 <div class="cell"><button id="randomize">Randomize</button></div>
                 <div class="cell"><button id="share">Share</button></div>
             </div>            
             <button id="save">Save STL</button>
-        </div>
-        <div class="area">
-            <h1>Edit Block</h1>
+        </details>
+        <details open>
+            <summary>Edit Block</summary>
             <div class="group" id="type">
                 <span class="editorhint">Type</span>
                 <input type="radio" id="pinhole" name="type" value="pinhole" checked>
@@ -65,8 +65,11 @@
                 <input type="radio" id="false" name="rounded" value="false">
                 <label class="radiolabel" for="false">Not Rounded</label>
             </div>
-            <button id="remove">Remove</button>
-        </div>
+            <div class="group" id="rounded">                
+                <span class="editorhint"></span>
+                <button id="remove">Remove block</button>
+            </div>
+        </details>
     </div>
     <div class="canvas-container">
         <canvas id="canvas"></canvas>

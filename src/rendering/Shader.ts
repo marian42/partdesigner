@@ -2,7 +2,7 @@ class Shader {
 	public program: WebGLShader;
 	public attributes: {[id: string]: number } = {};
 
-	private loadShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
+	private loadShader(type: number, source: string): WebGLShader {
         let shader = gl.createShader(type);      
         gl.shaderSource(shader, source);      
         gl.compileShader(shader);
@@ -18,9 +18,9 @@ class Shader {
         return shader;
     }
 
-    constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string) {
-        const vertexShader = this.loadShader(gl, gl.VERTEX_SHADER, vertexSource);
-        const fragmentShader = this.loadShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+    constructor(vertexSource: string, fragmentSource: string) {
+        const vertexShader = this.loadShader(gl.VERTEX_SHADER, vertexSource);
+        const fragmentShader = this.loadShader(gl.FRAGMENT_SHADER, fragmentSource);
       
         this.program = gl.createProgram();
         gl.attachShader(this.program, vertexShader);
@@ -32,11 +32,11 @@ class Shader {
 		}
 	}
 
-	public setAttribute(gl: WebGLRenderingContext, name: string) {
+	public setAttribute( name: string) {
 		this.attributes[name] = gl.getAttribLocation(this.program, name);
 	}
 
-	public setUniform(gl: WebGLRenderingContext, name: string) {		
+	public setUniform(name: string) {		
 		this.attributes[name] = gl.getUniformLocation(this.program, name) as number;
 	}
 }

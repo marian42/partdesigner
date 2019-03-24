@@ -4,12 +4,12 @@ class ContourPostEffect implements Renderer {
     positions: WebGLBuffer;    
     
     constructor() {
-        this.shader = new Shader(gl, COUNTOUR_VERTEX, CONTOUR_FRAGMENT);
+        this.shader = new Shader(COUNTOUR_VERTEX, CONTOUR_FRAGMENT);
 
-		this.shader.setAttribute(gl, "vertexPosition");
-		this.shader.setUniform(gl, "normalTexture");
-		this.shader.setUniform(gl, "depthTexture");
-		this.shader.setUniform(gl, "resolution");
+		this.shader.setAttribute("vertexPosition");
+		this.shader.setUniform("normalTexture");
+		this.shader.setUniform("depthTexture");
+		this.shader.setUniform("resolution");
 		
 		this.positions = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);

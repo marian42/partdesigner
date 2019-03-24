@@ -10,14 +10,14 @@ class MeshRenderer implements Renderer {
     alpha: number = 1;
 
     constructor() {
-        this.shader = new Shader(gl, VERTEX_SHADER, FRAGMENT_SHADER);
+        this.shader = new Shader(VERTEX_SHADER, FRAGMENT_SHADER);
 
-        this.shader.setAttribute(gl, "vertexPosition");
-        this.shader.setAttribute(gl, "normal");
-        this.shader.setUniform(gl, "projectionMatrix");
-        this.shader.setUniform(gl, "modelViewMatrix");
-        this.shader.setUniform(gl, "albedo");
-        this.shader.setUniform(gl, "alpha");
+        this.shader.setAttribute("vertexPosition");
+        this.shader.setAttribute("normal");
+        this.shader.setUniform("projectionMatrix");
+        this.shader.setUniform("modelViewMatrix");
+        this.shader.setUniform("albedo");
+        this.shader.setUniform("alpha");
 
         this.transform = Matrix4.getIdentity();
     }

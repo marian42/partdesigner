@@ -17,19 +17,19 @@ class NormalDepthRenderer implements Renderer {
     }
 
     private prepareShaders() {
-        this.colorShader = new Shader(gl, VERTEX_SHADER, FRAGMENT_SHADER);
-        this.colorShader.setAttribute(gl, "vertexPosition");
-        this.colorShader.setAttribute(gl, "normal");
-        this.colorShader.setUniform(gl, "projectionMatrix");
-        this.colorShader.setUniform(gl, "modelViewMatrix");
-        this.colorShader.setUniform(gl, "albedo");
-        this.colorShader.setUniform(gl, "alpha");
+        this.colorShader = new Shader(VERTEX_SHADER, FRAGMENT_SHADER);
+        this.colorShader.setAttribute("vertexPosition");
+        this.colorShader.setAttribute("normal");
+        this.colorShader.setUniform("projectionMatrix");
+        this.colorShader.setUniform("modelViewMatrix");
+        this.colorShader.setUniform("albedo");
+        this.colorShader.setUniform("alpha");
 
-        this.normalShader = new Shader(gl, VERTEX_SHADER, NORMAL_FRAGMENT_SHADER);
-        this.normalShader.setAttribute(gl, "vertexPosition");
-        this.normalShader.setAttribute(gl, "normal");
-        this.normalShader.setUniform(gl, "projectionMatrix");
-        this.normalShader.setUniform(gl, "modelViewMatrix");
+        this.normalShader = new Shader(VERTEX_SHADER, NORMAL_FRAGMENT_SHADER);
+        this.normalShader.setAttribute("vertexPosition");
+        this.normalShader.setAttribute("normal");
+        this.normalShader.setUniform("projectionMatrix");
+        this.normalShader.setUniform("modelViewMatrix");
     }
 
     public setMesh(mesh: Mesh) {

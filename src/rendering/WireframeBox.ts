@@ -12,12 +12,12 @@ class WireframeBox implements Renderer {
 	public alphaOccluded: number = 0.15;
 	
 	constructor() {
-		this.shader = new Shader(gl, BOX_VERTEX_SHADER, BOX_FRAGMENT_SHADER);
+		this.shader = new Shader(BOX_VERTEX_SHADER, BOX_FRAGMENT_SHADER);
 
-		this.shader.setAttribute(gl, "vertexPosition");
-        this.shader.setUniform(gl, "projectionMatrix");
-        this.shader.setUniform(gl, "modelViewMatrix");
-        this.shader.setUniform(gl, "color");
+		this.shader.setAttribute("vertexPosition");
+        this.shader.setUniform("projectionMatrix");
+        this.shader.setUniform("modelViewMatrix");
+        this.shader.setUniform("color");
 		
 		this.positions = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);

@@ -22,6 +22,7 @@ class Editor {
 	lastMousePosition: [number, number];
 
 	handles: Handles;
+	box: WireframeBox;
 
 	editorState: Block;
 	createFullSizedBlocks: boolean;
@@ -46,6 +47,9 @@ class Editor {
 		this.camera.renderers.push(this.partRenderer);
 
 		this.camera.renderers.push(new ContourPostEffect());
+
+		this.box = new WireframeBox();
+		this.camera.renderers.push(this.box);
 
 		this.handles = new Handles(this.camera);
 		this.camera.renderers.push(this.handles);
@@ -77,6 +81,7 @@ class Editor {
 
 	private onNodeEditorClick(event: MouseEvent) {
 		this.handles.visible = (event.srcElement as HTMLDetailsElement).open;
+		this.box.visible = this.handles.visible;
 		this.camera.render();
 	}
 
@@ -147,6 +152,7 @@ class Editor {
 		this.center = newCenter;
 		this.updateTransform();
 		this.handles.updateTransforms();
+		this.box.transform = Matrix4.getTranslation(this.handles.position);
 		this.camera.render();
 	}
 
@@ -185,6 +191,7 @@ class Editor {
 			case MouseMode.None:
 			case MouseMode.Left:
 				this.handles.onMouseMove(event);
+				this.box.transform = Matrix4.getTranslation(worldPositionToBlock(this.handles.position).plus(Vector3.one()).times(0.5));
 				break;
 			case MouseMode.Middle:
 				this.translation = this.translation.plus(new Vector3(event.movementX, -event.movementY, 0).times(this.camera.size / gl.drawingBufferHeight));

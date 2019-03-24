@@ -205,11 +205,6 @@ class Handles implements Renderer {
 		}
 	}
 
-	private snap() {
-		this.setBlock(this.position.plus(Vector3.one().times(-0.25)).times(2).floor());
-		this.camera.render();
-	}
-
 	setBlock(block: Vector3) {
 		this.block = block;
 		this.position = this.block.plus(Vector3.one()).times(0.5);
@@ -218,6 +213,7 @@ class Handles implements Renderer {
 
 	onMouseUp() {
 		this.grabbedAxis = Axis.None;
-		this.snap();
+		this.setBlock(worldPositionToBlock(this.position));
+		this.camera.render();
 	}
 }

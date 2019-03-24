@@ -118,3 +118,26 @@ const CONTOUR_FRAGMENT = `
         gl_FragColor = vec4(vec3(0.0), contour);
     }
 `
+
+const BOX_VERTEX_SHADER = `
+    attribute vec4 vertexPosition;
+
+    uniform mat4 modelViewMatrix;
+    uniform mat4 projectionMatrix;
+
+    const vec3 scale = vec3(0.5);
+
+    void main() {
+        gl_Position = projectionMatrix * modelViewMatrix * vec4((vertexPosition.xyz * scale), vertexPosition.a);
+    }
+`;
+
+const BOX_FRAGMENT_SHADER = `
+    precision mediump float;
+
+    uniform vec4 color;
+
+    void main() {
+        gl_FragColor = color;
+    }
+`;

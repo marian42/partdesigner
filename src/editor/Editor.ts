@@ -71,6 +71,13 @@ class Editor {
 		this.initializeEditor("orientation", (orientationName: string) => this.setOrientation(orientationName));
 		this.initializeEditor("size", (sizeName: string) => this.setSize(sizeName));
 		this.initializeEditor("rounded", (roundedName: string) => this.setRounded(roundedName));
+
+		document.getElementById("blockeditor").addEventListener("toggle", (event: MouseEvent) => this.onNodeEditorClick(event));
+	}
+
+	private onNodeEditorClick(event: MouseEvent) {
+		this.handles.visible = (event.srcElement as HTMLDetailsElement).open;
+		this.camera.render();
 	}
 
 	private initializeEditor(elementId: string, onchange: (value: string) => void) {

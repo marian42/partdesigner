@@ -31,10 +31,12 @@ class Handles implements Renderer {
 	block: Vector3;
 	camera: Camera;
 
-	handleAlpha: Vector3 = Vector3.one();
+	handleAlpha: Vector3 = Vector3.one().times(UNSELECTED_ALPHA);
 
 	grabbedAxis: Axis = Axis.None;
 	grabbedPosition: number;
+
+	visible: boolean = true;
 
 	private createRenderer(mesh: Mesh, color: Vector3): MeshRenderer {
 		let renderer = new MeshRenderer();
@@ -59,6 +61,10 @@ class Handles implements Renderer {
 	}
 
 	public render(camera: Camera) {
+		if (!this.visible) {
+			return;
+		}
+
 		this.xPositive.alpha = this.handleAlpha.x;
 		this.xNegative.alpha = this.handleAlpha.x;
 		this.yPositive.alpha = this.handleAlpha.y;

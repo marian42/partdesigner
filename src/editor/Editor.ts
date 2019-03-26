@@ -105,7 +105,10 @@ class Editor {
 	}
 
 	private remove() {
-		this.part.clearBlock(this.handles.block, Orientation.X);
+		this.part.clearBlock(this.handles.block, this.editorState.orientation);
+		if (this.createFullSizedBlocks) {
+			this.part.clearBlock(this.handles.block.plus(forward(this.editorState.orientation)), this.editorState.orientation);
+		}
 		this.updateMesh();
 	}
 

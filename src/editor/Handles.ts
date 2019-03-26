@@ -19,26 +19,26 @@ enum Axis {
 }
 
 class Handles implements Renderer {
-	xNegative: MeshRenderer;
-	xPositive: MeshRenderer;
-	yNegative: MeshRenderer;
-	yPositive: MeshRenderer;
-	zNegative: MeshRenderer;
-	zPositive: MeshRenderer;
-	meshRenderers: MeshRenderer[] = [];
+	private xNegative: MeshRenderer;
+	private xPositive: MeshRenderer;
+	private yNegative: MeshRenderer;
+	private yPositive: MeshRenderer;
+	private zNegative: MeshRenderer;
+	private zPositive: MeshRenderer;
+	private meshRenderers: MeshRenderer[] = [];
 
-	position: Vector3;
-	block: Vector3;
-	camera: Camera;
+	private position: Vector3;
+	private block: Vector3;
+	private camera: Camera;
 
-	handleAlpha: Vector3 = Vector3.one().times(UNSELECTED_ALPHA);
+	private handleAlpha: Vector3 = Vector3.one().times(UNSELECTED_ALPHA);
 
-	grabbedAxis: Axis = Axis.None;
-	grabbedPosition: number;
+	private grabbedAxis: Axis = Axis.None;
+	private grabbedPosition: number;
 
 	visible: boolean = true;
 	
-	box: WireframeBox;
+	private box: WireframeBox;
 
 	private createRenderer(mesh: Mesh, color: Vector3): MeshRenderer {
 		let renderer = new MeshRenderer();
@@ -196,14 +196,14 @@ class Handles implements Renderer {
 		return [Axis.None, 0];
 	}
 
-	onMouseDown(event: MouseEvent): boolean {
+	public onMouseDown(event: MouseEvent): boolean {
 		var handleData = this.getMouseHandle(event);
 		this.grabbedAxis = handleData[0];
 		this.grabbedPosition = handleData[1];		
 		return this.grabbedAxis != Axis.None;
 	}
 
-	onMouseMove(event: MouseEvent) {
+	public onMouseMove(event: MouseEvent) {
 		if (this.grabbedAxis != Axis.None) {
 			var mouseRay = this.camera.getScreenToWorldRay(event);
 			var axisRay = this.getRay(this.grabbedAxis);
@@ -223,10 +223,14 @@ class Handles implements Renderer {
 		}
 	}
 
-	onMouseUp() {
+	public onMouseUp() {
 		this.grabbedAxis = Axis.None;
 		this.position = this.getBlockCenter(this.block);
 		this.updateTransforms();
 		this.camera.render();
+	}
+
+	public getSelectedBlock(): Vector3 {
+		return this.block;
 	}
 }

@@ -105,9 +105,9 @@ class Editor {
 	}
 
 	private remove() {
-		this.part.clearBlock(this.handles.block, this.editorState.orientation);
+		this.part.clearBlock(this.handles.getSelectedBlock(), this.editorState.orientation);
 		if (this.createFullSizedBlocks) {
-			this.part.clearBlock(this.handles.block.plus(forward(this.editorState.orientation)), this.editorState.orientation);
+			this.part.clearBlock(this.handles.getSelectedBlock().plus(forward(this.editorState.orientation)), this.editorState.orientation);
 		}
 		this.updateMesh();
 	}
@@ -132,9 +132,9 @@ class Editor {
 	}
 
 	private updateBlock() {
-		this.part.placeBlockForced(this.handles.block, new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
+		this.part.placeBlockForced(this.handles.getSelectedBlock(), new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
 		if (this.createFullSizedBlocks) {
-			this.part.placeBlockForced(this.handles.block.plus(forward(this.editorState.orientation)),
+			this.part.placeBlockForced(this.handles.getSelectedBlock().plus(forward(this.editorState.orientation)),
 				new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
 		}
 		this.updateMesh();

@@ -85,7 +85,3 @@ function countInArray<T>(items: T[], selector: (item: T) => boolean): number {
 	}
 	return result;
 }
-
-function worldPositionToBlock(world: Vector3) {
-	return world.plus(Vector3.one().times(-0.25)).times(2).floor();
-}

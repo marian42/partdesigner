@@ -37,6 +37,8 @@ class Handles implements Renderer {
 	grabbedPosition: number;
 
 	visible: boolean = true;
+	
+	box: WireframeBox;
 
 	private createRenderer(mesh: Mesh, color: Vector3): MeshRenderer {
 		let renderer = new MeshRenderer();
@@ -46,7 +48,16 @@ class Handles implements Renderer {
 		return renderer;
 	}
 
+	private getBlockCenter(block: Vector3): Vector3 {
+		return this.block.plus(Vector3.one()).times(0.5);
+	}
+
+	private getBlock(worldPosition: Vector3): Vector3 {
+		return worldPosition.plus(Vector3.one().times(-0.25)).times(2).floor();
+	}
+
 	constructor(camera: Camera) {
+		this.box = new WireframeBox();
 		let mesh = Handles.getArrowMesh(20);
 
 		this.xNegative = this.createRenderer(mesh, new Vector3(1, 0, 0));
@@ -55,8 +66,10 @@ class Handles implements Renderer {
 		this.yPositive = this.createRenderer(mesh, new Vector3(0, 1, 0));
 		this.zNegative = this.createRenderer(mesh, new Vector3(0, 0, 1));
 		this.zPositive = this.createRenderer(mesh, new Vector3(0, 0, 1));
-
-		this.setBlock(Vector3.zero());
+		
+		this.block = Vector3.zero();
+		this.position = this.getBlockCenter(this.block);
+		this.updateTransforms();
 		this.camera = camera;
 	}
 
@@ -85,6 +98,8 @@ class Handles implements Renderer {
 		for (let renderer of this.meshRenderers) {
 			renderer.render(camera);
 		}
+
+		this.box.render(camera);
 	}
 
 	public updateTransforms() {
@@ -98,7 +113,9 @@ class Handles implements Renderer {
 			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, -HANDLE_DISTANCE, 0))));
 		this.zPositive.transform = Matrix4.getTranslation(this.position.plus(new Vector3(0, 0, HANDLE_DISTANCE)));
 		this.zNegative.transform = Quaternion.euler(new Vector3(180, 0, 0)).toMatrix()
-			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, 0, -HANDLE_DISTANCE))));		
+			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, 0, -HANDLE_DISTANCE))));
+			
+		this.box.transform = Matrix4.getTranslation(this.block.plus(Vector3.one()).times(0.5));
 	}
 
 	private static getVector(angle: number, radius: number, z: number): Vector3 {
@@ -192,7 +209,8 @@ class Handles implements Renderer {
 			var axisRay = this.getRay(this.grabbedAxis);
 			var mousePosition = axisRay.getClosestToRay(mouseRay);
 
-			this.position = this.position.plus(axisRay.direction.times(mousePosition - this.grabbedPosition));
+			this.position = this.position.plus(axisRay.direction.times(mousePosition - this.grabbedPosition));			
+			this.block = this.getBlock(this.position);
 			this.updateTransforms();
 			this.camera.render();
 		} else {
@@ -205,15 +223,10 @@ class Handles implements Renderer {
 		}
 	}
 
-	setBlock(block: Vector3) {
-		this.block = block;
-		this.position = this.block.plus(Vector3.one()).times(0.5);
-		this.updateTransforms();
-	}
-
 	onMouseUp() {
 		this.grabbedAxis = Axis.None;
-		this.setBlock(worldPositionToBlock(this.position));
+		this.position = this.getBlockCenter(this.block);
+		this.updateTransforms();
 		this.camera.render();
 	}
 }

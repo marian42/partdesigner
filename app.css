@@ -38,6 +38,7 @@ summary {
     margin: -10px;
     padding: 7px;
     user-select: none;
+    -moz-user-select: none;
     border-bottom: 1px solid rgb(219, 219, 219);
 }
 
@@ -90,6 +91,7 @@ label.radiolabel {
     display: table-cell;
     vertical-align: middle;
     user-select: none;
+    -moz-user-select: none;
 }
 
 label.radiolabel:active, button:active {

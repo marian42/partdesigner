@@ -119,11 +119,14 @@ class Editor {
 
 	private setOrientation(orientatioName: string) {
 		this.editorState.orientation = ORIENTATION[orientatioName];
+		this.handles.setMode(this.createFullSizedBlocks, this.editorState.orientation);
 		this.updateBlock();
 	}
 
 	private setSize(sizeName: string) {
 		this.createFullSizedBlocks = sizeName == "full";
+		this.handles.setMode(this.createFullSizedBlocks, this.editorState.orientation);
+		this.camera.render();
 	}
 
 	private setRounded(roundedName: string) {

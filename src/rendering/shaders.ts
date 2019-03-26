@@ -125,7 +125,7 @@ const BOX_VERTEX_SHADER = `
     uniform mat4 modelViewMatrix;
     uniform mat4 projectionMatrix;
 
-    const vec3 scale = vec3(0.5);
+    uniform vec3 scale;
 
     void main() {
         gl_Position = projectionMatrix * modelViewMatrix * vec4((vertexPosition.xyz * scale), vertexPosition.a);

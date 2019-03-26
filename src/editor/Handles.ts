@@ -40,6 +40,10 @@ class Handles implements Renderer {
 	
 	private box: WireframeBox;
 
+	private fullSize: boolean = true;
+	private orientation: Orientation = Orientation.X;
+	private size: Vector3;
+
 	private createRenderer(mesh: Mesh, color: Vector3): MeshRenderer {
 		let renderer = new MeshRenderer();
 		renderer.setMesh(mesh);
@@ -49,11 +53,19 @@ class Handles implements Renderer {
 	}
 
 	private getBlockCenter(block: Vector3): Vector3 {
-		return this.block.plus(Vector3.one()).times(0.5);
+		if (this.fullSize) {
+			return this.block.plus(Vector3.one()).times(0.5);
+		} else {
+			return this.block.plus(Vector3.one()).times(0.5).minus(forward(this.orientation).times(0.25));
+		}
 	}
 
 	private getBlock(worldPosition: Vector3): Vector3 {
-		return worldPosition.plus(Vector3.one().times(-0.25)).times(2).floor();
+		if (this.fullSize) {
+			return worldPosition.times(2).minus(Vector3.one().times(0.5)).floor();
+		} else {
+			return worldPosition.times(2).minus(Vector3.one().minus(forward(this.orientation)).times(0.5)).floor();
+		}
 	}
 
 	constructor(camera: Camera) {
@@ -68,8 +80,7 @@ class Handles implements Renderer {
 		this.zPositive = this.createRenderer(mesh, new Vector3(0, 0, 1));
 		
 		this.block = Vector3.zero();
-		this.position = this.getBlockCenter(this.block);
-		this.updateTransforms();
+		this.setMode(true, Orientation.X);
 		this.camera = camera;
 	}
 
@@ -104,18 +115,19 @@ class Handles implements Renderer {
 
 	public updateTransforms() {
 		this.xPositive.transform = Quaternion.euler(new Vector3(0, -90, 0)).toMatrix()
-			.times(Matrix4.getTranslation(this.position.plus(new Vector3(HANDLE_DISTANCE, 0, 0))));
+			.times(Matrix4.getTranslation(this.position.plus(new Vector3(this.size.x * HANDLE_DISTANCE, 0, 0))));
 		this.xNegative.transform = Quaternion.euler(new Vector3(0, 90, 0)).toMatrix()
-			.times(Matrix4.getTranslation(this.position.plus(new Vector3(-HANDLE_DISTANCE, 0, 0))));
+			.times(Matrix4.getTranslation(this.position.plus(new Vector3(this.size.x * -HANDLE_DISTANCE, 0, 0))));
 		this.yPositive.transform = Quaternion.euler(new Vector3(90, 0, 0)).toMatrix()
-			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, HANDLE_DISTANCE, 0))));
+			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, this.size.y * HANDLE_DISTANCE, 0))));
 		this.yNegative.transform = Quaternion.euler(new Vector3(-90, 0, 0)).toMatrix()
-			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, -HANDLE_DISTANCE, 0))));
-		this.zPositive.transform = Matrix4.getTranslation(this.position.plus(new Vector3(0, 0, HANDLE_DISTANCE)));
+			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, this.size.y * -HANDLE_DISTANCE, 0))));
+		this.zPositive.transform = Matrix4.getTranslation(this.position.plus(new Vector3(0, 0, this.size.z * HANDLE_DISTANCE)));
 		this.zNegative.transform = Quaternion.euler(new Vector3(180, 0, 0)).toMatrix()
-			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, 0, -HANDLE_DISTANCE))));
+			.times(Matrix4.getTranslation(this.position.plus(new Vector3(0, 0, this.size.z * -HANDLE_DISTANCE))));
 			
-		this.box.transform = Matrix4.getTranslation(this.block.plus(Vector3.one()).times(0.5));
+		this.box.transform = Matrix4.getTranslation(this.getBlockCenter(this.block));
+		this.box.scale = this.size.times(0.5);
 	}
 
 	private static getVector(angle: number, radius: number, z: number): Vector3 {
@@ -232,5 +244,17 @@ class Handles implements Renderer {
 
 	public getSelectedBlock(): Vector3 {
 		return this.block;
+	}
+
+	public setMode(fullSize: boolean, orientation: Orientation) {
+		this.fullSize = fullSize;
+		this.orientation = orientation;
+		this.position = this.getBlockCenter(this.block);
+		this.size = Vector3.one();
+		if (!this.fullSize) {
+			this.size = this.size.minus(forward(this.orientation).times(0.5));
+		}
+
+		this.updateTransforms();
 	}
 }

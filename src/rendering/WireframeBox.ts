@@ -11,6 +11,8 @@ class WireframeBox implements Renderer {
 	public colorOccluded: Vector3 = new Vector3(0.0, 0.0, 0.0);
 	public alphaOccluded: number = 0.15;
 	
+	public scale: Vector3 = Vector3.one();
+
 	constructor() {
 		this.shader = new Shader(BOX_VERTEX_SHADER, BOX_FRAGMENT_SHADER);
 
@@ -18,6 +20,7 @@ class WireframeBox implements Renderer {
         this.shader.setUniform("projectionMatrix");
         this.shader.setUniform("modelViewMatrix");
         this.shader.setUniform("color");
+        this.shader.setUniform("scale");
 		
 		this.positions = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
@@ -53,10 +56,11 @@ class WireframeBox implements Renderer {
 
 		gl.uniformMatrix4fv(this.shader.attributes["projectionMatrix"], false, camera.getProjectionMatrix().elements);
 		gl.uniformMatrix4fv(this.shader.attributes["modelViewMatrix"], false, this.transform.times(camera.transform).elements);
+		gl.uniform3f(this.shader.attributes["scale"], this.scale.x, this.scale.y, this.scale.z);
 		
 		gl.depthFunc(gl.GREATER);
 		gl.depthMask(false);
-        gl.uniform4f(this.shader.attributes["color"], this.colorOccluded.x, this.colorOccluded.y, this.colorOccluded.z, this.alphaOccluded);		
+        gl.uniform4f(this.shader.attributes["color"], this.colorOccluded.x, this.colorOccluded.y, this.colorOccluded.z, this.alphaOccluded);
 		gl.drawArrays(gl.LINES, 0, 24);
 		
 		gl.depthFunc(gl.LEQUAL);

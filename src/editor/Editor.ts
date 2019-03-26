@@ -52,6 +52,7 @@ class Editor {
 
 		this.center = Vector3.zero();
 		this.updateMesh();
+		this.translation = Vector3.zero();
 		this.updateTransform();
 		this.camera.size = this.zoom;
 		this.camera.render();

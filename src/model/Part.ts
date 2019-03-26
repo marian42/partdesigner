@@ -157,6 +157,7 @@ class Part {
 		let max = min.copy();
 
 		for (var position of this.blocks.keys()) {
+			var forward = this.blocks.get(position).forward();
 			if (position.x < min.x) {
 				min.x = position.x;
 			}
@@ -166,16 +167,16 @@ class Part {
 			if (position.z < min.z) {
 				min.z = position.z;
 			}
-			if (position.x > max.x) {
-				max.x = position.x;
+			if (position.x + (1.0 - forward.x) > max.x) {
+				max.x = position.x + (1.0 - forward.x);
 			}
-			if (position.y > max.y) {
-				max.y = position.y;
+			if (position.y + (1.0 - forward.y) > max.y) {
+				max.y = position.y + (1.0 - forward.y);
 			}
-			if (position.z > max.z) {
-				max.z = position.z;
+			if (position.z + (1.0 - forward.y) > max.z) {
+				max.z = position.z + (1.0 - forward.y);
 			}
 		}
-		return min.plus(max).plus(new Vector3(1, 1, 1)).times(0.5);
+		return min.plus(max).plus(Vector3.one()).times(0.5);
 	}
 }

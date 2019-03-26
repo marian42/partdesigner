@@ -9,7 +9,11 @@ class Camera {
     public normalTexture: WebGLTexture;
     public depthTexture: WebGLTexture;
 
-    constructor(canvas: HTMLCanvasElement) {
+    public clearColor: Vector3 = new Vector3(0.95, 0.95, 0.95);
+
+    public supersample: number = 1;
+
+    constructor(canvas: HTMLCanvasElement, supersample = 1) {
         gl = canvas.getContext("webgl") as WebGLRenderingContext;
 
 		if (gl == null) {
@@ -17,9 +21,9 @@ class Camera {
         }
         gl.getExtension('WEBGL_depth_texture');
 
-        window.addEventListener("resize", (e: Event) => this.onResize());
-        gl.canvas.width = Math.round(gl.canvas.clientWidth * window.devicePixelRatio);
-        gl.canvas.height = Math.round(gl.canvas.clientHeight * window.devicePixelRatio);
+        this.supersample = supersample;        
+        gl.canvas.width = Math.round(gl.canvas.clientWidth * window.devicePixelRatio) * this.supersample;
+        gl.canvas.height = Math.round(gl.canvas.clientHeight * window.devicePixelRatio) * this.supersample;
         this.createBuffers();
     }
 
@@ -51,7 +55,7 @@ class Camera {
     }
 
     public render() {
-        gl.clearColor(0.95, 0.95, 0.95, 1.0);
+        gl.clearColor(this.clearColor.x, this.clearColor.y, this.clearColor.z, 1.0);
         gl.colorMask(true, true, true, true);
         gl.clearDepth(1.0);
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -64,14 +68,15 @@ class Camera {
 		for (var renderer of this.renderers) {
 			renderer.render(this);
         }
+
         gl.colorMask(false, false, false, true);
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
     }
     
     public onResize() {
-        gl.canvas.width = Math.round(gl.canvas.clientWidth * window.devicePixelRatio);
-        gl.canvas.height = Math.round(gl.canvas.clientHeight * window.devicePixelRatio);
+        gl.canvas.width = Math.round(gl.canvas.clientWidth * window.devicePixelRatio) * this.supersample;
+        gl.canvas.height = Math.round(gl.canvas.clientHeight * window.devicePixelRatio) * this.supersample;
         this.createBuffers();
         this.render();
     }

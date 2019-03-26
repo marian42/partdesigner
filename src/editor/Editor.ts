@@ -51,9 +51,7 @@ class Editor {
 		this.camera.renderers.push(this.handles);
 
 		this.center = Vector3.zero();
-		this.updateMesh();
-		this.translation = Vector3.zero();
-		this.updateTransform();
+		this.updateMesh(true);
 		this.camera.size = this.zoom;
 		this.camera.render();
 
@@ -66,7 +64,8 @@ class Editor {
 		document.getElementById("randomize").addEventListener("click", (event: MouseEvent) => this.randomize());
 		document.getElementById("share").addEventListener("click", (event: MouseEvent) => this.share());
 		document.getElementById("save").addEventListener("click", (event: MouseEvent) => new PartMeshGenerator(this.part).getMesh().saveSTLFile());
-		document.getElementById("remove").addEventListener("click", (event: MouseEvent) => this.remove());
+		document.getElementById("remove").addEventListener("click", (event: MouseEvent) => this.remove());		
+        window.addEventListener("resize", (e: Event) => this.camera.onResize());
 
 		this.initializeEditor("type", (typeName: string) => this.setType(typeName));
 		this.initializeEditor("orientation", (orientationName: string) => this.setOrientation(orientationName));
@@ -144,12 +143,16 @@ class Editor {
 		this.updateMesh();
 	}
 
-	private updateMesh() {
+	public updateMesh(center = false) {
 		let mesh = new PartMeshGenerator(this.part).getMesh();
 		this.partRenderer.setMesh(mesh);
 
 		var newCenter = this.part.getCenter().times(-0.5);
-		this.translation = this.translation.plus(this.getRotation().transformDirection(this.center.minus(newCenter)));
+		if (center) {
+			this.translation = Vector3.zero();
+		} else {
+			this.translation = this.translation.plus(this.getRotation().transformDirection(this.center.minus(newCenter)));
+		}
 		this.center = newCenter;
 		this.updateTransform();
 		this.handles.updateTransforms();

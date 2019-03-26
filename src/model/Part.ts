@@ -14,10 +14,6 @@ let CUBE = [
 class Part {
 	public blocks: VectorDictionary<Block> = new VectorDictionary<Block>();
 
-	public generateMesh() {
-		throw new Error("Not implemented!");
-	}
-
 	public createSmallBlocks(): VectorDictionary<SmallBlock> {
 		var result = new VectorDictionary<SmallBlock>();
 
@@ -148,11 +144,7 @@ class Part {
 		return part;
 	}
 
-	public getCenter(): Vector3 {
-		if (!this.blocks.any()) {
-			return Vector3.zero();
-		}
-
+	private getBoundingBox(): [Vector3, Vector3] {
 		let min = this.blocks.keys()[0].copy();
 		let max = min.copy();
 
@@ -173,10 +165,29 @@ class Part {
 			if (position.y + (1.0 - forward.y) > max.y) {
 				max.y = position.y + (1.0 - forward.y);
 			}
-			if (position.z + (1.0 - forward.y) > max.z) {
-				max.z = position.z + (1.0 - forward.y);
+			if (position.z + (1.0 - forward.z) > max.z) {
+				max.z = position.z + (1.0 - forward.z);
 			}
 		}
+		return [min, max];
+	}
+
+	public getCenter(): Vector3 {
+		if (!this.blocks.any()) {
+			return Vector3.zero();
+		}
+
+		var boundingBox = this.getBoundingBox();
+		var min = boundingBox[0];
+		var max = boundingBox[1];
+		
 		return min.plus(max).plus(Vector3.one()).times(0.5);
+	}
+
+	public getSize() {
+		var boundingBox = this.getBoundingBox();
+		var min = boundingBox[0];
+		var max = boundingBox[1];
+		return Math.max(max.x - min.x, Math.max(max.y - min.y, max.z - min.z)) + 1;
 	}
 }

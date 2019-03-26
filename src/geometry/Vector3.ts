@@ -83,4 +83,8 @@
 	public static one(): Vector3 {
 		return new Vector3(1, 1, 1);
 	}
+
+	public static lerp(a: Vector3, b: Vector3, progress: number): Vector3 {
+		return a.plus(b.minus(a).times(progress));
+	}
 }

@@ -85,3 +85,7 @@ function countInArray<T>(items: T[], selector: (item: T) => boolean): number {
 	}
 	return result;
 }
+
+function ease(value: number) {
+	return value < 0.5 ? 2 * value * value : -1 + (4 - 2 * value) * value;
+}

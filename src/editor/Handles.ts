@@ -80,7 +80,7 @@ class Handles implements Renderer {
 		this.zPositive = this.createRenderer(mesh, new Vector3(0, 0, 1));
 		
 		this.block = Vector3.zero();
-		this.setMode(true, Orientation.X);
+		this.setMode(true, Orientation.X, false);
 		this.camera = camera;
 	}
 
@@ -236,25 +236,61 @@ class Handles implements Renderer {
 	}
 
 	public onMouseUp() {
-		this.grabbedAxis = Axis.None;
-		this.position = this.getBlockCenter(this.block);
-		this.updateTransforms();
-		this.camera.render();
+		if (this.grabbedAxis != Axis.None) {
+			this.grabbedAxis = Axis.None;
+			this.animatePositionAndSize(this.getBlockCenter(this.block), this.size, false, 100);
+		}
 	}
 
 	public getSelectedBlock(): Vector3 {
 		return this.block;
 	}
 
-	public setMode(fullSize: boolean, orientation: Orientation) {
-		this.fullSize = fullSize;
-		this.orientation = orientation;
-		this.position = this.getBlockCenter(this.block);
-		this.size = Vector3.one();
-		if (!this.fullSize) {
-			this.size = this.size.minus(forward(this.orientation).times(0.5));
+	public setMode(fullSize: boolean, orientation: Orientation, animate: boolean = true) {
+		if (this.fullSize == fullSize && this.orientation == orientation && animate) {
+			return;
 		}
 
-		this.updateTransforms();
+		this.fullSize = fullSize;
+		this.orientation = orientation;
+
+		var targetPosition = this.getBlockCenter(this.block);
+		var targetSize = Vector3.one();
+		if (!this.fullSize) {
+			targetSize = targetSize.minus(forward(this.orientation).times(0.5));
+		}
+		
+		if (!animate) {
+			this.position = targetPosition;
+			this.size = Vector3.one();
+			this.updateTransforms();
+			return;
+		}
+
+		this.animatePositionAndSize(targetPosition, targetSize);
+	}
+
+	private animatePositionAndSize(targetPosition: Vector3, targetSize: Vector3, animateBox: boolean = true, time = 300) {
+		var startPosition = this.position;
+		var startSize = this.size;
+
+		var start = new Date().getTime();
+		var end = start + time;
+		var handles = this;
+
+		function callback() {
+			var progress = ease(Math.min(1.0, (new Date().getTime() - start) / (end - start)));
+			handles.position = Vector3.lerp(startPosition, targetPosition, progress);
+			handles.size = Vector3.lerp(startSize, targetSize, progress);
+			handles.updateTransforms();
+			if (animateBox) {
+				handles.box.transform = Matrix4.getTranslation(handles.position);
+			}
+			handles.camera.render();
+			if (progress < 1.0) {
+				window.requestAnimationFrame(callback);
+			}
+		}
+		window.requestAnimationFrame(callback)
 	}
 }

@@ -126,6 +126,54 @@ label.radiolabel:last-of-type {
     border-right-style: solid;
 }
 
+label.radiolabel.x {
+    color: #FF0000;
+}
+
+input[type=radio]:checked + label.radiolabel.x {
+    color: white;
+    background-color: #B30000;
+    border-color: #B30000;
+}
+
+input[type=radio]:checked + label.radiolabel.x:hover, label.radiolabel.x:hover {
+    color: white;
+    background-color: red;
+    border-color: red;
+}
+
+label.radiolabel.y {
+    color: #009A05;
+}
+
+input[type=radio]:checked + label.radiolabel.y {
+    color: white;
+    background-color: #009A05;
+    border-color: #009A05;
+}
+
+input[type=radio]:checked + label.radiolabel.y:hover, label.radiolabel.y:hover {
+    color: white;
+    background-color: #00DF07;
+    border-color: #00DF07;
+}
+
+label.radiolabel.z {
+    color: #0000FF;
+}
+
+input[type=radio]:checked + label.radiolabel.z {
+    color: white;
+    background-color: #0011A7;
+    border-color: #0011A7;
+}
+
+input[type=radio]:checked + label.radiolabel.z:hover, label.radiolabel.z:hover {
+    color: white;
+    background-color: #001AFF;
+    border-color: #001AFF;
+}
+
 .editorhint {
     display: table-cell;
     width: 84px;

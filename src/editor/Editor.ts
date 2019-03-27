@@ -101,7 +101,7 @@ class Editor {
 	}
 
 	private share() {
-		window.location.href = "?part=" + this.part.toString();
+		window.history.pushState({}, document.title, "/?part=" + this.part.toString());
 	}
 
 	private remove() {

@@ -40,6 +40,11 @@ summary {
     user-select: none;
     -moz-user-select: none;
     border-bottom: 1px solid rgb(219, 219, 219);
+    transition: background-color 0.2s;
+}
+
+summary:hover {
+    background-color: rgb(184, 184, 184);
 }
 
 details summary::-webkit-details-marker {

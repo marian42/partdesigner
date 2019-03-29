@@ -17,7 +17,6 @@ var catalog;
 window.onload = function () {
     editor = new Editor();
     catalog = new Catalog();
-    alert("test");
 };
 window.onpopstate = function (event) {
     if (event.state) {

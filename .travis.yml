@@ -1,0 +1,25 @@
+language: node_js
+
+branches:
+  only:
+    - master
+
+install:
+  - npm install -g typescript
+
+script:
+  - tsc || travis_terminate 1
+
+  - git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
+  - git fetch origin gh-pages
+  - git checkout --detach
+  - git reset --soft origin/gh-pages
+  - git config user.name "Travis CI"
+  - git config user.email "travis@travis-ci.org"
+  - git reset .
+  - rm .gitignore  
+  - git add index.html app.css app.js favicon.png
+  - git commit -m "Render page" || travis_terminate 0
+  - git branch -f gh-pages
+  - git checkout gh-pages
+  - git push "https://$GITHUB_API_KEY@github.com/marian42/partdesigner.git"

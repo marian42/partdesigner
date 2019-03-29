@@ -1,0 +1,199 @@
+﻿html, body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0px;
+    height: 100%;
+    overflow: hidden;
+    font-size: 14px;
+}
+
+.canvas-container canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.canvas-container {
+    padding-left: 420px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;    
+}
+
+.sidebar {
+    background-color: rgb(219, 219, 219);
+    width: 420px;
+    height: 100%;
+    position: fixed;
+    overflow: auto;
+}
+
+details {
+    padding: 10px;
+    overflow: hidden;
+}
+
+summary {
+    font-weight: bold;
+    box-sizing: border-box;
+    background-color: rgb(167, 167, 167);
+    margin: -10px;
+    padding: 7px;
+    user-select: none;
+    -moz-user-select: none;
+    border-bottom: 1px solid rgb(219, 219, 219);
+    transition: background-color 0.2s;
+}
+
+summary:hover {
+    background-color: rgb(184, 184, 184);
+}
+
+details summary::-webkit-details-marker {
+    display:none;
+}
+
+details[open] summary {    
+    margin-bottom: 10px;
+}
+
+.cell {    
+    display: table-cell;
+    width: 100%;
+    padding-right: 10px;
+}
+
+.cell:last-of-type {
+    padding-right: 0;
+}
+
+.group {
+    margin-bottom: 10px;
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+}
+
+button, label.radiolabel {
+    padding: 8px;
+    transition: 0.1s;
+    width: 100%;
+    border: 1px solid rgb(21, 98, 212);
+}
+
+button {
+    position: relative;
+    background-color: rgb(21, 98, 212);
+    border-radius: 5px;
+    color: white;
+    text-shadow: 0px 1px 6px rgba(0,0,0,0.63);
+}
+
+label.radiolabel {
+    text-align: center;
+    background-color: rgb(219, 219, 219);
+    border-right-style: none;
+    margin-right: -6px;
+    color: rgb(21, 98, 212);
+    display: table-cell;
+    vertical-align: middle;
+    user-select: none;
+    -moz-user-select: none;
+}
+
+label.radiolabel:active, button:active {
+    box-shadow: inset 2px 2px 6px 0px rgba(0,0,0,0.35);
+}
+
+input[type=radio]:checked + label.radiolabel {
+    background-color: rgb(21, 98, 212);
+    color: white;
+    text-shadow: 0px 1px 6px rgba(0,0,0,0.63);
+}
+
+.radiolabel:hover, input[type=radio]:checked + label.radiolabel:hover, button:hover {
+    border: 1px solid rgb(47, 130, 255);
+    background-color: rgb(47, 130, 255);
+    color: white;
+    text-shadow: 0px 1px 6px rgba(0,0,0,0.63);
+}
+
+.group input {
+    display: none;
+}
+
+label.radiolabel:first-of-type {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+label.radiolabel:last-of-type {
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-right-style: solid;
+}
+
+label.radiolabel.x {
+    color: #FF0000;
+}
+
+input[type=radio]:checked + label.radiolabel.x {
+    color: white;
+    background-color: #B30000;
+    border-color: #B30000;
+}
+
+input[type=radio]:checked + label.radiolabel.x:hover, label.radiolabel.x:hover {
+    color: white;
+    background-color: red;
+    border-color: red;
+}
+
+label.radiolabel.y {
+    color: #009A05;
+}
+
+input[type=radio]:checked + label.radiolabel.y {
+    color: white;
+    background-color: #009A05;
+    border-color: #009A05;
+}
+
+input[type=radio]:checked + label.radiolabel.y:hover, label.radiolabel.y:hover {
+    color: white;
+    background-color: #00DF07;
+    border-color: #00DF07;
+}
+
+label.radiolabel.z {
+    color: #0000FF;
+}
+
+input[type=radio]:checked + label.radiolabel.z {
+    color: white;
+    background-color: #0011A7;
+    border-color: #0011A7;
+}
+
+input[type=radio]:checked + label.radiolabel.z:hover, label.radiolabel.z:hover {
+    color: white;
+    background-color: #001AFF;
+    border-color: #001AFF;
+}
+
+.editorhint {
+    display: table-cell;
+    width: 84px;
+    vertical-align: middle;
+}
+
+.catalogItem {
+    margin: 2px;
+    padding: 2px;
+    display: inline-block;
+    border: 2px solid rgba(0,0,0,0);
+    border-radius: 5px;
+    transition: 0.2s;
+}
+
+.catalogItem:hover {
+    border-color: rgb(47, 130, 255);
+}

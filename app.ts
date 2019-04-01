@@ -4,8 +4,8 @@ var editor: Editor;
 var catalog: Catalog;
 
 window.onload = () => {
-	editor = new Editor();
 	catalog = new Catalog();
+	editor = new Editor();
 };
 
 window.onpopstate = function(event: PopStateEvent){

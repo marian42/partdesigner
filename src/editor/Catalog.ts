@@ -2,7 +2,7 @@ class Catalog {
 	private container: HTMLElement;
 
 	private initialized: boolean = false;
-	private items: CatalogItem[];
+	public items: CatalogItem[];
 
 	constructor() {
 		this.container = document.getElementById("catalog");

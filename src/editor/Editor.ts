@@ -32,8 +32,7 @@ class Editor {
 		if (url.searchParams.has("part")) {
 			this.part = Part.fromString(url.searchParams.get("part"));
 		} else {
-			this.part = new Part();
-			this.part.randomize();
+			this.part = Part.fromString(catalog.items[Math.floor(Math.random() * catalog.items.length)].string);
 		}
 
 		this.editorState = new Block(Orientation.X, BlockType.PinHole, true);

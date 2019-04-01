@@ -375,19 +375,7 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         if (this.tinyBlocks.containsKey(block.position.plus(direction))) {
             return false;
         }
-        if (direction.dot(block.forward()) == 0) {
-            // side face
-            return !block.rounded
-                || direction.dot(block.horizontal()) < 0
-                || direction.dot(block.vertical()) < 0;
-        }
-        else {
-            // front / back face
-            return block.localPositon().dot(block.right()) == block.directionX()
-                || block.localPositon().dot(block.up()) == block.directionY()
-                || this.smallBlocks.containsKey(block.smallBlockPosition().plus(direction)) &&
-                    (!this.smallBlocks.get(block.smallBlockPosition().plus(direction)).isAttachment() || this.smallBlocks.get(block.smallBlockPosition().plus(direction)).orientation == block.orientation);
-        }
+        return this.tinyBlocks.get(block.position.plus(direction).minus(direction.normalized())).isFaceVisible(direction);
     };
     PartMeshGenerator.prototype.createTinyFace = function (block, v1, v2, v3, v4, flipped) {
         if (flipped === void 0) { flipped = false; }
@@ -415,6 +403,26 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.vertical().times(3)))
             && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.horizontal().times(3)).minus(block.vertical().times(3)));
     };
+    PartMeshGenerator.prototype.hideStartEndFaces = function (centerBlock, forward) {
+        var direction = forward ? centerBlock.forward() : centerBlock.forward().times(-1);
+        centerBlock.hideFace(direction);
+        this.hideFaceIfExists(centerBlock.position.minus(centerBlock.horizontal()), direction);
+        this.hideFaceIfExists(centerBlock.position.minus(centerBlock.vertical()), direction);
+        this.hideFaceIfExists(centerBlock.position.minus(centerBlock.vertical()).minus(centerBlock.horizontal()), direction);
+    };
+    PartMeshGenerator.prototype.hideFaceIfExists = function (position, direction) {
+        if (this.tinyBlocks.containsKey(position)) {
+            this.tinyBlocks.get(position).hideFace(direction);
+        }
+    };
+    PartMeshGenerator.prototype.hideOutsideFaces = function (centerBlock) {
+        var vertical = centerBlock.vertical();
+        var horizontal = centerBlock.horizontal();
+        centerBlock.hideFace(vertical);
+        centerBlock.hideFace(horizontal);
+        this.tinyBlocks.get(centerBlock.position.minus(vertical)).hideFace(horizontal);
+        this.tinyBlocks.get(centerBlock.position.minus(horizontal)).hideFace(vertical);
+    };
     PartMeshGenerator.prototype.renderTinyBlocks = function () {
         for (var _i = 0, _a = this.tinyBlocks.values(); _i < _a.length; _i++) {
             var block = _a[_i];
@@ -429,14 +437,19 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             // Back cap
             if (nextBlock == null) {
                 this.createCircleWithHole(block, block.hasInterior && hasOpenEnd ? INTERIOR_RADIUS : 0, 0.5 - EDGE_MARGIN, distance, false, !block.rounded);
+                this.hideStartEndFaces(this.tinyBlocks.get(block.position.plus(block.forward().times(block.mergedBlocks - 1))), true);
             }
             // Front cap
             if (previousBlock == null) {
                 this.createCircleWithHole(block, block.hasInterior && hasOpenStart ? INTERIOR_RADIUS : 0, 0.5 - EDGE_MARGIN, 0, true, !block.rounded);
+                this.hideStartEndFaces(block, false);
             }
             if (block.rounded) {
                 // Rounded corners
                 this.createCylinder(block, 0, 0.5 - EDGE_MARGIN, distance);
+                for (var i = 0; i < block.mergedBlocks; i++) {
+                    this.hideOutsideFaces(this.tinyBlocks.get(block.position.plus(block.forward().times(i))));
+                }
                 // Rounded to non rounded adapter
                 if (nextBlock != null && !nextBlock.rounded) {
                     this.createCircleWithHole(block, 0.5 - EDGE_MARGIN, 0.5 - EDGE_MARGIN, distance, true, true);
@@ -702,19 +715,19 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             if (this.isFaceVisible(block, new Vector3(size.x, 0, 0))) {
                 this.createTinyFace(block, new Vector3(1, 0, 0), new Vector3(1, 0, 1), new Vector3(1, 1, 1), new Vector3(1, 1, 0), true);
             }
-            if (this.isFaceVisible(block, new Vector3(-size.x, 0, 0))) {
+            if (this.isFaceVisible(block, new Vector3(-1, 0, 0))) {
                 this.createTinyFace(block, new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 1), new Vector3(0, 1, 0));
             }
             if (this.isFaceVisible(block, new Vector3(0, size.y, 0))) {
                 this.createTinyFace(block, new Vector3(0, 1, 0), new Vector3(0, 1, 1), new Vector3(1, 1, 1), new Vector3(1, 1, 0));
             }
-            if (this.isFaceVisible(block, new Vector3(0, -size.y, 0))) {
+            if (this.isFaceVisible(block, new Vector3(0, -1, 0))) {
                 this.createTinyFace(block, new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(1, 0, 1), new Vector3(1, 0, 0), true);
             }
             if (this.isFaceVisible(block, new Vector3(0, 0, size.z))) {
                 this.createTinyFace(block, new Vector3(0, 0, 1), new Vector3(0, 1, 1), new Vector3(1, 1, 1), new Vector3(1, 0, 1), true);
             }
-            if (this.isFaceVisible(block, new Vector3(0, 0, -size.z))) {
+            if (this.isFaceVisible(block, new Vector3(0, 0, -1))) {
                 this.createTinyFace(block, new Vector3(0, 0, 0), new Vector3(0, 1, 0), new Vector3(1, 1, 0), new Vector3(1, 0, 0));
             }
         }
@@ -1240,14 +1253,14 @@ var Handles = /** @class */ (function () {
             // Base
             triangles.push(new Triangle(Handles.getVector(angle1, ARROW_RADIUS_INNER, 0), Vector3.zero(), Handles.getVector(angle2, ARROW_RADIUS_INNER, 0)));
             // Side
-            triangles.push(new TriangleWithNormals(Handles.getVector(angle1, ARROW_RADIUS_INNER, 0), Handles.getVector(angle2, ARROW_RADIUS_INNER, 0), Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH), Handles.getVector(angle1, 1, 0), Handles.getVector(angle2, 1, 0), Handles.getVector(angle2, 1, 0)));
-            triangles.push(new TriangleWithNormals(Handles.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH), Handles.getVector(angle1, ARROW_RADIUS_INNER, 0), Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH), Handles.getVector(angle1, 1, 0), Handles.getVector(angle1, 1, 0), Handles.getVector(angle2, 1, 0)));
+            triangles.push(new TriangleWithNormals(Handles.getVector(angle1, ARROW_RADIUS_INNER, 0), Handles.getVector(angle2, ARROW_RADIUS_INNER, 0), Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH), Handles.getVector(angle1, 1, 0).times(-1), Handles.getVector(angle2, 1, 0).times(-1), Handles.getVector(angle2, 1, 0).times(-1)));
+            triangles.push(new TriangleWithNormals(Handles.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH), Handles.getVector(angle1, ARROW_RADIUS_INNER, 0), Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH), Handles.getVector(angle1, 1, 0).times(-1), Handles.getVector(angle1, 1, 0).times(-1), Handles.getVector(angle2, 1, 0).times(-1)));
             // Tip base
             triangles.push(new Triangle(Handles.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH), Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH), Handles.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH)));
             triangles.push(new Triangle(Handles.getVector(angle1, ARROW_RADIUS_OUTER, ARROW_LENGTH), Handles.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH), Handles.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH)));
             // Tip
             var alpha = Math.tan(ARROW_TIP / ARROW_RADIUS_OUTER);
-            triangles.push(new TriangleWithNormals(new Vector3(0, 0, ARROW_LENGTH + ARROW_TIP), Handles.getVector(angle1, ARROW_RADIUS_OUTER, ARROW_LENGTH), Handles.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH), Handles.getVector(angle1, Math.sin(alpha), Math.cos(alpha)), Handles.getVector(angle1, Math.sin(alpha), Math.cos(alpha)), Handles.getVector(angle2, Math.sin(alpha), Math.cos(alpha))));
+            triangles.push(new TriangleWithNormals(new Vector3(0, 0, ARROW_LENGTH + ARROW_TIP), Handles.getVector(angle1, ARROW_RADIUS_OUTER, ARROW_LENGTH), Handles.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH), Handles.getVector(angle1, -Math.sin(alpha), -Math.cos(alpha)), Handles.getVector(angle1, -Math.sin(alpha), -Math.cos(alpha)), Handles.getVector(angle2, -Math.sin(alpha), -Math.cos(alpha))));
         }
         return new Mesh(triangles);
     };
@@ -2049,6 +2062,7 @@ var TinyBlock = /** @class */ (function (_super) {
         var _this = _super.call(this, source.quadrant, position, source) || this;
         _this.mergedBlocks = 1;
         _this.merged = false;
+        _this.visibleFaces = [true, true, true, true, true, true];
         return _this;
     }
     TinyBlock.prototype.angle = function () {
@@ -2072,6 +2086,52 @@ var TinyBlock = /** @class */ (function (_super) {
     };
     TinyBlock.prototype.getDepth = function () {
         return tinyIndexToWorld(this.forward().dot(this.position) + this.mergedBlocks) - tinyIndexToWorld(this.forward().dot(this.position));
+    };
+    TinyBlock.prototype.isFaceVisible = function (direction) {
+        if (direction.x > 0 && direction.y == 0 && direction.z == 0) {
+            return this.visibleFaces[0];
+        }
+        else if (direction.x < 0 && direction.y == 0 && direction.z == 0) {
+            return this.visibleFaces[1];
+        }
+        else if (direction.x == 0 && direction.y > 0 && direction.z == 0) {
+            return this.visibleFaces[2];
+        }
+        else if (direction.x == 0 && direction.y < 0 && direction.z == 0) {
+            return this.visibleFaces[3];
+        }
+        else if (direction.x == 0 && direction.y == 0 && direction.z > 0) {
+            return this.visibleFaces[4];
+        }
+        else if (direction.x == 0 && direction.y == 0 && direction.z < 0) {
+            return this.visibleFaces[5];
+        }
+        else {
+            throw new Error("Invalid direction vector.");
+        }
+    };
+    TinyBlock.prototype.hideFace = function (direction) {
+        if (direction.x > 0 && direction.y == 0 && direction.z == 0) {
+            this.visibleFaces[0] = false;
+        }
+        else if (direction.x < 0 && direction.y == 0 && direction.z == 0) {
+            this.visibleFaces[1] = false;
+        }
+        else if (direction.x == 0 && direction.y > 0 && direction.z == 0) {
+            this.visibleFaces[2] = false;
+        }
+        else if (direction.x == 0 && direction.y < 0 && direction.z == 0) {
+            this.visibleFaces[3] = false;
+        }
+        else if (direction.x == 0 && direction.y == 0 && direction.z > 0) {
+            this.visibleFaces[4] = false;
+        }
+        else if (direction.x == 0 && direction.y == 0 && direction.z < 0) {
+            this.visibleFaces[5] = false;
+        }
+        else {
+            throw new Error("Invalid direction vector.");
+        }
     };
     return TinyBlock;
 }(SmallBlock));

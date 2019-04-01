@@ -148,16 +148,16 @@ class Handles implements Renderer {
 				Handles.getVector(angle1, ARROW_RADIUS_INNER, 0),
 				Handles.getVector(angle2, ARROW_RADIUS_INNER, 0),
 				Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH),
-				Handles.getVector(angle1, 1, 0),
-				Handles.getVector(angle2, 1, 0),
-				Handles.getVector(angle2, 1, 0)));
+				Handles.getVector(angle1, 1, 0).times(-1),
+				Handles.getVector(angle2, 1, 0).times(-1),
+				Handles.getVector(angle2, 1, 0).times(-1)));
 			triangles.push(new TriangleWithNormals(
 				Handles.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH),
 				Handles.getVector(angle1, ARROW_RADIUS_INNER, 0),
 				Handles.getVector(angle2, ARROW_RADIUS_INNER, ARROW_LENGTH),
-				Handles.getVector(angle1, 1, 0),
-				Handles.getVector(angle1, 1, 0),
-				Handles.getVector(angle2, 1, 0)));
+				Handles.getVector(angle1, 1, 0).times(-1),
+				Handles.getVector(angle1, 1, 0).times(-1),
+				Handles.getVector(angle2, 1, 0).times(-1)));
 			// Tip base
 			triangles.push(new Triangle(
 				Handles.getVector(angle1, ARROW_RADIUS_INNER, ARROW_LENGTH),
@@ -174,9 +174,9 @@ class Handles implements Renderer {
 				new Vector3(0, 0, ARROW_LENGTH + ARROW_TIP),
 				Handles.getVector(angle1, ARROW_RADIUS_OUTER, ARROW_LENGTH),
 				Handles.getVector(angle2, ARROW_RADIUS_OUTER, ARROW_LENGTH),
-				Handles.getVector(angle1, Math.sin(alpha), Math.cos(alpha)),
-				Handles.getVector(angle1, Math.sin(alpha), Math.cos(alpha)),
-				Handles.getVector(angle2, Math.sin(alpha), Math.cos(alpha))));
+				Handles.getVector(angle1, -Math.sin(alpha), -Math.cos(alpha)),
+				Handles.getVector(angle1, -Math.sin(alpha), -Math.cos(alpha)),
+				Handles.getVector(angle2, -Math.sin(alpha), -Math.cos(alpha))));
 		}
 
 		return new Mesh(triangles);

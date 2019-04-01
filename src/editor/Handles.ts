@@ -89,6 +89,8 @@ class Handles implements Renderer {
 			return;
 		}
 
+		this.box.render(camera);
+
 		this.xPositive.alpha = this.handleAlpha.x;
 		this.xNegative.alpha = this.handleAlpha.x;
 		this.yPositive.alpha = this.handleAlpha.y;
@@ -109,8 +111,6 @@ class Handles implements Renderer {
 		for (let renderer of this.meshRenderers) {
 			renderer.render(camera);
 		}
-
-		this.box.render(camera);
 	}
 
 	public updateTransforms() {

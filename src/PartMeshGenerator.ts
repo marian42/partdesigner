@@ -603,7 +603,7 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private renderPinHoleInterior(block: TinyBlock) {
-        var nextBlock = this.getNextBlock(block);
+		var nextBlock = this.getNextBlock(block);
         var previousBlock = this.getPreviousBlock(block);
         var distance = block.getDepth();
 
@@ -612,25 +612,25 @@ class PartMeshGenerator extends MeshGenerator {
         var showInteriorEndCap = this.showInteriorCap(block, nextBlock) || (nextBlock == null && !hasOpenEnd);
         var showInteriorStartCap = this.showInteriorCap(block, previousBlock) || (previousBlock == null && !hasOpenStart);
 
-        var offsetStart = (hasOpenStart ? PIN_HOLE_OFFSET : 0) + (showInteriorStartCap ? INTERIOR_END_MARGIN : 0);
-        var offsetEnd = (hasOpenEnd ? PIN_HOLE_OFFSET : 0) + (showInteriorEndCap ? INTERIOR_END_MARGIN : 0);
-        this.createCylinder(block, offsetStart, PIN_HOLE_RADIUS, distance - offsetStart - offsetEnd, true);
+        var offsetStart = (hasOpenStart || showInteriorStartCap ? PIN_HOLE_OFFSET : 0) + (showInteriorStartCap ? INTERIOR_END_MARGIN : 0);
+		var offsetEnd = (hasOpenEnd || showInteriorEndCap ? PIN_HOLE_OFFSET : 0) + (showInteriorEndCap ? INTERIOR_END_MARGIN : 0);
+		this.createCylinder(block, offsetStart, PIN_HOLE_RADIUS, distance - offsetStart - offsetEnd, true);
 
-        if (hasOpenStart) {
-            this.createCylinder(block, 0, INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
-            this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
+        if (hasOpenStart || showInteriorStartCap) {
+            this.createCylinder(block, showInteriorStartCap ? INTERIOR_END_MARGIN : 0, INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
+            this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, PIN_HOLE_OFFSET + (showInteriorStartCap ? INTERIOR_END_MARGIN : 0), true);
         }
 
-        if (hasOpenEnd) {
-            this.createCylinder(block, distance - PIN_HOLE_OFFSET, INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
-            this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, distance - PIN_HOLE_OFFSET, false);
+        if (hasOpenEnd || showInteriorEndCap) {
+            this.createCylinder(block, distance - PIN_HOLE_OFFSET - (showInteriorEndCap ? INTERIOR_END_MARGIN : 0), INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
+            this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, distance - PIN_HOLE_OFFSET - (showInteriorEndCap ? INTERIOR_END_MARGIN : 0), false);
         }
 
         if (showInteriorEndCap) {
-            this.createCircle(block, PIN_HOLE_RADIUS, distance - INTERIOR_END_MARGIN, false);
+            this.createCircle(block, INTERIOR_RADIUS, distance - INTERIOR_END_MARGIN, false);
         }
         if (showInteriorStartCap) {
-            this.createCircle(block, PIN_HOLE_RADIUS, INTERIOR_END_MARGIN, true);
+            this.createCircle(block, INTERIOR_RADIUS, INTERIOR_END_MARGIN, true);
         }
     }
 

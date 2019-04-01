@@ -269,25 +269,10 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private isFaceVisible(block: TinyBlock, direction: Vector3): boolean {
-        if (this.tinyBlocks.containsKey(block.position.plus(direction))) {
+		if (this.tinyBlocks.containsKey(block.position.plus(direction))) {
             return false;
-        }
-        
-        if (direction.dot(block.forward()) == 0) {
-            // side face
-            return !block.rounded
-                || direction.dot(block.horizontal()) < 0
-                || direction.dot(block.vertical()) < 0;
-        } else {
-			// front / back face
-			var centerBlockPosition = block.position.minus(block.localPositon()).plus(block.forward().times(block.forward().dot(block.localPositon())));
-			var nextSmallBlock = this.smallBlocks.getOrNull(block.smallBlockPosition().plus(direction));
-			
-			return this.isTinyBlock(centerBlockPosition.plus(direction))
-				|| block.localPositon().dot(block.right()) == block.directionX() // outer face
-                || block.localPositon().dot(block.up()) == block.directionY() // outer face
-                || nextSmallBlock != null && (!nextSmallBlock.isAttachment() || nextSmallBlock.orientation == block.orientation);
-        }
+		}
+		return this.tinyBlocks.get(block.position.plus(direction).minus(direction.normalized())).isFaceVisible(direction);
     }
 
     private createTinyFace(block: TinyBlock, v1: Vector3, v2: Vector3, v3: Vector3, v4: Vector3, flipped = false) {
@@ -324,7 +309,30 @@ class PartMeshGenerator extends MeshGenerator {
             && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.horizontal().times(3)))
             && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.vertical().times(3)))
             && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.horizontal().times(3)).minus(block.vertical().times(3)));
-    }
+	}
+	
+	private hideStartEndFaces(centerBlock: TinyBlock, forward: boolean) {
+		var direction = forward ? centerBlock.forward() : centerBlock.forward().times(-1);
+		centerBlock.hideFace(direction);
+		this.hideFaceIfExists(centerBlock.position.minus(centerBlock.horizontal()), direction);
+		this.hideFaceIfExists(centerBlock.position.minus(centerBlock.vertical()), direction);
+		this.hideFaceIfExists(centerBlock.position.minus(centerBlock.vertical()).minus(centerBlock.horizontal()), direction);
+	}
+
+	private hideFaceIfExists(position: Vector3, direction: Vector3) {
+		if (this.tinyBlocks.containsKey(position)) {
+			this.tinyBlocks.get(position).hideFace(direction);
+		}
+	}
+
+	private hideOutsideFaces(centerBlock: TinyBlock) {
+		var vertical = centerBlock.vertical();
+		var horizontal = centerBlock.horizontal();
+		centerBlock.hideFace(vertical);
+		centerBlock.hideFace(horizontal);
+		this.tinyBlocks.get(centerBlock.position.minus(vertical)).hideFace(horizontal);
+		this.tinyBlocks.get(centerBlock.position.minus(horizontal)).hideFace(vertical);
+	}
 
     private renderTinyBlocks() {
         for (let block of this.tinyBlocks.values()) {
@@ -341,17 +349,22 @@ class PartMeshGenerator extends MeshGenerator {
 
             // Back cap
             if (nextBlock == null) {
-                this.createCircleWithHole(block, block.hasInterior && hasOpenEnd ? INTERIOR_RADIUS : 0, 0.5 - EDGE_MARGIN, distance, false, !block.rounded);
+				this.createCircleWithHole(block, block.hasInterior && hasOpenEnd ? INTERIOR_RADIUS : 0, 0.5 - EDGE_MARGIN, distance, false, !block.rounded);
+				this.hideStartEndFaces(this.tinyBlocks.get(block.position.plus(block.forward().times(block.mergedBlocks - 1))), true);
             }
 
             // Front cap
             if (previousBlock == null) {
-                this.createCircleWithHole(block, block.hasInterior && hasOpenStart ? INTERIOR_RADIUS : 0, 0.5 - EDGE_MARGIN, 0, true, !block.rounded);
+				this.createCircleWithHole(block, block.hasInterior && hasOpenStart ? INTERIOR_RADIUS : 0, 0.5 - EDGE_MARGIN, 0, true, !block.rounded);
+				this.hideStartEndFaces(block, false);
             }
 
             if (block.rounded) {
                 // Rounded corners
-                this.createCylinder(block, 0, 0.5 - EDGE_MARGIN, distance);
+				this.createCylinder(block, 0, 0.5 - EDGE_MARGIN, distance);
+				for (var i = 0; i < block.mergedBlocks; i++) {
+					this.hideOutsideFaces(this.tinyBlocks.get(block.position.plus(block.forward().times(i))));
+				}
 
                 // Rounded to non rounded adapter
                 if (nextBlock != null && !nextBlock.rounded) {
@@ -779,7 +792,7 @@ class PartMeshGenerator extends MeshGenerator {
                     new Vector3(1, 1, 1),
                     new Vector3(1, 1, 0), true);
             }
-            if (this.isFaceVisible(block, new Vector3(-size.x, 0, 0))) {
+            if (this.isFaceVisible(block, new Vector3(-1, 0, 0))) {
                 this.createTinyFace(block,
                     new Vector3(0, 0, 0),
                     new Vector3(0, 0, 1),
@@ -793,7 +806,7 @@ class PartMeshGenerator extends MeshGenerator {
                     new Vector3(1, 1, 1),
                     new Vector3(1, 1, 0));
             }
-            if (this.isFaceVisible(block, new Vector3(0, -size.y, 0))) {
+            if (this.isFaceVisible(block, new Vector3(0, -1, 0))) {
                 this.createTinyFace(block,
                     new Vector3(0, 0, 0),
                     new Vector3(0, 0, 1),
@@ -807,7 +820,7 @@ class PartMeshGenerator extends MeshGenerator {
                     new Vector3(1, 1, 1),
                     new Vector3(1, 0, 1), true);
             }
-            if (this.isFaceVisible(block, new Vector3(0, 0, -size.z))) {
+            if (this.isFaceVisible(block, new Vector3(0, 0, -1))) {
                 this.createTinyFace(block,
                     new Vector3(0, 0, 0),
                     new Vector3(0, 1, 0),

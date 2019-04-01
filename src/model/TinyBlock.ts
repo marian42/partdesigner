@@ -2,6 +2,8 @@
 	public mergedBlocks = 1;
 	public merged = false;
 
+	private visibleFaces: [boolean, boolean, boolean, boolean, boolean, boolean];
+
 	public angle() {
 		return getAngle(this.quadrant);
 	}
@@ -36,5 +38,42 @@
 
 	constructor(position: Vector3, source: SmallBlock) {
 		super(source.quadrant, position, source);
+		this.visibleFaces = [true, true, true, true, true, true];
+	}
+
+	public isFaceVisible(direction: Vector3): boolean {
+		if (direction.x > 0 && direction.y == 0 && direction.z == 0) {
+			return this.visibleFaces[0];
+		} else if (direction.x < 0 && direction.y == 0 && direction.z == 0) {
+			return this.visibleFaces[1];
+		} else if (direction.x == 0 && direction.y > 0 && direction.z == 0) {
+			return this.visibleFaces[2];
+		} else if (direction.x == 0 && direction.y < 0 && direction.z == 0) {
+			return this.visibleFaces[3];
+		} else if (direction.x == 0 && direction.y == 0 && direction.z > 0) {
+			return this.visibleFaces[4];
+		} else if (direction.x == 0 && direction.y == 0 && direction.z < 0) {
+			return this.visibleFaces[5];
+		} else {
+			throw new Error("Invalid direction vector.");
+		}
+	}
+
+	public hideFace(direction: Vector3) {
+		if (direction.x > 0 && direction.y == 0 && direction.z == 0) {
+			this.visibleFaces[0] = false;
+		} else if (direction.x < 0 && direction.y == 0 && direction.z == 0) {
+			this.visibleFaces[1] = false;
+		} else if (direction.x == 0 && direction.y > 0 && direction.z == 0) {
+			this.visibleFaces[2] = false;
+		} else if (direction.x == 0 && direction.y < 0 && direction.z == 0) {
+			this.visibleFaces[3] = false;
+		} else if (direction.x == 0 && direction.y == 0 && direction.z > 0) {
+			this.visibleFaces[4] = false;
+		} else if (direction.x == 0 && direction.y == 0 && direction.z < 0) {
+			this.visibleFaces[5] = false;
+		} else {
+			throw new Error("Invalid direction vector.");
+		}
 	}
 }

@@ -18,11 +18,11 @@ function getAngle(quadrant: Quadrant): number {
 		case Quadrant.TopRight:
 			return 0;
 		case Quadrant.BottomRight:
-			return 90;
+			return 90 * DEG_TO_RAD;
 		case Quadrant.BottomLeft:
-			return 180;
+			return 180 * DEG_TO_RAD;
 		case Quadrant.TopLeft:
-			return 270;
+			return 270 * DEG_TO_RAD;
 	}
 	throw new Error("Unknown quadrant: " + quadrant);
 }

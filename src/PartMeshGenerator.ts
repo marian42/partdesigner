@@ -390,12 +390,8 @@ class PartMeshGenerator extends MeshGenerator {
 		var center = block.getCylinderOrigin().plus(block.forward().times(zOffset));
 		
 		for (var i = 0; i < SUBDIVISIONS; i++) {
-			var angleI = i / 2 * Math.PI / SUBDIVISIONS;
-			var angleI2 = (i + 1) / 2 * Math.PI / SUBDIVISIONS;
-			var out1 = block.right().times(Math.sin(angleI + getAngle(block.quadrant) * DEG_TO_RAD)).plus(
-				block.up().times(Math.cos(angleI + getAngle(block.quadrant) * DEG_TO_RAD)));
-			var out2 = block.right().times(Math.sin(angleI2 + getAngle(block.quadrant) * DEG_TO_RAD)).plus(
-				block.up().times(Math.cos(angleI2 + getAngle(block.quadrant) * DEG_TO_RAD)));
+			var out1 = block.getOnCircle(i / 2 * Math.PI / SUBDIVISIONS);
+			var out2 = block.getOnCircle((i + 1) / 2 * Math.PI / SUBDIVISIONS);
 
 			for (var j = 0; j < LIP_SUBDIVISIONS; j++) {
 				var angleJ = j * Math.PI / LIP_SUBDIVISIONS;

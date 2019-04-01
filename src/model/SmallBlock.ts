@@ -64,8 +64,8 @@
 	}
 
 	public getOnCircle(angle: number, radius = 1): Vector3 {
-		return this.right().times(Math.sin(angle + getAngle(this.quadrant) * DEG_TO_RAD) * radius).plus(
-			this.up().times(Math.cos(angle + getAngle(this.quadrant) * DEG_TO_RAD) * radius));
+		return this.right().times(Math.sin(angle + getAngle(this.quadrant)) * radius).plus(
+			this.up().times(Math.cos(angle + getAngle(this.quadrant)) * radius));
 	}
 }
  

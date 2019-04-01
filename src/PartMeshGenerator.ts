@@ -279,11 +279,14 @@ class PartMeshGenerator extends MeshGenerator {
                 || direction.dot(block.horizontal()) < 0
                 || direction.dot(block.vertical()) < 0;
         } else {
-            // front / back face
-            return block.localPositon().dot(block.right()) == block.directionX()
-                || block.localPositon().dot(block.up()) == block.directionY()
-                || this.smallBlocks.containsKey(block.smallBlockPosition().plus(direction)) && 
-                    (!this.smallBlocks.get(block.smallBlockPosition().plus(direction)).isAttachment() || this.smallBlocks.get(block.smallBlockPosition().plus(direction)).orientation == block.orientation);
+			// front / back face
+			var centerBlockPosition = block.position.minus(block.localPositon()).plus(block.forward().times(block.forward().dot(block.localPositon())));
+			var nextSmallBlock = this.smallBlocks.getOrNull(block.smallBlockPosition().plus(direction));
+			
+			return this.isTinyBlock(centerBlockPosition.plus(direction))
+				|| block.localPositon().dot(block.right()) == block.directionX() // outer face
+                || block.localPositon().dot(block.up()) == block.directionY() // outer face
+                || nextSmallBlock != null && (!nextSmallBlock.isAttachment() || nextSmallBlock.orientation == block.orientation);
         }
     }
 

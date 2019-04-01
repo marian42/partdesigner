@@ -1,13 +1,20 @@
 class Mesh {
-    public triangles: Triangle[];
+    private triangles: Triangle[];
+
+    private vertexBuffer: WebGLBuffer = null;
+    private normalBuffer: WebGLBuffer = null;
 
     constructor(triangles: Triangle[]) {
         this.triangles = triangles;
     }
 
-    public createPositionBuffer(): WebGLBuffer {
-        let positionBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    public createVertexBuffer(): WebGLBuffer {
+        if (this.vertexBuffer != null) {
+            return this.vertexBuffer;
+        }
+
+        let vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
         var positions: number[] = [];
 
         for (let triangle of this.triangles) {
@@ -17,10 +24,16 @@ class Mesh {
         }
 
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-        return positionBuffer;
+
+        this.vertexBuffer = vertexBuffer;
+        return vertexBuffer;
     }
 
     public createNormalBuffer(): WebGLBuffer {
+        if (this.normalBuffer != null) {
+            return this.normalBuffer;
+        }
+
         let normalBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
         var normals: number[] = [];
@@ -38,6 +51,7 @@ class Mesh {
         }
 
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+        this.normalBuffer = normalBuffer;
         return normalBuffer;
     }
 
@@ -88,5 +102,9 @@ class Mesh {
         link.href = window.URL.createObjectURL(blob);
         link.download = filename;
         link.click();
+    }
+
+    public getVertexCount(): number {
+        return this.triangles.length * 3;
     }
 }

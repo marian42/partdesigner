@@ -1,13 +1,13 @@
 class MeshRenderer implements Renderer {
-    shader: Shader;
+    private shader: Shader;
 
-    positions: WebGLBuffer;
-    normals: WebGLBuffer;
+    private vertices: WebGLBuffer;
+    private normals: WebGLBuffer;
 
-    mesh: Mesh;
-    transform: Matrix4;
-    color: Vector3 = new Vector3(1, 0, 0);
-    alpha: number = 1;
+    private vertexCount: number;
+    public transform: Matrix4;
+    public color: Vector3 = new Vector3(1, 0, 0);
+    public alpha: number = 1;
 
     constructor() {
         this.shader = new Shader(VERTEX_SHADER, FRAGMENT_SHADER);
@@ -23,13 +23,13 @@ class MeshRenderer implements Renderer {
     }
 
     public setMesh(mesh: Mesh) {
-        this.mesh = mesh;
-        this.positions = mesh.createPositionBuffer();
+        this.vertexCount = mesh.getVertexCount();
+        this.vertices = mesh.createVertexBuffer();
         this.normals = mesh.createNormalBuffer();
     }
 
     public render(camera: Camera) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices);
         gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);
         
@@ -44,6 +44,6 @@ class MeshRenderer implements Renderer {
         gl.uniform3f(this.shader.attributes["albedo"], this.color.x, this.color.y, this.color.z);
         gl.uniform1f(this.shader.attributes["alpha"], this.alpha);
       
-        gl.drawArrays(gl.TRIANGLES, 0, this.mesh.triangles.length * 3);
+        gl.drawArrays(gl.TRIANGLES, 0, this.vertexCount);
     }
 }

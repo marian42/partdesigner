@@ -25,9 +25,11 @@ class Catalog {
 
 		var camera = new Camera(canvas, 2);
 		camera.clearColor = new Vector3(0.859, 0.859, 0.859);
-		var partRenderer = new NormalDepthRenderer();
+		var partRenderer = new MeshRenderer();
 		partRenderer.color = new Vector3(0.67, 0.7, 0.71);
+		var partNormalDepthRenderer = new NormalDepthRenderer();
 		camera.renderers.push(partRenderer);
+		camera.renderers.push(partNormalDepthRenderer);
 		camera.renderers.push(new ContourPostEffect());
 		
 		for (var item of this.items) {
@@ -40,7 +42,9 @@ class Catalog {
 			catalogLink.appendChild(itemCanvas);
 			itemCanvas.style.height = "64px";
 			itemCanvas.style.width = "64px";
-			partRenderer.setMesh(new PartMeshGenerator(item.part).getMesh());
+			var mesh = new PartMeshGenerator(item.part).getMesh();
+			partRenderer.setMesh(mesh);
+			partNormalDepthRenderer.setMesh(mesh);
 			camera.size = (item.part.getSize() + 2) * 0.41;
 			camera.transform = Matrix4.getTranslation(item.part.getCenter().times(-0.5))
 				.times(Matrix4.getRotation(new Vector3(0, 45, -30))

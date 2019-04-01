@@ -7,7 +7,8 @@ enum MouseMode {
 
 class Editor {
 	camera: Camera;
-	partRenderer: NormalDepthRenderer;
+	partRenderer: MeshRenderer;
+	partNormalDepthRenderer: NormalDepthRenderer;
 	part: Part;
 	canvas: HTMLCanvasElement;
 
@@ -41,9 +42,12 @@ class Editor {
 		this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
 		this.camera = new Camera(this.canvas);
 		
-		this.partRenderer = new NormalDepthRenderer();
+		this.partRenderer = new MeshRenderer();
 		this.partRenderer.color = new Vector3(0.67, 0.7, 0.71);
 		this.camera.renderers.push(this.partRenderer);
+
+		this.partNormalDepthRenderer = new NormalDepthRenderer();
+		this.camera.renderers.push(this.partNormalDepthRenderer);
 
 		this.camera.renderers.push(new ContourPostEffect());
 
@@ -146,6 +150,7 @@ class Editor {
 	public updateMesh(center = false) {
 		let mesh = new PartMeshGenerator(this.part).getMesh();
 		this.partRenderer.setMesh(mesh);
+		this.partNormalDepthRenderer.setMesh(mesh);
 
 		var newCenter = this.part.getCenter().times(-0.5);
 		if (center) {

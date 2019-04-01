@@ -15,8 +15,8 @@ var gl;
 var editor;
 var catalog;
 window.onload = function () {
-    editor = new Editor();
     catalog = new Catalog();
+    editor = new Editor();
 };
 window.onpopstate = function (event) {
     if (event.state) {
@@ -471,18 +471,40 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             }
         }
     };
+    PartMeshGenerator.prototype.renderLip = function (block, zOffset) {
+        var center = block.getCylinderOrigin().plus(block.forward().times(zOffset));
+        for (var i = 0; i < SUBDIVISIONS; i++) {
+            var angleI = i / 2 * Math.PI / SUBDIVISIONS;
+            var angleI2 = (i + 1) / 2 * Math.PI / SUBDIVISIONS;
+            var out1 = block.right().times(Math.sin(angleI + getAngle(block.quadrant) * DEG_TO_RAD)).plus(block.up().times(Math.cos(angleI + getAngle(block.quadrant) * DEG_TO_RAD)));
+            var out2 = block.right().times(Math.sin(angleI2 + getAngle(block.quadrant) * DEG_TO_RAD)).plus(block.up().times(Math.cos(angleI2 + getAngle(block.quadrant) * DEG_TO_RAD)));
+            for (var j = 0; j < LIP_SUBDIVISIONS; j++) {
+                var angleJ = j * Math.PI / LIP_SUBDIVISIONS;
+                var angleJ2 = (j + 1) * Math.PI / LIP_SUBDIVISIONS;
+                this.createQuadWithNormals(center.plus(out1.times(PIN_RADIUS)).plus(out1.times(Math.sin(angleJ) * PIN_LIP_RADIUS).plus(block.forward().times(Math.cos(angleJ) * PIN_LIP_RADIUS))), center.plus(out2.times(PIN_RADIUS)).plus(out2.times(Math.sin(angleJ) * PIN_LIP_RADIUS).plus(block.forward().times(Math.cos(angleJ) * PIN_LIP_RADIUS))), center.plus(out2.times(PIN_RADIUS)).plus(out2.times(Math.sin(angleJ2) * PIN_LIP_RADIUS).plus(block.forward().times(Math.cos(angleJ2) * PIN_LIP_RADIUS))), center.plus(out1.times(PIN_RADIUS)).plus(out1.times(Math.sin(angleJ2) * PIN_LIP_RADIUS).plus(block.forward().times(Math.cos(angleJ2) * PIN_LIP_RADIUS))), out1.times(-Math.sin(angleJ)).plus(block.forward().times(-Math.cos(angleJ))), out2.times(-Math.sin(angleJ)).plus(block.forward().times(-Math.cos(angleJ))), out2.times(-Math.sin(angleJ2)).plus(block.forward().times(-Math.cos(angleJ2))), out1.times(-Math.sin(angleJ2)).plus(block.forward().times(-Math.cos(angleJ2))));
+            }
+        }
+    };
     PartMeshGenerator.prototype.renderPin = function (block) {
         var nextBlock = this.getNextBlock(block);
         var previousBlock = this.getPreviousBlock(block);
         var distance = block.getDepth();
         var startOffset = (previousBlock != null && previousBlock.type == BlockType.Axle) ? AXLE_PIN_ADAPTER_SIZE : 0;
+        if (previousBlock == null) {
+            startOffset += 2 * PIN_LIP_RADIUS;
+        }
         var endOffset = (nextBlock != null && nextBlock.type == BlockType.Axle) ? AXLE_PIN_ADAPTER_SIZE : 0;
+        if (nextBlock == null) {
+            endOffset += 2 * PIN_LIP_RADIUS;
+        }
         this.createCylinder(block, startOffset, PIN_RADIUS, distance - startOffset - endOffset);
         if (nextBlock == null) {
             this.createCircle(block, PIN_RADIUS, distance, true);
+            this.renderLip(block, distance - PIN_LIP_RADIUS);
         }
         if (previousBlock == null) {
             this.createCircle(block, PIN_RADIUS, 0);
+            this.renderLip(block, PIN_LIP_RADIUS);
         }
         if (nextBlock != null && !nextBlock.isAttachment()) {
             this.createCircleWithHole(block, PIN_RADIUS, 0.5 - EDGE_MARGIN, distance, true, !nextBlock.rounded);
@@ -796,6 +818,8 @@ var AXLE_SIZE_OUTER = 4.2 * 0.5 / TECHNIC_UNIT; // 4.4 is too large
 var AXLE_PIN_ADAPTER_SIZE = 0.8 / TECHNIC_UNIT;
 var AXLE_PIN_ADAPTER_RADIUS = 6 * 0.5 / TECHNIC_UNIT;
 var INTERIOR_END_MARGIN = 0.2 / TECHNIC_UNIT;
+var PIN_LIP_RADIUS = 0.4 / TECHNIC_UNIT;
+var LIP_SUBDIVISIONS = 6;
 var SUBDIVISIONS = 8;
 var Catalog = /** @class */ (function () {
     function Catalog() {
@@ -819,9 +843,11 @@ var Catalog = /** @class */ (function () {
         this.container.appendChild(canvas);
         var camera = new Camera(canvas, 2);
         camera.clearColor = new Vector3(0.859, 0.859, 0.859);
-        var partRenderer = new NormalDepthRenderer();
+        var partRenderer = new MeshRenderer();
         partRenderer.color = new Vector3(0.67, 0.7, 0.71);
+        var partNormalDepthRenderer = new NormalDepthRenderer();
         camera.renderers.push(partRenderer);
+        camera.renderers.push(partNormalDepthRenderer);
         camera.renderers.push(new ContourPostEffect());
         var _loop_1 = function () {
             catalogLink = document.createElement("a");
@@ -833,7 +859,9 @@ var Catalog = /** @class */ (function () {
             catalogLink.appendChild(itemCanvas);
             itemCanvas.style.height = "64px";
             itemCanvas.style.width = "64px";
-            partRenderer.setMesh(new PartMeshGenerator(item.part).getMesh());
+            mesh = new PartMeshGenerator(item.part).getMesh();
+            partRenderer.setMesh(mesh);
+            partNormalDepthRenderer.setMesh(mesh);
             camera.size = (item.part.getSize() + 2) * 0.41;
             camera.transform = Matrix4.getTranslation(item.part.getCenter().times(-0.5))
                 .times(Matrix4.getRotation(new Vector3(0, 45, -30))
@@ -846,7 +874,7 @@ var Catalog = /** @class */ (function () {
             var itemCopy = item;
             catalogLink.addEventListener("click", function (event) { return _this.onSelectPart(itemCopy, event); });
         };
-        var this_1 = this, catalogLink, itemCanvas, context;
+        var this_1 = this, catalogLink, itemCanvas, mesh, context;
         for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
             var item = _a[_i];
             _loop_1();
@@ -937,16 +965,17 @@ var Editor = /** @class */ (function () {
             this.part = Part.fromString(url.searchParams.get("part"));
         }
         else {
-            this.part = new Part();
-            this.part.randomize();
+            this.part = Part.fromString(catalog.items[Math.floor(Math.random() * catalog.items.length)].string);
         }
         this.editorState = new Block(Orientation.X, BlockType.PinHole, true);
         this.createFullSizedBlocks = true;
         this.canvas = document.getElementById('canvas');
         this.camera = new Camera(this.canvas);
-        this.partRenderer = new NormalDepthRenderer();
+        this.partRenderer = new MeshRenderer();
         this.partRenderer.color = new Vector3(0.67, 0.7, 0.71);
         this.camera.renderers.push(this.partRenderer);
+        this.partNormalDepthRenderer = new NormalDepthRenderer();
+        this.camera.renderers.push(this.partNormalDepthRenderer);
         this.camera.renderers.push(new ContourPostEffect());
         this.handles = new Handles(this.camera);
         this.camera.renderers.push(this.handles);
@@ -1031,6 +1060,7 @@ var Editor = /** @class */ (function () {
         if (center === void 0) { center = false; }
         var mesh = new PartMeshGenerator(this.part).getMesh();
         this.partRenderer.setMesh(mesh);
+        this.partNormalDepthRenderer.setMesh(mesh);
         var newCenter = this.part.getCenter().times(-0.5);
         if (center) {
             this.translation = Vector3.zero();
@@ -1444,11 +1474,16 @@ var Matrix4 = /** @class */ (function () {
 }());
 var Mesh = /** @class */ (function () {
     function Mesh(triangles) {
+        this.vertexBuffer = null;
+        this.normalBuffer = null;
         this.triangles = triangles;
     }
-    Mesh.prototype.createPositionBuffer = function () {
-        var positionBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    Mesh.prototype.createVertexBuffer = function () {
+        if (this.vertexBuffer != null) {
+            return this.vertexBuffer;
+        }
+        var vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
         var positions = [];
         for (var _i = 0, _a = this.triangles; _i < _a.length; _i++) {
             var triangle = _a[_i];
@@ -1457,9 +1492,13 @@ var Mesh = /** @class */ (function () {
             this.pushVector(positions, triangle.v3);
         }
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-        return positionBuffer;
+        this.vertexBuffer = vertexBuffer;
+        return vertexBuffer;
     };
     Mesh.prototype.createNormalBuffer = function () {
+        if (this.normalBuffer != null) {
+            return this.normalBuffer;
+        }
         var normalBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
         var normals = [];
@@ -1477,6 +1516,7 @@ var Mesh = /** @class */ (function () {
             }
         }
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+        this.normalBuffer = normalBuffer;
         return normalBuffer;
     };
     Mesh.prototype.pushVector = function (array, vector) {
@@ -1520,6 +1560,9 @@ var Mesh = /** @class */ (function () {
         link.href = window.URL.createObjectURL(blob);
         link.download = filename;
         link.click();
+    };
+    Mesh.prototype.getVertexCount = function () {
+        return this.triangles.length * 3;
     };
     return Mesh;
 }());
@@ -2257,12 +2300,12 @@ var MeshRenderer = /** @class */ (function () {
         this.transform = Matrix4.getIdentity();
     }
     MeshRenderer.prototype.setMesh = function (mesh) {
-        this.mesh = mesh;
-        this.positions = mesh.createPositionBuffer();
+        this.vertexCount = mesh.getVertexCount();
+        this.vertices = mesh.createVertexBuffer();
         this.normals = mesh.createNormalBuffer();
     };
     MeshRenderer.prototype.render = function (camera) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices);
         gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.normals);
@@ -2273,69 +2316,42 @@ var MeshRenderer = /** @class */ (function () {
         gl.uniformMatrix4fv(this.shader.attributes["modelViewMatrix"], false, this.transform.times(camera.transform).elements);
         gl.uniform3f(this.shader.attributes["albedo"], this.color.x, this.color.y, this.color.z);
         gl.uniform1f(this.shader.attributes["alpha"], this.alpha);
-        gl.drawArrays(gl.TRIANGLES, 0, this.mesh.triangles.length * 3);
+        gl.drawArrays(gl.TRIANGLES, 0, this.vertexCount);
     };
     return MeshRenderer;
 }());
 var NormalDepthRenderer = /** @class */ (function () {
     function NormalDepthRenderer() {
-        this.alpha = 1;
         this.prepareShaders();
         this.transform = Matrix4.getIdentity();
     }
     NormalDepthRenderer.prototype.prepareShaders = function () {
-        this.colorShader = new Shader(VERTEX_SHADER, FRAGMENT_SHADER);
-        this.colorShader.setAttribute("vertexPosition");
-        this.colorShader.setAttribute("normal");
-        this.colorShader.setUniform("projectionMatrix");
-        this.colorShader.setUniform("modelViewMatrix");
-        this.colorShader.setUniform("albedo");
-        this.colorShader.setUniform("alpha");
-        this.normalShader = new Shader(VERTEX_SHADER, NORMAL_FRAGMENT_SHADER);
-        this.normalShader.setAttribute("vertexPosition");
-        this.normalShader.setAttribute("normal");
-        this.normalShader.setUniform("projectionMatrix");
-        this.normalShader.setUniform("modelViewMatrix");
+        this.shader = new Shader(VERTEX_SHADER, NORMAL_FRAGMENT_SHADER);
+        this.shader.setAttribute("vertexPosition");
+        this.shader.setAttribute("normal");
+        this.shader.setUniform("projectionMatrix");
+        this.shader.setUniform("modelViewMatrix");
     };
     NormalDepthRenderer.prototype.setMesh = function (mesh) {
-        this.mesh = mesh;
-        this.positions = mesh.createPositionBuffer();
+        this.vertexCount = mesh.getVertexCount();
+        this.vertices = mesh.createVertexBuffer();
         this.normals = mesh.createNormalBuffer();
     };
     NormalDepthRenderer.prototype.render = function (camera) {
-        this.renderColor(camera);
-        this.renderNormals(camera);
-    };
-    NormalDepthRenderer.prototype.renderColor = function (camera) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
-        gl.vertexAttribPointer(this.colorShader.attributes["vertexPosition"], 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(this.colorShader.attributes["vertexPosition"]);
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.normals);
-        gl.vertexAttribPointer(this.colorShader.attributes["normal"], 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(this.colorShader.attributes["normal"]);
-        gl.useProgram(this.colorShader.program);
-        gl.uniformMatrix4fv(this.colorShader.attributes["projectionMatrix"], false, camera.getProjectionMatrix().elements);
-        gl.uniformMatrix4fv(this.colorShader.attributes["modelViewMatrix"], false, this.transform.times(camera.transform).elements);
-        gl.uniform3f(this.colorShader.attributes["albedo"], this.color.x, this.color.y, this.color.z);
-        gl.uniform1f(this.colorShader.attributes["alpha"], this.alpha);
-        gl.drawArrays(gl.TRIANGLES, 0, this.mesh.triangles.length * 3);
-        gl.flush();
-    };
-    NormalDepthRenderer.prototype.renderNormals = function (camera) {
         gl.bindFramebuffer(gl.FRAMEBUFFER, camera.frameBuffer);
         gl.bindTexture(gl.TEXTURE_2D, null);
         gl.clearColor(0.5, 0.5, -1.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
-        gl.vertexAttribPointer(this.normalShader.attributes["vertexPosition"], 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(this.normalShader.attributes["vertexPosition"]);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices);
+        gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.normals);
-        gl.vertexAttribPointer(this.normalShader.attributes["normal"], 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(this.normalShader.attributes["normal"]);
-        gl.useProgram(this.normalShader.program);
-        gl.uniformMatrix4fv(this.normalShader.attributes["projectionMatrix"], false, camera.getProjectionMatrix().elements);
-        gl.uniformMatrix4fv(this.normalShader.attributes["modelViewMatrix"], false, this.transform.times(camera.transform).elements);
-        gl.drawArrays(gl.TRIANGLES, 0, this.mesh.triangles.length * 3);
+        gl.vertexAttribPointer(this.shader.attributes["normal"], 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(this.shader.attributes["normal"]);
+        gl.useProgram(this.shader.program);
+        gl.uniformMatrix4fv(this.shader.attributes["projectionMatrix"], false, camera.getProjectionMatrix().elements);
+        gl.uniformMatrix4fv(this.shader.attributes["modelViewMatrix"], false, this.transform.times(camera.transform).elements);
+        gl.drawArrays(gl.TRIANGLES, 0, this.vertexCount);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     };
     return NormalDepthRenderer;

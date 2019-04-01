@@ -474,10 +474,8 @@ var PartMeshGenerator = /** @class */ (function (_super) {
     PartMeshGenerator.prototype.renderLip = function (block, zOffset) {
         var center = block.getCylinderOrigin().plus(block.forward().times(zOffset));
         for (var i = 0; i < SUBDIVISIONS; i++) {
-            var angleI = i / 2 * Math.PI / SUBDIVISIONS;
-            var angleI2 = (i + 1) / 2 * Math.PI / SUBDIVISIONS;
-            var out1 = block.right().times(Math.sin(angleI + getAngle(block.quadrant) * DEG_TO_RAD)).plus(block.up().times(Math.cos(angleI + getAngle(block.quadrant) * DEG_TO_RAD)));
-            var out2 = block.right().times(Math.sin(angleI2 + getAngle(block.quadrant) * DEG_TO_RAD)).plus(block.up().times(Math.cos(angleI2 + getAngle(block.quadrant) * DEG_TO_RAD)));
+            var out1 = block.getOnCircle(i / 2 * Math.PI / SUBDIVISIONS);
+            var out2 = block.getOnCircle((i + 1) / 2 * Math.PI / SUBDIVISIONS);
             for (var j = 0; j < LIP_SUBDIVISIONS; j++) {
                 var angleJ = j * Math.PI / LIP_SUBDIVISIONS;
                 var angleJ2 = (j + 1) * Math.PI / LIP_SUBDIVISIONS;
@@ -597,22 +595,22 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         var hasOpenStart = this.hasOpenStart(block);
         var showInteriorEndCap = this.showInteriorCap(block, nextBlock) || (nextBlock == null && !hasOpenEnd);
         var showInteriorStartCap = this.showInteriorCap(block, previousBlock) || (previousBlock == null && !hasOpenStart);
-        var offsetStart = (hasOpenStart ? PIN_HOLE_OFFSET : 0) + (showInteriorStartCap ? INTERIOR_END_MARGIN : 0);
-        var offsetEnd = (hasOpenEnd ? PIN_HOLE_OFFSET : 0) + (showInteriorEndCap ? INTERIOR_END_MARGIN : 0);
+        var offsetStart = (hasOpenStart || showInteriorStartCap ? PIN_HOLE_OFFSET : 0) + (showInteriorStartCap ? INTERIOR_END_MARGIN : 0);
+        var offsetEnd = (hasOpenEnd || showInteriorEndCap ? PIN_HOLE_OFFSET : 0) + (showInteriorEndCap ? INTERIOR_END_MARGIN : 0);
         this.createCylinder(block, offsetStart, PIN_HOLE_RADIUS, distance - offsetStart - offsetEnd, true);
-        if (hasOpenStart) {
-            this.createCylinder(block, 0, INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
-            this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
+        if (hasOpenStart || showInteriorStartCap) {
+            this.createCylinder(block, showInteriorStartCap ? INTERIOR_END_MARGIN : 0, INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
+            this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, PIN_HOLE_OFFSET + (showInteriorStartCap ? INTERIOR_END_MARGIN : 0), true);
         }
-        if (hasOpenEnd) {
-            this.createCylinder(block, distance - PIN_HOLE_OFFSET, INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
-            this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, distance - PIN_HOLE_OFFSET, false);
+        if (hasOpenEnd || showInteriorEndCap) {
+            this.createCylinder(block, distance - PIN_HOLE_OFFSET - (showInteriorEndCap ? INTERIOR_END_MARGIN : 0), INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
+            this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, distance - PIN_HOLE_OFFSET - (showInteriorEndCap ? INTERIOR_END_MARGIN : 0), false);
         }
         if (showInteriorEndCap) {
-            this.createCircle(block, PIN_HOLE_RADIUS, distance - INTERIOR_END_MARGIN, false);
+            this.createCircle(block, INTERIOR_RADIUS, distance - INTERIOR_END_MARGIN, false);
         }
         if (showInteriorStartCap) {
-            this.createCircle(block, PIN_HOLE_RADIUS, INTERIOR_END_MARGIN, true);
+            this.createCircle(block, INTERIOR_RADIUS, INTERIOR_END_MARGIN, true);
         }
     };
     PartMeshGenerator.prototype.renderAxleHoleInterior = function (block) {
@@ -1192,6 +1190,7 @@ var Handles = /** @class */ (function () {
         if (!this.visible) {
             return;
         }
+        this.box.render(camera);
         this.xPositive.alpha = this.handleAlpha.x;
         this.xNegative.alpha = this.handleAlpha.x;
         this.yPositive.alpha = this.handleAlpha.y;
@@ -1214,7 +1213,6 @@ var Handles = /** @class */ (function () {
             var renderer = _e[_d];
             renderer.render(camera);
         }
-        this.box.render(camera);
     };
     Handles.prototype.updateTransforms = function () {
         this.xPositive.transform = Quaternion.euler(new Vector3(0, -90, 0)).toMatrix()
@@ -2041,7 +2039,7 @@ var SmallBlock = /** @class */ (function (_super) {
     };
     SmallBlock.prototype.getOnCircle = function (angle, radius) {
         if (radius === void 0) { radius = 1; }
-        return this.right().times(Math.sin(angle + getAngle(this.quadrant) * DEG_TO_RAD) * radius).plus(this.up().times(Math.cos(angle + getAngle(this.quadrant) * DEG_TO_RAD) * radius));
+        return this.right().times(Math.sin(angle + getAngle(this.quadrant)) * radius).plus(this.up().times(Math.cos(angle + getAngle(this.quadrant)) * radius));
     };
     return SmallBlock;
 }(Block));
@@ -2168,11 +2166,11 @@ function getAngle(quadrant) {
         case Quadrant.TopRight:
             return 0;
         case Quadrant.BottomRight:
-            return 90;
+            return 90 * DEG_TO_RAD;
         case Quadrant.BottomLeft:
-            return 180;
+            return 180 * DEG_TO_RAD;
         case Quadrant.TopLeft:
-            return 270;
+            return 270 * DEG_TO_RAD;
     }
     throw new Error("Unknown quadrant: " + quadrant);
 }

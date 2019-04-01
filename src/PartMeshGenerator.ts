@@ -384,24 +384,59 @@ class PartMeshGenerator extends MeshGenerator {
                     this.renderAxle(block);
             }
         }
-    }
+	}
+
+	private renderLip(block: TinyBlock, zOffset: number) {		
+		var center = block.getCylinderOrigin().plus(block.forward().times(zOffset));
+		
+		for (var i = 0; i < SUBDIVISIONS; i++) {
+			var angleI = i / 2 * Math.PI / SUBDIVISIONS;
+			var angleI2 = (i + 1) / 2 * Math.PI / SUBDIVISIONS;
+			var out1 = block.right().times(Math.sin(angleI + getAngle(block.quadrant) * DEG_TO_RAD)).plus(
+				block.up().times(Math.cos(angleI + getAngle(block.quadrant) * DEG_TO_RAD)));
+			var out2 = block.right().times(Math.sin(angleI2 + getAngle(block.quadrant) * DEG_TO_RAD)).plus(
+				block.up().times(Math.cos(angleI2 + getAngle(block.quadrant) * DEG_TO_RAD)));
+
+			for (var j = 0; j < LIP_SUBDIVISIONS; j++) {
+				var angleJ = j * Math.PI / LIP_SUBDIVISIONS;
+				var angleJ2 = (j + 1) * Math.PI / LIP_SUBDIVISIONS;
+				this.createQuadWithNormals(
+					center.plus(out1.times(PIN_RADIUS)).plus(out1.times(Math.sin(angleJ) * PIN_LIP_RADIUS).plus(block.forward().times(Math.cos(angleJ) * PIN_LIP_RADIUS))),
+					center.plus(out2.times(PIN_RADIUS)).plus(out2.times(Math.sin(angleJ) * PIN_LIP_RADIUS).plus(block.forward().times(Math.cos(angleJ) * PIN_LIP_RADIUS))),
+					center.plus(out2.times(PIN_RADIUS)).plus(out2.times(Math.sin(angleJ2) * PIN_LIP_RADIUS).plus(block.forward().times(Math.cos(angleJ2) * PIN_LIP_RADIUS))),
+					center.plus(out1.times(PIN_RADIUS)).plus(out1.times(Math.sin(angleJ2) * PIN_LIP_RADIUS).plus(block.forward().times(Math.cos(angleJ2) * PIN_LIP_RADIUS))),
+					out1.times(-Math.sin(angleJ)).plus(block.forward().times(-Math.cos(angleJ))),
+					out2.times(-Math.sin(angleJ)).plus(block.forward().times(-Math.cos(angleJ))),
+					out2.times(-Math.sin(angleJ2)).plus(block.forward().times(-Math.cos(angleJ2))),
+					out1.times(-Math.sin(angleJ2)).plus(block.forward().times(-Math.cos(angleJ2))));
+			}
+		}
+	}
 
     private renderPin(block: TinyBlock) {
-        var nextBlock = this.getNextBlock(block);
+		var nextBlock = this.getNextBlock(block);
 		var previousBlock = this.getPreviousBlock(block);
 
 		var distance = block.getDepth();
 
 		var startOffset = (previousBlock != null && previousBlock.type == BlockType.Axle) ? AXLE_PIN_ADAPTER_SIZE : 0;
+		if (previousBlock == null) {
+			startOffset += 2 * PIN_LIP_RADIUS;
+		}
 		var endOffset = (nextBlock != null && nextBlock.type == BlockType.Axle) ? AXLE_PIN_ADAPTER_SIZE : 0;
+		if (nextBlock == null) {
+			endOffset += 2 * PIN_LIP_RADIUS;
+		}
 
 		this.createCylinder(block, startOffset, PIN_RADIUS, distance - startOffset - endOffset);
 
 		if (nextBlock == null) {
 			this.createCircle(block, PIN_RADIUS, distance, true);
+			this.renderLip(block, distance - PIN_LIP_RADIUS);
 		}
 		if (previousBlock == null) {
 			this.createCircle(block, PIN_RADIUS, 0);
+			this.renderLip(block, PIN_LIP_RADIUS);
 		}
 		if (nextBlock != null && !nextBlock.isAttachment()) {
 			this.createCircleWithHole(block, PIN_RADIUS, 0.5 - EDGE_MARGIN, distance, true, !nextBlock.rounded);

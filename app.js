@@ -372,7 +372,7 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         this.tinyBlocks.set(position, new TinyBlock(position, source));
     };
     PartMeshGenerator.prototype.isFaceVisible = function (block, direction) {
-        if (this.tinyBlocks.containsKey(block.position.plus(direction))) {
+        if (this.isTinyBlock(block.position.plus(direction))) {
             return false;
         }
         return this.tinyBlocks.get(block.position.plus(direction).minus(direction.normalized())).isFaceVisible(direction);

@@ -269,7 +269,7 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private isFaceVisible(block: TinyBlock, direction: Vector3): boolean {
-		if (this.tinyBlocks.containsKey(block.position.plus(direction))) {
+		if (this.isTinyBlock(block.position.plus(direction))) {
             return false;
 		}
 		return this.tinyBlocks.get(block.position.plus(direction).minus(direction.normalized())).isFaceVisible(direction);

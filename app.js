@@ -375,13 +375,12 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         if (this.isTinyBlock(block.position.plus(direction))) {
             return false;
         }
-        return this.tinyBlocks.get(block.position.plus(direction).minus(direction.normalized())).isFaceVisible(direction);
+        return block.isFaceVisible(direction);
     };
     PartMeshGenerator.prototype.createTinyFace = function (block, v1, v2, v3, v4, flipped) {
         if (flipped === void 0) { flipped = false; }
         var pos = block.position;
-        var size = block.forward().times(block.mergedBlocks).plus(block.right()).plus(block.up());
-        this.createQuad(tinyBlockToWorld(pos.plus(v1.elementwiseMultiply(size))), tinyBlockToWorld(pos.plus(v2.elementwiseMultiply(size))), tinyBlockToWorld(pos.plus(v3.elementwiseMultiply(size))), tinyBlockToWorld(pos.plus(v4.elementwiseMultiply(size))), flipped);
+        this.createQuad(tinyBlockToWorld(pos.plus(v1)), tinyBlockToWorld(pos.plus(v2)), tinyBlockToWorld(pos.plus(v3)), tinyBlockToWorld(pos.plus(v4)), flipped);
     };
     PartMeshGenerator.prototype.getNextBlock = function (block) {
         return this.tinyBlocks.getOrNull(block.position.plus(block.forward().times(block.mergedBlocks)));
@@ -403,12 +402,12 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.vertical().times(3)))
             && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.horizontal().times(3)).minus(block.vertical().times(3)));
     };
-    PartMeshGenerator.prototype.hideStartEndFaces = function (centerBlock, forward) {
-        var direction = forward ? centerBlock.forward() : centerBlock.forward().times(-1);
-        centerBlock.hideFace(direction);
-        this.hideFaceIfExists(centerBlock.position.minus(centerBlock.horizontal()), direction);
-        this.hideFaceIfExists(centerBlock.position.minus(centerBlock.vertical()), direction);
-        this.hideFaceIfExists(centerBlock.position.minus(centerBlock.vertical()).minus(centerBlock.horizontal()), direction);
+    PartMeshGenerator.prototype.hideStartEndFaces = function (position, block, forward) {
+        var direction = forward ? block.forward() : block.forward().times(-1);
+        this.hideFaceIfExists(position, direction);
+        this.hideFaceIfExists(position.minus(block.horizontal()), direction);
+        this.hideFaceIfExists(position.minus(block.vertical()), direction);
+        this.hideFaceIfExists(position.minus(block.vertical()).minus(block.horizontal()), direction);
     };
     PartMeshGenerator.prototype.hideFaceIfExists = function (position, direction) {
         if (this.tinyBlocks.containsKey(position)) {
@@ -437,12 +436,12 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             // Back cap
             if (nextBlock == null) {
                 this.createCircleWithHole(block, block.hasInterior && hasOpenEnd ? INTERIOR_RADIUS : 0, 0.5 - EDGE_MARGIN, distance, false, !block.rounded);
-                this.hideStartEndFaces(this.tinyBlocks.get(block.position.plus(block.forward().times(block.mergedBlocks - 1))), true);
+                this.hideStartEndFaces(block.position.plus(block.forward().times(block.mergedBlocks - 1)), block, true);
             }
             // Front cap
             if (previousBlock == null) {
                 this.createCircleWithHole(block, block.hasInterior && hasOpenStart ? INTERIOR_RADIUS : 0, 0.5 - EDGE_MARGIN, 0, true, !block.rounded);
-                this.hideStartEndFaces(block, false);
+                this.hideStartEndFaces(block.position, block, false);
             }
             if (block.rounded) {
                 // Rounded corners
@@ -519,9 +518,11 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         }
         if (nextBlock != null && !nextBlock.isAttachment()) {
             this.createCircleWithHole(block, PIN_RADIUS, 0.5 - EDGE_MARGIN, distance, true, !nextBlock.rounded);
+            this.hideStartEndFaces(nextBlock.position, block, false);
         }
         if (previousBlock != null && !previousBlock.isAttachment()) {
             this.createCircleWithHole(block, PIN_RADIUS, 0.5 - EDGE_MARGIN, 0, false, !previousBlock.rounded);
+            this.hideStartEndFaces(previousBlock.position, block, true);
         }
         if (nextBlock != null && nextBlock.type == BlockType.Axle) {
             this.createCircleWithHole(block, PIN_RADIUS, AXLE_PIN_ADAPTER_RADIUS, distance - AXLE_PIN_ADAPTER_SIZE, true);
@@ -566,6 +567,12 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         }
         if (previousBlock != null && previousBlock.type != block.type && previousBlock.rounded) {
             this.createAxleToCircleAdapter(start, block, previousBlock.type == BlockType.Pin ? AXLE_PIN_ADAPTER_RADIUS : 0.5 - EDGE_MARGIN, true);
+        }
+        if (nextBlock != null && !nextBlock.isAttachment()) {
+            this.hideStartEndFaces(nextBlock.position, block, false);
+        }
+        if (previousBlock != null && !previousBlock.isAttachment()) {
+            this.hideStartEndFaces(previousBlock.position, block, true);
         }
     };
     PartMeshGenerator.prototype.createAxleToCircleAdapter = function (center, block, radius, flipped) {
@@ -708,23 +715,22 @@ var PartMeshGenerator = /** @class */ (function (_super) {
     PartMeshGenerator.prototype.renderTinyBlockFaces = function () {
         for (var _i = 0, _a = this.tinyBlocks.values(); _i < _a.length; _i++) {
             var block = _a[_i];
-            if (block.merged || block.isAttachment()) {
+            if (block.isAttachment()) {
                 continue;
             }
-            var size = block.forward().times(block.mergedBlocks).plus(block.right()).plus(block.up());
-            if (this.isFaceVisible(block, new Vector3(size.x, 0, 0))) {
+            if (this.isFaceVisible(block, new Vector3(1, 0, 0))) {
                 this.createTinyFace(block, new Vector3(1, 0, 0), new Vector3(1, 0, 1), new Vector3(1, 1, 1), new Vector3(1, 1, 0), true);
             }
             if (this.isFaceVisible(block, new Vector3(-1, 0, 0))) {
                 this.createTinyFace(block, new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 1), new Vector3(0, 1, 0));
             }
-            if (this.isFaceVisible(block, new Vector3(0, size.y, 0))) {
+            if (this.isFaceVisible(block, new Vector3(0, 1, 0))) {
                 this.createTinyFace(block, new Vector3(0, 1, 0), new Vector3(0, 1, 1), new Vector3(1, 1, 1), new Vector3(1, 1, 0));
             }
             if (this.isFaceVisible(block, new Vector3(0, -1, 0))) {
                 this.createTinyFace(block, new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(1, 0, 1), new Vector3(1, 0, 0), true);
             }
-            if (this.isFaceVisible(block, new Vector3(0, 0, size.z))) {
+            if (this.isFaceVisible(block, new Vector3(0, 0, 1))) {
                 this.createTinyFace(block, new Vector3(0, 0, 1), new Vector3(0, 1, 1), new Vector3(1, 1, 1), new Vector3(1, 0, 1), true);
             }
             if (this.isFaceVisible(block, new Vector3(0, 0, -1))) {
@@ -818,18 +824,18 @@ function ease(value) {
     return value < 0.5 ? 2 * value * value : -1 + (4 - 2 * value) * value;
 }
 var TECHNIC_UNIT = 8;
-var EDGE_MARGIN = 0.19 / TECHNIC_UNIT; // 0.16 -- 0.23
-var INTERIOR_RADIUS = 6.2 * 0.5 / TECHNIC_UNIT;
-var PIN_HOLE_RADIUS = 5.2 * 0.5 / TECHNIC_UNIT; // 5.0 -- 5.5
-var PIN_HOLE_OFFSET = 0.55 / TECHNIC_UNIT; // 0.5 is too small
-var AXLE_HOLE_SIZE = 2.1 * 0.5 / TECHNIC_UNIT; // 2.0 -- 2.3
-var PIN_RADIUS = 4.8 * 0.5 / TECHNIC_UNIT; // 4.7 -- 5.0
-var AXLE_SIZE_INNER = 1.7 * 0.5 / TECHNIC_UNIT; // 1.75 is too large
-var AXLE_SIZE_OUTER = 4.2 * 0.5 / TECHNIC_UNIT; // 4.4 is too large
+var EDGE_MARGIN = 0.2 / TECHNIC_UNIT;
+var INTERIOR_RADIUS = 6.4 * 0.5 / TECHNIC_UNIT;
+var PIN_HOLE_RADIUS = 5.2 * 0.5 / TECHNIC_UNIT;
+var PIN_HOLE_OFFSET = 0.7 / TECHNIC_UNIT;
+var AXLE_HOLE_SIZE = 2.02 * 0.5 / TECHNIC_UNIT;
+var PIN_RADIUS = 4.63 * 0.5 / TECHNIC_UNIT;
+var PIN_LIP_RADIUS = 0.17 / TECHNIC_UNIT;
+var AXLE_SIZE_INNER = 1.72 * 0.5 / TECHNIC_UNIT;
+var AXLE_SIZE_OUTER = 4.3 * 0.5 / TECHNIC_UNIT;
 var AXLE_PIN_ADAPTER_SIZE = 0.8 / TECHNIC_UNIT;
 var AXLE_PIN_ADAPTER_RADIUS = 6 * 0.5 / TECHNIC_UNIT;
 var INTERIOR_END_MARGIN = 0.2 / TECHNIC_UNIT;
-var PIN_LIP_RADIUS = 0.4 / TECHNIC_UNIT;
 var LIP_SUBDIVISIONS = 6;
 var SUBDIVISIONS = 8;
 var Catalog = /** @class */ (function () {

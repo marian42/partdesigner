@@ -209,7 +209,7 @@ class PartMeshGenerator extends MeshGenerator {
 					if (a == 0 && b == 0) {
 						continue;
 					}
-					var neighborPos = block.position.minus(block.horizontal().times(2 * a)).minus(block.vertical().times(2 * b));
+					var neighborPos = block.position.minus(block.horizontal().times(3 * a)).minus(block.vertical().times(3 * b));
 					if (!this.tinyBlocks.containsKey(neighborPos)) {
 						block.hasInterior = false;
 					} else {

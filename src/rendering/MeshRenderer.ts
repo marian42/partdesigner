@@ -9,6 +9,8 @@ class MeshRenderer implements Renderer {
     public color: Vector3 = new Vector3(1, 0, 0);
     public alpha: number = 1;
 
+    public enabled: boolean = true;
+
     constructor() {
         this.shader = new Shader(VERTEX_SHADER, FRAGMENT_SHADER);
 
@@ -29,6 +31,10 @@ class MeshRenderer implements Renderer {
     }
 
     public render(camera: Camera) {
+        if (!this.enabled) {
+            return;
+        }
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices);
         gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);

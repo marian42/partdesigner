@@ -5,10 +5,10 @@ class WireframeRenderer implements Renderer {
 
 	public transform: Matrix4;
 	
-	public visible: boolean = true;
+	public enabled: boolean = true;
 
 	public color: Vector3 = new Vector3(0.0, 0.0, 0.0);
-	public alpha: number = 0.6;
+	public alpha: number = 0.5;
 
     constructor() {
 		this.shader = new Shader(SIMPLE_VERTEX_SHADER, COLOR_FRAGMENT_SHADER);
@@ -28,7 +28,7 @@ class WireframeRenderer implements Renderer {
     }
 
     public render(camera: Camera) {
-		if (!this.visible) {
+		if (!this.enabled) {
 			return;
 		}
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices);

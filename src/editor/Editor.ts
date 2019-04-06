@@ -9,6 +9,7 @@ class Editor {
 	camera: Camera;
 	partRenderer: MeshRenderer;
 	partNormalDepthRenderer: NormalDepthRenderer;
+	contourEffect: ContourPostEffect;
 	wireframeRenderer: WireframeRenderer;
 	part: Part;
 	canvas: HTMLCanvasElement;
@@ -27,6 +28,8 @@ class Editor {
 
 	editorState: Block;
 	createFullSizedBlocks: boolean;
+
+	style: RenderStyle = RenderStyle.Contour;
 
 	constructor() {
 		var url = new URL(document.URL);
@@ -47,12 +50,14 @@ class Editor {
 		this.camera.renderers.push(this.partRenderer);
 
 		this.wireframeRenderer = new WireframeRenderer();
+		this.wireframeRenderer.enabled = false;
 		this.camera.renderers.push(this.wireframeRenderer);
 
 		this.partNormalDepthRenderer = new NormalDepthRenderer();
 		this.camera.renderers.push(this.partNormalDepthRenderer);
 
-		this.camera.renderers.push(new ContourPostEffect());
+		this.contourEffect = new ContourPostEffect();
+		this.camera.renderers.push(this.contourEffect);
 
 		this.handles = new Handles(this.camera);
 		this.camera.renderers.push(this.handles);
@@ -71,7 +76,8 @@ class Editor {
 		document.getElementById("randomize").addEventListener("click", (event: MouseEvent) => this.randomize());
 		document.getElementById("share").addEventListener("click", (event: MouseEvent) => this.share());
 		document.getElementById("save").addEventListener("click", (event: MouseEvent) => new PartMeshGenerator(this.part).getMesh().saveSTLFile());
-		document.getElementById("remove").addEventListener("click", (event: MouseEvent) => this.remove());		
+		document.getElementById("remove").addEventListener("click", (event: MouseEvent) => this.remove());
+		document.getElementById("style").addEventListener("change", (event: MouseEvent) => this.setRenderStyle(parseInt((event.srcElement as HTMLSelectElement).value)));
         window.addEventListener("resize", (e: Event) => this.camera.onResize());
 
 		this.initializeEditor("type", (typeName: string) => this.setType(typeName));
@@ -141,6 +147,15 @@ class Editor {
 		this.updateBlock();
 	}
 
+	private setRenderStyle(style: RenderStyle) {
+		this.style = style;
+		this.partNormalDepthRenderer.enabled = style == RenderStyle.Contour;
+		this.contourEffect.enabled = style == RenderStyle.Contour;
+		this.partRenderer.enabled = style != RenderStyle.Wireframe;
+		this.wireframeRenderer.enabled = style == RenderStyle.SolidWireframe || style == RenderStyle.Wireframe;
+		this.updateMesh();
+	}
+
 	private updateBlock() {
 		this.part.placeBlockForced(this.handles.getSelectedBlock(), new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
 		if (this.createFullSizedBlocks) {
@@ -152,9 +167,15 @@ class Editor {
 
 	public updateMesh(center = false) {
 		let mesh = new PartMeshGenerator(this.part).getMesh();
-		this.partRenderer.setMesh(mesh);
-		this.partNormalDepthRenderer.setMesh(mesh);
-		this.wireframeRenderer.setMesh(mesh);
+		if (this.partRenderer.enabled) {
+			this.partRenderer.setMesh(mesh);
+		}
+		if (this.partNormalDepthRenderer.enabled) {
+			this.partNormalDepthRenderer.setMesh(mesh);
+		}
+		if (this.wireframeRenderer.enabled) {
+			this.wireframeRenderer.setMesh(mesh);
+		}
 
 		var newCenter = this.part.getCenter().times(-0.5);
 		if (center) {

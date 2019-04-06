@@ -8,6 +8,8 @@ class NormalDepthRenderer implements Renderer {
 
     private vertexCount: number;
 
+    public enabled: boolean = true;
+
     constructor() {
         this.prepareShaders();
         this.transform = Matrix4.getIdentity();
@@ -28,6 +30,10 @@ class NormalDepthRenderer implements Renderer {
     }
 
     public render(camera: Camera) {
+        if (!this.enabled) {
+            return;
+        }
+
         gl.bindFramebuffer(gl.FRAMEBUFFER, camera.frameBuffer);
         gl.bindTexture(gl.TEXTURE_2D, null);
 

@@ -1,7 +1,9 @@
 class ContourPostEffect implements Renderer {
 
-	shader: Shader;
-    positions: WebGLBuffer;    
+	private shader: Shader;
+	private vertices: WebGLBuffer;
+	
+	public enabled: boolean = true;
     
     constructor() {
         this.shader = new Shader(COUNTOUR_VERTEX, CONTOUR_FRAGMENT);
@@ -11,14 +13,18 @@ class ContourPostEffect implements Renderer {
 		this.shader.setUniform("depthTexture");
 		this.shader.setUniform("resolution");
 		
-		this.positions = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
+		this.vertices = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices);
 		var positions: number[] = [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1];
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
     }
 
     public render(camera: Camera) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
+		if (!this.enabled) {
+			return;
+		}
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices);
         gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);
       

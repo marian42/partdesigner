@@ -197,3 +197,21 @@ input[type=radio]:checked + label.radiolabel.z:hover, label.radiolabel.z:hover {
 .catalogItem:hover {
     border-color: rgb(47, 130, 255);
 }
+
+.group select, .group select:focus {
+    display: table-cell;
+    width: 100%;
+    border-radius: 5px;
+    padding: 8px;
+    border: 1px solid rgb(21, 98, 212);
+    background-color: rgb(21, 98, 212);
+    transition: 0.1s;
+    color: white;
+}
+
+.group select:hover, .group select:active {
+    border: 1px solid rgb(47, 130, 255);
+    background-color: rgb(47, 130, 255);
+    color: white;
+    text-shadow: 0px 1px 6px rgba(0,0,0,0.63);
+}

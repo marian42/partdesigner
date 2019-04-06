@@ -977,6 +977,7 @@ var Editor = /** @class */ (function () {
         this.zoom = 5;
         this.zoomStep = 0.9;
         this.mouseMode = MouseMode.None;
+        this.style = RenderStyle.Contour;
         var url = new URL(document.URL);
         if (url.searchParams.has("part")) {
             this.part = Part.fromString(url.searchParams.get("part"));
@@ -991,9 +992,13 @@ var Editor = /** @class */ (function () {
         this.partRenderer = new MeshRenderer();
         this.partRenderer.color = new Vector3(0.67, 0.7, 0.71);
         this.camera.renderers.push(this.partRenderer);
+        this.wireframeRenderer = new WireframeRenderer();
+        this.wireframeRenderer.enabled = false;
+        this.camera.renderers.push(this.wireframeRenderer);
         this.partNormalDepthRenderer = new NormalDepthRenderer();
         this.camera.renderers.push(this.partNormalDepthRenderer);
-        this.camera.renderers.push(new ContourPostEffect());
+        this.contourEffect = new ContourPostEffect();
+        this.camera.renderers.push(this.contourEffect);
         this.handles = new Handles(this.camera);
         this.camera.renderers.push(this.handles);
         this.center = Vector3.zero();
@@ -1010,6 +1015,7 @@ var Editor = /** @class */ (function () {
         document.getElementById("share").addEventListener("click", function (event) { return _this.share(); });
         document.getElementById("save").addEventListener("click", function (event) { return new PartMeshGenerator(_this.part).getMesh().saveSTLFile(); });
         document.getElementById("remove").addEventListener("click", function (event) { return _this.remove(); });
+        document.getElementById("style").addEventListener("change", function (event) { return _this.setRenderStyle(parseInt(event.srcElement.value)); });
         window.addEventListener("resize", function (e) { return _this.camera.onResize(); });
         this.initializeEditor("type", function (typeName) { return _this.setType(typeName); });
         this.initializeEditor("orientation", function (orientationName) { return _this.setOrientation(orientationName); });
@@ -1066,6 +1072,14 @@ var Editor = /** @class */ (function () {
         this.editorState.rounded = roundedName == "true";
         this.updateBlock();
     };
+    Editor.prototype.setRenderStyle = function (style) {
+        this.style = style;
+        this.partNormalDepthRenderer.enabled = style == RenderStyle.Contour;
+        this.contourEffect.enabled = style == RenderStyle.Contour;
+        this.partRenderer.enabled = style != RenderStyle.Wireframe;
+        this.wireframeRenderer.enabled = style == RenderStyle.SolidWireframe || style == RenderStyle.Wireframe;
+        this.updateMesh();
+    };
     Editor.prototype.updateBlock = function () {
         this.part.placeBlockForced(this.handles.getSelectedBlock(), new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
         if (this.createFullSizedBlocks) {
@@ -1076,8 +1090,15 @@ var Editor = /** @class */ (function () {
     Editor.prototype.updateMesh = function (center) {
         if (center === void 0) { center = false; }
         var mesh = new PartMeshGenerator(this.part).getMesh();
-        this.partRenderer.setMesh(mesh);
-        this.partNormalDepthRenderer.setMesh(mesh);
+        if (this.partRenderer.enabled) {
+            this.partRenderer.setMesh(mesh);
+        }
+        if (this.partNormalDepthRenderer.enabled) {
+            this.partNormalDepthRenderer.setMesh(mesh);
+        }
+        if (this.wireframeRenderer.enabled) {
+            this.wireframeRenderer.setMesh(mesh);
+        }
         var newCenter = this.part.getCenter().times(-0.5);
         if (center) {
             this.translation = Vector3.zero();
@@ -1374,6 +1395,13 @@ var Handles = /** @class */ (function () {
     };
     return Handles;
 }());
+var RenderStyle;
+(function (RenderStyle) {
+    RenderStyle[RenderStyle["Contour"] = 0] = "Contour";
+    RenderStyle[RenderStyle["Solid"] = 1] = "Solid";
+    RenderStyle[RenderStyle["Wireframe"] = 2] = "Wireframe";
+    RenderStyle[RenderStyle["SolidWireframe"] = 3] = "SolidWireframe";
+})(RenderStyle || (RenderStyle = {}));
 var Matrix4 = /** @class */ (function () {
     function Matrix4(elements) {
         this.elements = elements;
@@ -1535,6 +1563,22 @@ var Mesh = /** @class */ (function () {
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
         this.normalBuffer = normalBuffer;
         return normalBuffer;
+    };
+    Mesh.prototype.createWireframeVertexBuffer = function () {
+        var vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        var positions = [];
+        for (var _i = 0, _a = this.triangles; _i < _a.length; _i++) {
+            var triangle = _a[_i];
+            this.pushVector(positions, triangle.v1);
+            this.pushVector(positions, triangle.v2);
+            this.pushVector(positions, triangle.v2);
+            this.pushVector(positions, triangle.v3);
+            this.pushVector(positions, triangle.v3);
+            this.pushVector(positions, triangle.v1);
+        }
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+        return vertexBuffer;
     };
     Mesh.prototype.pushVector = function (array, vector) {
         array.push(vector.x);
@@ -2320,18 +2364,22 @@ var Camera = /** @class */ (function () {
 }());
 var ContourPostEffect = /** @class */ (function () {
     function ContourPostEffect() {
+        this.enabled = true;
         this.shader = new Shader(COUNTOUR_VERTEX, CONTOUR_FRAGMENT);
         this.shader.setAttribute("vertexPosition");
         this.shader.setUniform("normalTexture");
         this.shader.setUniform("depthTexture");
         this.shader.setUniform("resolution");
-        this.positions = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
+        this.vertices = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices);
         var positions = [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1];
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
     }
     ContourPostEffect.prototype.render = function (camera) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
+        if (!this.enabled) {
+            return;
+        }
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices);
         gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);
         gl.useProgram(this.shader.program);
@@ -2354,6 +2402,7 @@ var MeshRenderer = /** @class */ (function () {
     function MeshRenderer() {
         this.color = new Vector3(1, 0, 0);
         this.alpha = 1;
+        this.enabled = true;
         this.shader = new Shader(VERTEX_SHADER, FRAGMENT_SHADER);
         this.shader.setAttribute("vertexPosition");
         this.shader.setAttribute("normal");
@@ -2369,6 +2418,9 @@ var MeshRenderer = /** @class */ (function () {
         this.normals = mesh.createNormalBuffer();
     };
     MeshRenderer.prototype.render = function (camera) {
+        if (!this.enabled) {
+            return;
+        }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices);
         gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);
@@ -2386,6 +2438,7 @@ var MeshRenderer = /** @class */ (function () {
 }());
 var NormalDepthRenderer = /** @class */ (function () {
     function NormalDepthRenderer() {
+        this.enabled = true;
         this.prepareShaders();
         this.transform = Matrix4.getIdentity();
     }
@@ -2402,6 +2455,9 @@ var NormalDepthRenderer = /** @class */ (function () {
         this.normals = mesh.createNormalBuffer();
     };
     NormalDepthRenderer.prototype.render = function (camera) {
+        if (!this.enabled) {
+            return;
+        }
         gl.bindFramebuffer(gl.FRAMEBUFFER, camera.frameBuffer);
         gl.bindTexture(gl.TEXTURE_2D, null);
         gl.clearColor(0.5, 0.5, -1.0, 1.0);
@@ -2462,7 +2518,7 @@ var WireframeBox = /** @class */ (function () {
         this.colorOccluded = new Vector3(0.0, 0.0, 0.0);
         this.alphaOccluded = 0.15;
         this.scale = Vector3.one();
-        this.shader = new Shader(BOX_VERTEX_SHADER, BOX_FRAGMENT_SHADER);
+        this.shader = new Shader(SIMPLE_VERTEX_SHADER, COLOR_FRAGMENT_SHADER);
         this.shader.setAttribute("vertexPosition");
         this.shader.setUniform("projectionMatrix");
         this.shader.setUniform("modelViewMatrix");
@@ -2508,11 +2564,44 @@ var WireframeBox = /** @class */ (function () {
     };
     return WireframeBox;
 }());
+var WireframeRenderer = /** @class */ (function () {
+    function WireframeRenderer() {
+        this.enabled = true;
+        this.color = new Vector3(0.0, 0.0, 0.0);
+        this.alpha = 0.5;
+        this.shader = new Shader(SIMPLE_VERTEX_SHADER, COLOR_FRAGMENT_SHADER);
+        this.shader.setAttribute("vertexPosition");
+        this.shader.setUniform("projectionMatrix");
+        this.shader.setUniform("modelViewMatrix");
+        this.shader.setUniform("color");
+        this.shader.setUniform("scale");
+        this.transform = Matrix4.getIdentity();
+    }
+    WireframeRenderer.prototype.setMesh = function (mesh) {
+        this.vertexCount = mesh.getVertexCount() * 2;
+        this.vertices = mesh.createWireframeVertexBuffer();
+    };
+    WireframeRenderer.prototype.render = function (camera) {
+        if (!this.enabled) {
+            return;
+        }
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices);
+        gl.vertexAttribPointer(this.shader.attributes["vertexPosition"], 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(this.shader.attributes["vertexPosition"]);
+        gl.useProgram(this.shader.program);
+        gl.uniformMatrix4fv(this.shader.attributes["projectionMatrix"], false, camera.getProjectionMatrix().elements);
+        gl.uniformMatrix4fv(this.shader.attributes["modelViewMatrix"], false, this.transform.times(camera.transform).elements);
+        gl.uniform3f(this.shader.attributes["scale"], 1, 1, 1);
+        gl.uniform4f(this.shader.attributes["color"], this.color.x, this.color.y, this.color.z, this.alpha);
+        gl.drawArrays(gl.LINES, 0, this.vertexCount);
+    };
+    return WireframeRenderer;
+}());
 var VERTEX_SHADER = "\n    attribute vec4 vertexPosition;\n    attribute vec4 normal;\n\n    uniform mat4 modelViewMatrix;\n    uniform mat4 projectionMatrix;\n\n    varying vec3 v2fNormal;\n\n    void main() {\n        v2fNormal = (modelViewMatrix * vec4(normal.xyz, 0.0)).xyz;\n        gl_Position = projectionMatrix * modelViewMatrix * vertexPosition;\n    }\n";
 var FRAGMENT_SHADER = "\n    precision mediump float;\n\n    const vec3 lightDirection = vec3(-0.7, -0.7, 0.14);\n    const float ambient = 0.2;\n    const float diffuse = 0.8;\n    const float specular = 0.3;\n    const vec3 viewDirection = vec3(0.0, 0.0, 1.0);\n\n    varying vec3 v2fNormal;\n\n    uniform vec3 albedo;\n    uniform float alpha;\n\n    void main() {\n        vec3 color = albedo * (ambient\n             + diffuse * (0.5 + 0.5 * dot(lightDirection, v2fNormal))\n             + specular * pow(max(0.0, dot(reflect(-lightDirection, v2fNormal), viewDirection)), 2.0));\n\n        gl_FragColor = vec4(color.r, color.g, color.b, alpha);\n    }\n";
 var NORMAL_FRAGMENT_SHADER = "\n    precision mediump float;\n\n    varying vec3 v2fNormal;\n\n    void main() {\n        vec3 normal = vec3(0.5) + 0.5 * normalize(v2fNormal);\n        gl_FragColor = vec4(normal, 1.0);\n    }\n";
 var COUNTOUR_VERTEX = "\n    attribute vec2 vertexPosition;\n\n    varying vec2 uv;\n\n    void main() {\n        uv = vertexPosition / 2.0 + vec2(0.5);\n        gl_Position = vec4(vertexPosition, 0.0, 1.0);\n    }\n";
 var CONTOUR_FRAGMENT = "\n    precision mediump float;\n\n    uniform sampler2D normalTexture;\n    uniform sampler2D depthTexture;\n    uniform vec2 resolution;\n\n    varying vec2 uv;\n    \n    const float NORMAL_THRESHOLD = 0.5;\n\n    vec3 getNormal(vec2 uv) {\n        vec4 sample = texture2D(normalTexture, uv);\n        return 2.0 * sample.xyz - vec3(1.0);\n    }\n\n    float getDepth(vec2 uv) {\n        return texture2D(depthTexture, uv).r;\n    }\n\n    bool isContour(vec2 uv, float referenceDepth, vec3 referenceNormal) {\n        float depth = getDepth(uv);\n        vec3 normal = getNormal(uv);\n        float angle = abs(referenceNormal.z);\n        \n        float threshold = mix(0.005, 0.0001, pow(-referenceNormal.z, 0.5));\n\n        if (abs(depth - referenceDepth) > threshold) {\n            return true;\n        }\n\n        if (abs(dot(normal, referenceNormal)) < NORMAL_THRESHOLD) {\n            return true;\n        }\n\n        return false;\n    }\n\n    void main() {\n        vec2 pixelSize = vec2(1.0 / resolution.x, 1.0 / resolution.y);\n\n        float depth = getDepth(uv);\n        vec3 normal = getNormal(uv);\n\n        float contour = 0.0;\n        float count = 0.0;\n\n        for (float x = -1.0; x <= 1.0; x++) {\n            for (float y = -1.0; y <= 1.0; y++) {\n                if ((x != 0.0 || y != 0.0) && isContour(uv + pixelSize * vec2(x, y), depth, normal)) {\n                    count++;\n                }\n            }\n        }\n        contour = count == 1.0 ? 0.0 : clamp(0.0, 1.0, (count - 0.2) / 5.0);\n\n        gl_FragColor = vec4(vec3(0.0), contour);\n    }\n";
-var BOX_VERTEX_SHADER = "\n    attribute vec4 vertexPosition;\n\n    uniform mat4 modelViewMatrix;\n    uniform mat4 projectionMatrix;\n\n    uniform vec3 scale;\n\n    void main() {\n        gl_Position = projectionMatrix * modelViewMatrix * vec4((vertexPosition.xyz * scale), vertexPosition.a);\n    }\n";
-var BOX_FRAGMENT_SHADER = "\n    precision mediump float;\n\n    uniform vec4 color;\n\n    void main() {\n        gl_FragColor = color;\n    }\n";
+var SIMPLE_VERTEX_SHADER = "\n    attribute vec4 vertexPosition;\n\n    uniform mat4 modelViewMatrix;\n    uniform mat4 projectionMatrix;\n\n    uniform vec3 scale;\n\n    void main() {\n        gl_Position = projectionMatrix * modelViewMatrix * vec4((vertexPosition.xyz * scale), vertexPosition.a);\n    }\n";
+var COLOR_FRAGMENT_SHADER = "\n    precision mediump float;\n\n    uniform vec4 color;\n\n    void main() {\n        gl_FragColor = color;\n    }\n";
 //# sourceMappingURL=app.js.map

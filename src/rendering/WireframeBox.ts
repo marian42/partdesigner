@@ -14,7 +14,7 @@ class WireframeBox implements Renderer {
 	public scale: Vector3 = Vector3.one();
 
 	constructor() {
-		this.shader = new Shader(BOX_VERTEX_SHADER, BOX_FRAGMENT_SHADER);
+		this.shader = new Shader(SIMPLE_VERTEX_SHADER, COLOR_FRAGMENT_SHADER);
 
 		this.shader.setAttribute("vertexPosition");
         this.shader.setUniform("projectionMatrix");

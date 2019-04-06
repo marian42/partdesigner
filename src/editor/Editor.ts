@@ -9,6 +9,7 @@ class Editor {
 	camera: Camera;
 	partRenderer: MeshRenderer;
 	partNormalDepthRenderer: NormalDepthRenderer;
+	wireframeRenderer: WireframeRenderer;
 	part: Part;
 	canvas: HTMLCanvasElement;
 
@@ -44,6 +45,9 @@ class Editor {
 		this.partRenderer = new MeshRenderer();
 		this.partRenderer.color = new Vector3(0.67, 0.7, 0.71);
 		this.camera.renderers.push(this.partRenderer);
+
+		this.wireframeRenderer = new WireframeRenderer();
+		this.camera.renderers.push(this.wireframeRenderer);
 
 		this.partNormalDepthRenderer = new NormalDepthRenderer();
 		this.camera.renderers.push(this.partNormalDepthRenderer);
@@ -150,6 +154,7 @@ class Editor {
 		let mesh = new PartMeshGenerator(this.part).getMesh();
 		this.partRenderer.setMesh(mesh);
 		this.partNormalDepthRenderer.setMesh(mesh);
+		this.wireframeRenderer.setMesh(mesh);
 
 		var newCenter = this.part.getCenter().times(-0.5);
 		if (center) {

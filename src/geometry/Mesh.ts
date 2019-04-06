@@ -55,6 +55,25 @@ class Mesh {
         return normalBuffer;
     }
 
+    public createWireframeVertexBuffer(): WebGLBuffer {        
+        let vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        var positions: number[] = [];
+
+        for (let triangle of this.triangles) {
+            this.pushVector(positions, triangle.v1);
+            this.pushVector(positions, triangle.v2);
+            this.pushVector(positions, triangle.v2);
+            this.pushVector(positions, triangle.v3);
+            this.pushVector(positions, triangle.v3);
+            this.pushVector(positions, triangle.v1);
+        }
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        return vertexBuffer;
+    }
+
     private pushVector(array: number[], vector: Vector3) {
         array.push(vector.x);
         array.push(vector.y);

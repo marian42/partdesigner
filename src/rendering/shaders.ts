@@ -119,7 +119,7 @@ const CONTOUR_FRAGMENT = `
     }
 `
 
-const BOX_VERTEX_SHADER = `
+const SIMPLE_VERTEX_SHADER = `
     attribute vec4 vertexPosition;
 
     uniform mat4 modelViewMatrix;
@@ -132,7 +132,7 @@ const BOX_VERTEX_SHADER = `
     }
 `;
 
-const BOX_FRAGMENT_SHADER = `
+const COLOR_FRAGMENT_SHADER = `
     precision mediump float;
 
     uniform vec4 color;

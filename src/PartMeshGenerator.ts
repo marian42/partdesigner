@@ -267,12 +267,6 @@ class PartMeshGenerator extends MeshGenerator {
     private createTinyBlock(position: Vector3, source: SmallBlock) {
         this.tinyBlocks.set(position, new TinyBlock(position, source));
     }
-
-    private isFaceVisible(block: TinyBlock, direction: Vector3): boolean {
-		return !this.isTinyBlock(block.position.plus(direction))
-			&& !block.isAttachment()
-			&& block.isFaceVisible(direction);
-	}
 	
     private getNextBlock(block: TinyBlock): TinyBlock {
         return this.tinyBlocks.getOrNull(block.position.plus(block.forward().times(block.mergedBlocks)));
@@ -773,7 +767,15 @@ class PartMeshGenerator extends MeshGenerator {
 		}
 	}
 
-    private createTinyFace(block: TinyBlock, direction: Vector3) {
+    private isFaceVisible(position: Vector3, direction: Vector3): boolean {
+		var block = this.tinyBlocks.getOrNull(position);
+		return block != null
+			&& !this.isTinyBlock(block.position.plus(direction))
+			&& !block.isAttachment()
+			&& block.isFaceVisible(direction);
+	}
+
+    private createTinyFace(position: Vector3, size: Vector3, direction: Vector3) {
 		var vertices: Vector3[] = null;
 
 		if (direction.x > 0) {
@@ -792,21 +794,85 @@ class PartMeshGenerator extends MeshGenerator {
 			throw new Error("Invalid direction: " + direction.toString());
 		}
         
-        var pos = block.position;		
-		this.createQuad(
-            tinyBlockToWorld(pos.plus(vertices[0])),
-            tinyBlockToWorld(pos.plus(vertices[1])),
-            tinyBlockToWorld(pos.plus(vertices[2])),
-            tinyBlockToWorld(pos.plus(vertices[3])));
+        this.createQuad(
+            tinyBlockToWorld(position.plus(vertices[0].elementwiseMultiply(size))),
+            tinyBlockToWorld(position.plus(vertices[1].elementwiseMultiply(size))),
+            tinyBlockToWorld(position.plus(vertices[2].elementwiseMultiply(size))),
+            tinyBlockToWorld(position.plus(vertices[3].elementwiseMultiply(size))));
+	}
+
+	private isRowOfVisibleFaces(position: Vector3, rowDirection: Vector3, faceDirection: Vector3, count: number): boolean {
+		for (var i = 0; i < count; i++) {
+			if (!this.isFaceVisible(position.plus(rowDirection.times(i)), faceDirection)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/* Finds a connected rectangle of visible faces in the given direction by starting with
+	the supplied position and a rectangle of size 1x1 and expanding it in the 4 directions
+	that are tangential to the supplied face direction, until it is no longer possible to
+	expand in any direction. 
+	Returns the lower left corner of the rectangle and its size.
+	The component of the size vector of the direction supplied by the direction parameter is
+	always 1. The component of the position vector in the direction supplied by the direction
+	parameter remains unchanged. */
+	private findConnectedFaces(position: Vector3, direction: Vector3): [Vector3, Vector3] {
+		var tangent1 = new Vector3(direction.x == 0 ? 1 : 0, direction.x == 0 ? 0 : 1, 0);
+		var tangent2 = new Vector3(0, direction.z == 0 ? 0 : 1, direction.z == 0 ? 1 : 0);
+
+		var size = Vector3.one();
+		while (true) {
+			var hasChanged = false;
+
+			if (this.isRowOfVisibleFaces(position.minus(tangent2), tangent1, direction, size.dot(tangent1))) {
+				position = position.minus(tangent2);
+				size = size.plus(tangent2);
+				hasChanged = true;
+			}
+			if (this.isRowOfVisibleFaces(position.minus(tangent1), tangent2, direction, size.dot(tangent2))) {
+				position = position.minus(tangent1);
+				size = size.plus(tangent1);
+				hasChanged = true;
+			}
+			if (this.isRowOfVisibleFaces(position.plus(tangent2.times(size.dot(tangent2))), tangent1, direction, size.dot(tangent1))) {
+				size = size.plus(tangent2);
+				hasChanged = true;
+			}
+			if (this.isRowOfVisibleFaces(position.plus(tangent1.times(size.dot(tangent1))), tangent2, direction, size.dot(tangent2))) {
+				size = size.plus(tangent1);
+				hasChanged = true;
+			}
+
+			if (!hasChanged) {
+				return [position, size];
+			}
+		}
+	}
+
+	private hideFaces(position: Vector3, size: Vector3, direction: Vector3) {
+		for (var x = 0; x < size.x; x++) {
+			for (var y = 0; y < size.y; y++) {
+				for (var z = 0; z < size.z; z++) {
+					this.hideFaceIfExists(new Vector3(position.x + x, position.y + y, position.z + z), direction);
+				}
+			}
+		}
 	}
 
     private renderTinyBlockFaces() {
         for (let block of this.tinyBlocks.values()) {
 			for (let direction of FACE_DIRECTIONS) {
-				if (this.isFaceVisible(block, direction)) {
-					this.createTinyFace(block, direction);
+				if (!this.isFaceVisible(block.position, direction)) {
+					continue;
 				}
+				var expanded = this.findConnectedFaces(block.position, direction);
+				var position = expanded[0];
+				var size = expanded[1];
+				this.createTinyFace(position, size, direction);
+				this.hideFaces(position, size, direction);
 			}
-        }
+		}
     }
 }

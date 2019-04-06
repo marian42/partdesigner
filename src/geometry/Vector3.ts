@@ -88,3 +88,54 @@
 		return a.plus(b.minus(a).times(progress));
 	}
 }
+
+const RIGHT_FACE_VERTICES = [
+	new Vector3(1, 1, 0),
+	new Vector3(1, 1, 1),
+	new Vector3(1, 0, 1),
+	new Vector3(1, 0, 0)
+];
+
+const LEFT_FACE_VERTICES = [
+	new Vector3(0, 0, 0),
+	new Vector3(0, 0, 1),
+	new Vector3(0, 1, 1),
+	new Vector3(0, 1, 0)
+];
+
+const UP_FACE_VERTICES = [
+	new Vector3(0, 1, 0),
+	new Vector3(0, 1, 1),
+	new Vector3(1, 1, 1),
+	new Vector3(1, 1, 0)
+];
+
+const DOWN_FACE_VERTICES = [
+	new Vector3(1, 0, 0),
+	new Vector3(1, 0, 1),
+	new Vector3(0, 0, 1),
+	new Vector3(0, 0, 0)
+];
+
+const FORWARD_FACE_VERTICES = [
+	new Vector3(1, 0, 1),
+	new Vector3(1, 1, 1),
+	new Vector3(0, 1, 1),
+	new Vector3(0, 0, 1)
+];
+
+const BACK_FACE_VERTICES = [
+	new Vector3(0, 0, 0),
+	new Vector3(0, 1, 0),
+	new Vector3(1, 1, 0),
+	new Vector3(1, 0, 0)
+];
+
+const FACE_DIRECTIONS = [
+	new Vector3(1, 0, 0),
+	new Vector3(-1, 0, 0),
+	new Vector3(0, 1, 0),
+	new Vector3(0, -1, 0),
+	new Vector3(0, 0, 1),
+	new Vector3(0, 0, -1)
+];

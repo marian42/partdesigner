@@ -2,7 +2,7 @@
 	public mergedBlocks = 1;
 	public merged = false;
 
-	private visibleFaces: [boolean, boolean, boolean, boolean, boolean, boolean];
+	private visibleFaces: [boolean, boolean, boolean, boolean, boolean, boolean] = null;
 
 	public angle() {
 		return getAngle(this.quadrant);
@@ -38,10 +38,12 @@
 
 	constructor(position: Vector3, source: SmallBlock) {
 		super(source.quadrant, position, source);
-		this.visibleFaces = [true, true, true, true, true, true];
 	}
 
 	public isFaceVisible(direction: Vector3): boolean {
+		if (this.visibleFaces == null) {			
+			return true;
+		}
 		if (direction.x > 0 && direction.y == 0 && direction.z == 0) {
 			return this.visibleFaces[0];
 		} else if (direction.x < 0 && direction.y == 0 && direction.z == 0) {
@@ -60,6 +62,9 @@
 	}
 
 	public hideFace(direction: Vector3) {
+		if (this.visibleFaces == null) {			
+			this.visibleFaces = [true, true, true, true, true, true];
+		}
 		if (direction.x > 0 && direction.y == 0 && direction.z == 0) {
 			this.visibleFaces[0] = false;
 		} else if (direction.x < 0 && direction.y == 0 && direction.z == 0) {

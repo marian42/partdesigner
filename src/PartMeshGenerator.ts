@@ -269,23 +269,11 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private isFaceVisible(block: TinyBlock, direction: Vector3): boolean {
-		if (this.isTinyBlock(block.position.plus(direction))) {
-            return false;
-		}
-		return block.isFaceVisible(direction);
-    }
-
-    private createTinyFace(block: TinyBlock, v1: Vector3, v2: Vector3, v3: Vector3, v4: Vector3, flipped = false) {
-        let pos = block.position;
-        
-        this.createQuad(
-            tinyBlockToWorld(pos.plus(v1)),
-            tinyBlockToWorld(pos.plus(v2)),
-            tinyBlockToWorld(pos.plus(v3)),
-            tinyBlockToWorld(pos.plus(v4)),
-            flipped);
-    }
-
+		return !this.isTinyBlock(block.position.plus(direction))
+			&& !block.isAttachment()
+			&& block.isFaceVisible(direction);
+	}
+	
     private getNextBlock(block: TinyBlock): TinyBlock {
         return this.tinyBlocks.getOrNull(block.position.plus(block.forward().times(block.mergedBlocks)));
     }
@@ -783,56 +771,42 @@ class PartMeshGenerator extends MeshGenerator {
 				start,
 				start.plus(block.getOnCircle(axleWingAngle2, adjustedRadius))));
 		}
-    }
+	}
+
+    private createTinyFace(block: TinyBlock, direction: Vector3) {
+		var vertices: Vector3[] = null;
+
+		if (direction.x > 0) {
+			vertices = RIGHT_FACE_VERTICES;
+		} else if (direction.x < 0) {
+			vertices = LEFT_FACE_VERTICES;
+		} else if (direction.y > 0) {
+			vertices = UP_FACE_VERTICES;
+		} else if (direction.y < 0) {
+			vertices = DOWN_FACE_VERTICES;
+		} else if (direction.z > 0) {
+			vertices = FORWARD_FACE_VERTICES;
+		} else if (direction.z < 0) {
+			vertices = BACK_FACE_VERTICES;
+		} else {
+			throw new Error("Invalid direction: " + direction.toString());
+		}
+        
+        var pos = block.position;		
+		this.createQuad(
+            tinyBlockToWorld(pos.plus(vertices[0])),
+            tinyBlockToWorld(pos.plus(vertices[1])),
+            tinyBlockToWorld(pos.plus(vertices[2])),
+            tinyBlockToWorld(pos.plus(vertices[3])));
+	}
 
     private renderTinyBlockFaces() {
         for (let block of this.tinyBlocks.values()) {
-            if (block.isAttachment()) {
-                continue;
-            }
-            
-            if (this.isFaceVisible(block, new Vector3(1, 0, 0))) {
-                this.createTinyFace(block,
-                    new Vector3(1, 0, 0),
-                    new Vector3(1, 0, 1),
-                    new Vector3(1, 1, 1),
-                    new Vector3(1, 1, 0), true);
-            }
-            if (this.isFaceVisible(block, new Vector3(-1, 0, 0))) {
-                this.createTinyFace(block,
-                    new Vector3(0, 0, 0),
-                    new Vector3(0, 0, 1),
-                    new Vector3(0, 1, 1),
-                    new Vector3(0, 1, 0));
-            }
-            if (this.isFaceVisible(block, new Vector3(0, 1, 0))) {
-                this.createTinyFace(block,
-                    new Vector3(0, 1, 0),
-                    new Vector3(0, 1, 1),
-                    new Vector3(1, 1, 1),
-                    new Vector3(1, 1, 0));
-            }
-            if (this.isFaceVisible(block, new Vector3(0, -1, 0))) {
-                this.createTinyFace(block,
-                    new Vector3(0, 0, 0),
-                    new Vector3(0, 0, 1),
-                    new Vector3(1, 0, 1),
-                    new Vector3(1, 0, 0), true);
-            }
-            if (this.isFaceVisible(block, new Vector3(0, 0, 1))) {
-                this.createTinyFace(block,
-                    new Vector3(0, 0, 1),
-                    new Vector3(0, 1, 1),
-                    new Vector3(1, 1, 1),
-                    new Vector3(1, 0, 1), true);
-            }
-            if (this.isFaceVisible(block, new Vector3(0, 0, -1))) {
-                this.createTinyFace(block,
-                    new Vector3(0, 0, 0),
-                    new Vector3(0, 1, 0),
-                    new Vector3(1, 1, 0),
-                    new Vector3(1, 0, 0));
-            }
+			for (let direction of FACE_DIRECTIONS) {
+				if (this.isFaceVisible(block, direction)) {
+					this.createTinyFace(block, direction);
+				}
+			}
         }
     }
 }

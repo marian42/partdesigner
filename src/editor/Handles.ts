@@ -251,6 +251,18 @@ class Handles implements Renderer {
 			return;
 		}
 
+		switch (orientation) {
+			case Orientation.X:
+				this.box.color = new Vector3(1.0, 0.0, 0.0);
+				break;
+			case Orientation.Y:
+				this.box.color = new Vector3(0.0, 0.8, 0.0);
+				break;
+			case Orientation.Z:
+				this.box.color = new Vector3(0.0, 0.0, 1.0);
+				break;
+		}
+		
 		this.fullSize = fullSize;
 		this.orientation = orientation;
 

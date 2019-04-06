@@ -31,6 +31,8 @@ class Editor {
 
 	style: RenderStyle = RenderStyle.Contour;
 
+	measurements: Measurements = new Measurements();
+
 	constructor() {
 		var url = new URL(document.URL);
 		if (url.searchParams.has("part")) {
@@ -75,7 +77,7 @@ class Editor {
 		document.getElementById("clear").addEventListener("click", (event: MouseEvent) => this.clear());
 		document.getElementById("randomize").addEventListener("click", (event: MouseEvent) => this.randomize());
 		document.getElementById("share").addEventListener("click", (event: MouseEvent) => this.share());
-		document.getElementById("save").addEventListener("click", (event: MouseEvent) => new PartMeshGenerator(this.part).getMesh().saveSTLFile());
+		document.getElementById("save").addEventListener("click", (event: MouseEvent) => this.saveSTL());
 		document.getElementById("remove").addEventListener("click", (event: MouseEvent) => this.remove());
 		document.getElementById("style").addEventListener("change", (event: MouseEvent) => this.setRenderStyle(parseInt((event.srcElement as HTMLSelectElement).value)));
         window.addEventListener("resize", (e: Event) => this.camera.onResize());
@@ -91,6 +93,10 @@ class Editor {
 	private onNodeEditorClick(event: MouseEvent) {
 		this.handles.visible = (event.srcElement as HTMLDetailsElement).open;
 		this.camera.render();
+	}
+
+	private saveSTL() {
+		new PartMeshGenerator(this.part, this.measurements).getMesh().saveSTLFile(this.measurements.technicUnit);
 	}
 
 	private initializeEditor(elementId: string, onchange: (value: string) => void) {
@@ -166,7 +172,7 @@ class Editor {
 	}
 
 	public updateMesh(center = false) {
-		let mesh = new PartMeshGenerator(this.part).getMesh();
+		let mesh = new PartMeshGenerator(this.part, this.measurements).getMesh();
 		if (this.partRenderer.enabled) {
 			this.partRenderer.setMesh(mesh);
 		}

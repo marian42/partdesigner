@@ -31,6 +31,7 @@ class Catalog {
 		camera.renderers.push(partRenderer);
 		camera.renderers.push(partNormalDepthRenderer);
 		camera.renderers.push(new ContourPostEffect());
+		var measurements = new Measurements();
 		
 		for (var item of this.items) {
 			var catalogLink: HTMLAnchorElement = document.createElement("a");
@@ -42,7 +43,7 @@ class Catalog {
 			catalogLink.appendChild(itemCanvas);
 			itemCanvas.style.height = "64px";
 			itemCanvas.style.width = "64px";
-			var mesh = new PartMeshGenerator(item.part).getMesh();
+			var mesh = new PartMeshGenerator(item.part, measurements).getMesh();
 			partRenderer.setMesh(mesh);
 			partNormalDepthRenderer.setMesh(mesh);
 			camera.size = (item.part.getSize() + 2) * 0.41;

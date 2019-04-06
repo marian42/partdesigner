@@ -1,18 +1,20 @@
-let TECHNIC_UNIT = 8;
+class Measurements {
+	technicUnit = 8;
 
-let EDGE_MARGIN = 0.2 / TECHNIC_UNIT;
-let INTERIOR_RADIUS = 6.4 * 0.5 / TECHNIC_UNIT;
-let PIN_HOLE_RADIUS = 5.2 * 0.5 / TECHNIC_UNIT;
-let PIN_HOLE_OFFSET = 0.7 / TECHNIC_UNIT;
-let AXLE_HOLE_SIZE = 2.02 * 0.5 / TECHNIC_UNIT;
-let PIN_RADIUS = 4.63 * 0.5 / TECHNIC_UNIT;
-let PIN_LIP_RADIUS = 0.17 / TECHNIC_UNIT;
-let AXLE_SIZE_INNER = 1.72 * 0.5 / TECHNIC_UNIT;
-let AXLE_SIZE_OUTER = 4.3 * 0.5 / TECHNIC_UNIT;
-let AXLE_PIN_ADAPTER_SIZE = 0.8 / TECHNIC_UNIT;
-let AXLE_PIN_ADAPTER_RADIUS = 6 * 0.5 / TECHNIC_UNIT;
-let INTERIOR_END_MARGIN = 0.2 / TECHNIC_UNIT;
+	edgeMargin = 0.2 / this.technicUnit;
+	interiorRadius = 3.2 / this.technicUnit;
+	pinHoleRadius = 2.6 / this.technicUnit;
+	pinHoleOffset = 0.7 / this.technicUnit;
+	axleHoleSize = 1.01 / this.technicUnit;
+	pinRadius = 2.315 / this.technicUnit;
+	pinLipRadius = 0.17 / this.technicUnit;
+	axleSizeInner = 0.86 / this.technicUnit;
+	axleSizeOuter = 2.15 / this.technicUnit;
+	axlePinAdapterSize = 0.8 / this.technicUnit;
+	axlePinAdapterRadius = 3 / this.technicUnit;
+	interiorEndMargin = 0.2 / this.technicUnit;
 
-let LIP_SUBDIVISIONS = 6;
+	lipSubdivisions = 6;
 
-let SUBDIVISIONS = 8;
+	subdivisionsPerQuarter = 8;
+}

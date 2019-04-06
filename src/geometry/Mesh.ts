@@ -80,7 +80,7 @@ class Mesh {
         array.push(vector.z);
     }
 
-    private createSTLFile(): ArrayBuffer {
+    private createSTLFile(scalingFactor: number): ArrayBuffer {
         let size = 84 + 50 * this.triangles.length;
         var buffer = new ArrayBuffer(size);
         let view = new DataView(buffer, 0, size);
@@ -94,7 +94,7 @@ class Mesh {
         p += 4;
 
         for (let triangle of this.triangles) {
-            this.writeTriangle(view, p, triangle);
+            this.writeTriangle(view, p, triangle, scalingFactor);
             p += 50;
         }
 
@@ -107,16 +107,16 @@ class Mesh {
         view.setFloat32(offset + 8, vector.y, true);
     }
 
-    private writeTriangle(view: DataView, offset: number, triangle: Triangle) {
+    private writeTriangle(view: DataView, offset: number, triangle: Triangle, scalingFactor: number) {
         this.writeVector(view, offset, triangle.normal().times(-1));
-        this.writeVector(view, offset + 12, triangle.v2.times(TECHNIC_UNIT));
-        this.writeVector(view, offset + 24, triangle.v1.times(TECHNIC_UNIT));
-        this.writeVector(view, offset + 36, triangle.v3.times(TECHNIC_UNIT));
+        this.writeVector(view, offset + 12, triangle.v2.times(scalingFactor));
+        this.writeVector(view, offset + 24, triangle.v1.times(scalingFactor));
+        this.writeVector(view, offset + 36, triangle.v3.times(scalingFactor));
         view.setInt16(offset + 48, 0, true);
     }
 
-    public saveSTLFile(filename = "part.stl") {
-        let blob = new Blob([this.createSTLFile()], { type: "application/octet-stream" });
+    public saveSTLFile(scalingFactor: number, filename = "part.stl") {
+        let blob = new Blob([this.createSTLFile(scalingFactor)], { type: "application/octet-stream" });
         let link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);
         link.download = filename;

@@ -1,11 +1,16 @@
 class MeshGenerator {
     protected triangles: Triangle[] = [];
+    protected measurements: Measurements;
 
-    getMesh(): Mesh {
+    constructor(measurements: Measurements) {
+        this.measurements = measurements;
+    }
+
+    public getMesh(): Mesh {
         return new Mesh(this.triangles);
     }
 
-    createQuad(v1: Vector3, v2: Vector3, v3: Vector3, v4: Vector3, flipped = false) {
+    protected createQuad(v1: Vector3, v2: Vector3, v3: Vector3, v4: Vector3, flipped = false) {
         if (!flipped) {
             this.triangles.push(new Triangle(v1, v2, v4));
             this.triangles.push(new Triangle(v2, v3, v4));
@@ -15,7 +20,7 @@ class MeshGenerator {
         }
     }
 
-    createQuadWithNormals(v1: Vector3, v2: Vector3, v3: Vector3, v4: Vector3, n1: Vector3, n2: Vector3, n3: Vector3, n4: Vector3, flipped = false) {
+    protected createQuadWithNormals(v1: Vector3, v2: Vector3, v3: Vector3, v4: Vector3, n1: Vector3, n2: Vector3, n3: Vector3, n4: Vector3, flipped = false) {
         if (!flipped) {
             this.triangles.push(new TriangleWithNormals(v1, v2, v4, n1, n2, n4));
             this.triangles.push(new TriangleWithNormals(v2, v3, v4, n2, n3, n4));
@@ -25,12 +30,12 @@ class MeshGenerator {
         }
     }
 
-    createCircleWithHole(block: TinyBlock, innerRadius: number, outerRadius: number, offset: number, inverted = false, square = false) {
-        let center = block.getCylinderOrigin().plus(block.forward().times(offset));
+    protected createCircleWithHole(block: TinyBlock, innerRadius: number, outerRadius: number, offset: number, inverted = false, square = false) {
+        let center = block.getCylinderOrigin(this).plus(block.forward().times(offset));
 
-        for (var i = 0; i < SUBDIVISIONS; i++) {
-            let i1 = block.getOnCircle(Math.PI / 2 * i / SUBDIVISIONS);
-            let i2 = block.getOnCircle(Math.PI / 2 * (i + 1) / SUBDIVISIONS);
+        for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
+            let i1 = block.getOnCircle(Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter);
+            let i2 = block.getOnCircle(Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter);
             var o1 = i1;
             var o2 = i2;
 
@@ -56,12 +61,12 @@ class MeshGenerator {
         }
     }
 
-    createCircle(block: TinyBlock, radius: number, offset: number, inverted = false) {
-        let center = block.getCylinderOrigin().plus(block.forward().times(offset));
+    protected createCircle(block: TinyBlock, radius: number, offset: number, inverted = false) {
+        let center = block.getCylinderOrigin(this).plus(block.forward().times(offset));
 
-        for (var i = 0; i < SUBDIVISIONS; i++) {
-            let p1 = block.getOnCircle(Math.PI / 2 * i / SUBDIVISIONS, radius);
-            let p2 = block.getOnCircle(Math.PI / 2 * (i + 1) / SUBDIVISIONS, radius);
+        for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
+            let p1 = block.getOnCircle(Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter, radius);
+            let p2 = block.getOnCircle(Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter, radius);
 
             if (inverted) {
                 this.triangles.push(new Triangle(center.plus(p1), center, center.plus(p2)));
@@ -71,12 +76,12 @@ class MeshGenerator {
         }
     }
 
-    createCylinder(block: TinyBlock, offset: number, radius: number, distance: number, inverted = false) {
-        let center = block.getCylinderOrigin().plus(block.forward().times(offset));
+    protected createCylinder(block: TinyBlock, offset: number, radius: number, distance: number, inverted = false) {
+        let center = block.getCylinderOrigin(this).plus(block.forward().times(offset));
 
-        for (var i = 0; i < SUBDIVISIONS; i++) {
-            let v1 = block.getOnCircle(Math.PI / 2 * i / SUBDIVISIONS);
-            let v2 = block.getOnCircle(Math.PI / 2 * (i + 1) / SUBDIVISIONS);
+        for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
+            let v1 = block.getOnCircle(Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter);
+            let v2 = block.getOnCircle(Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter);
             this.createQuadWithNormals(
                 center.plus(v1.times(radius)),
                 center.plus(v2.times(radius)),
@@ -85,5 +90,23 @@ class MeshGenerator {
                 v1, v2, v2, v1,
                 !inverted);
         }
+    }
+
+    public tinyIndexToWorld(p: number): number {
+        let i = Math.floor((p + 1) / 3);
+        let j = p - i * 3;
+    
+        var f = 0.5 * i;
+        if (j == 0) {
+            f += this.measurements.edgeMargin;
+        } else if (j == 1) {
+            f += 0.5 - this.measurements.edgeMargin;
+        }
+    
+        return f;
+    }
+    
+    public tinyBlockToWorld(position: Vector3): Vector3 {
+        return new Vector3(this.tinyIndexToWorld(position.x), this.tinyIndexToWorld(position.y), this.tinyIndexToWorld(position.z));
     }
 }

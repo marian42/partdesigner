@@ -26,14 +26,14 @@
 		return this.localPositon().dot(this.up()) == 0 && this.localPositon().dot(this.right()) == 0;
 	}
 
-	public getCylinderOrigin(): Vector3 {
-		return this.forward().times(tinyIndexToWorld(this.forward().dot(this.position)))
+	public getCylinderOrigin(meshGenerator: MeshGenerator): Vector3 {
+		return this.forward().times(meshGenerator.tinyIndexToWorld(this.forward().dot(this.position)))
 			.plus(this.right().times((this.smallBlockPosition().dot(this.right()) + (1 - this.localX())) * 0.5))
 			.plus(this.up().times((this.smallBlockPosition().dot(this.up()) + (1 - this.localY())) * 0.5));
 	}
 
-	public getDepth(): number {
-		return tinyIndexToWorld(this.forward().dot(this.position) + this.mergedBlocks) - tinyIndexToWorld(this.forward().dot(this.position));
+	public getDepth(meshGenerator: MeshGenerator): number {
+		return meshGenerator.tinyIndexToWorld(this.forward().dot(this.position) + this.mergedBlocks) - meshGenerator.tinyIndexToWorld(this.forward().dot(this.position));
 	}
 
 	constructor(position: Vector3, source: SmallBlock) {

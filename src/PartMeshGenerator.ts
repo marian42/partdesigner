@@ -1,9 +1,8 @@
 class PartMeshGenerator extends MeshGenerator {
     private smallBlocks: VectorDictionary<SmallBlock>;
-    private tinyBlocks: VectorDictionary<TinyBlock>;   
-
-    constructor(part: Part) {
-        super();
+	private tinyBlocks: VectorDictionary<TinyBlock>;
+    constructor(part: Part, measurements: Measurements) {
+        super(measurements);
         this.smallBlocks = part.createSmallBlocks();
         this.createDummyBlocks();
         this.updateRounded();
@@ -316,6 +315,8 @@ class PartMeshGenerator extends MeshGenerator {
 	}
 
     private renderTinyBlocks() {
+		var blockSizeWithoutMargin = 0.5 - this.measurements.edgeMargin;
+		
         for (let block of this.tinyBlocks.values()) {
             if (block.merged || !block.isCenter() || block.isAttachment()) {
                 continue;
@@ -323,36 +324,36 @@ class PartMeshGenerator extends MeshGenerator {
 
             var nextBlock = this.getNextBlock(block);
             var previousBlock = this.getPreviousBlock(block);
-            var distance = block.getDepth();
+            var distance = block.getDepth(this);
 
             var hasOpenEnd = this.hasOpenEnd(block);
             var hasOpenStart = this.hasOpenStart(block);
 
             // Back cap
             if (nextBlock == null) {
-				this.createCircleWithHole(block, block.hasInterior && hasOpenEnd ? INTERIOR_RADIUS : 0, 0.5 - EDGE_MARGIN, distance, false, !block.rounded);
+				this.createCircleWithHole(block, block.hasInterior && hasOpenEnd ? this.measurements.interiorRadius : 0, blockSizeWithoutMargin, distance, false, !block.rounded);
 				this.hideStartEndFaces(block.position.plus(block.forward().times(block.mergedBlocks - 1)), block, true);
             }
 
             // Front cap
             if (previousBlock == null) {
-				this.createCircleWithHole(block, block.hasInterior && hasOpenStart ? INTERIOR_RADIUS : 0, 0.5 - EDGE_MARGIN, 0, true, !block.rounded);
+				this.createCircleWithHole(block, block.hasInterior && hasOpenStart ? this.measurements.interiorRadius : 0, blockSizeWithoutMargin, 0, true, !block.rounded);
 				this.hideStartEndFaces(block.position, block, false);
             }
 
             if (block.rounded) {
                 // Rounded corners
-				this.createCylinder(block, 0, 0.5 - EDGE_MARGIN, distance);
+				this.createCylinder(block, 0, blockSizeWithoutMargin, distance);
 				for (var i = 0; i < block.mergedBlocks; i++) {
 					this.hideOutsideFaces(this.tinyBlocks.get(block.position.plus(block.forward().times(i))));
 				}
 
                 // Rounded to non rounded adapter
                 if (nextBlock != null && !nextBlock.rounded) {
-                    this.createCircleWithHole(block, 0.5 - EDGE_MARGIN, 0.5 - EDGE_MARGIN, distance, true, true);
+                    this.createCircleWithHole(block, blockSizeWithoutMargin, blockSizeWithoutMargin, distance, true, true);
                 }
                 if (previousBlock != null && !previousBlock.rounded) {
-                    this.createCircleWithHole(block, 0.5 - EDGE_MARGIN, 0.5 - EDGE_MARGIN, 0, false, true);
+                    this.createCircleWithHole(block, blockSizeWithoutMargin, blockSizeWithoutMargin, 0, false, true);
                 }
             }
             
@@ -384,20 +385,20 @@ class PartMeshGenerator extends MeshGenerator {
 	}
 
 	private renderLip(block: TinyBlock, zOffset: number) {		
-		var center = block.getCylinderOrigin().plus(block.forward().times(zOffset));
+		var center = block.getCylinderOrigin(this).plus(block.forward().times(zOffset));
 		
-		for (var i = 0; i < SUBDIVISIONS; i++) {
-			var out1 = block.getOnCircle(i / 2 * Math.PI / SUBDIVISIONS);
-			var out2 = block.getOnCircle((i + 1) / 2 * Math.PI / SUBDIVISIONS);
+		for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
+			var out1 = block.getOnCircle(i / 2 * Math.PI / this.measurements.subdivisionsPerQuarter);
+			var out2 = block.getOnCircle((i + 1) / 2 * Math.PI / this.measurements.subdivisionsPerQuarter);
 
-			for (var j = 0; j < LIP_SUBDIVISIONS; j++) {
-				var angleJ = j * Math.PI / LIP_SUBDIVISIONS;
-				var angleJ2 = (j + 1) * Math.PI / LIP_SUBDIVISIONS;
+			for (var j = 0; j < this.measurements.lipSubdivisions; j++) {
+				var angleJ = j * Math.PI / this.measurements.lipSubdivisions;
+				var angleJ2 = (j + 1) * Math.PI / this.measurements.lipSubdivisions;
 				this.createQuadWithNormals(
-					center.plus(out1.times(PIN_RADIUS)).plus(out1.times(Math.sin(angleJ) * PIN_LIP_RADIUS).plus(block.forward().times(Math.cos(angleJ) * PIN_LIP_RADIUS))),
-					center.plus(out2.times(PIN_RADIUS)).plus(out2.times(Math.sin(angleJ) * PIN_LIP_RADIUS).plus(block.forward().times(Math.cos(angleJ) * PIN_LIP_RADIUS))),
-					center.plus(out2.times(PIN_RADIUS)).plus(out2.times(Math.sin(angleJ2) * PIN_LIP_RADIUS).plus(block.forward().times(Math.cos(angleJ2) * PIN_LIP_RADIUS))),
-					center.plus(out1.times(PIN_RADIUS)).plus(out1.times(Math.sin(angleJ2) * PIN_LIP_RADIUS).plus(block.forward().times(Math.cos(angleJ2) * PIN_LIP_RADIUS))),
+					center.plus(out1.times(this.measurements.pinRadius)).plus(out1.times(Math.sin(angleJ) * this.measurements.pinLipRadius).plus(block.forward().times(Math.cos(angleJ) * this.measurements.pinLipRadius))),
+					center.plus(out2.times(this.measurements.pinRadius)).plus(out2.times(Math.sin(angleJ) * this.measurements.pinLipRadius).plus(block.forward().times(Math.cos(angleJ) * this.measurements.pinLipRadius))),
+					center.plus(out2.times(this.measurements.pinRadius)).plus(out2.times(Math.sin(angleJ2) * this.measurements.pinLipRadius).plus(block.forward().times(Math.cos(angleJ2) * this.measurements.pinLipRadius))),
+					center.plus(out1.times(this.measurements.pinRadius)).plus(out1.times(Math.sin(angleJ2) * this.measurements.pinLipRadius).plus(block.forward().times(Math.cos(angleJ2) * this.measurements.pinLipRadius))),
 					out1.times(-Math.sin(angleJ)).plus(block.forward().times(-Math.cos(angleJ))),
 					out2.times(-Math.sin(angleJ)).plus(block.forward().times(-Math.cos(angleJ))),
 					out2.times(-Math.sin(angleJ2)).plus(block.forward().times(-Math.cos(angleJ2))),
@@ -410,42 +411,42 @@ class PartMeshGenerator extends MeshGenerator {
 		var nextBlock = this.getNextBlock(block);
 		var previousBlock = this.getPreviousBlock(block);
 
-		var distance = block.getDepth();
+		var distance = block.getDepth(this);
 
-		var startOffset = (previousBlock != null && previousBlock.type == BlockType.Axle) ? AXLE_PIN_ADAPTER_SIZE : 0;
+		var startOffset = (previousBlock != null && previousBlock.type == BlockType.Axle) ? this.measurements.axlePinAdapterSize : 0;
 		if (previousBlock == null) {
-			startOffset += 2 * PIN_LIP_RADIUS;
+			startOffset += 2 * this.measurements.pinLipRadius;
 		}
-		var endOffset = (nextBlock != null && nextBlock.type == BlockType.Axle) ? AXLE_PIN_ADAPTER_SIZE : 0;
+		var endOffset = (nextBlock != null && nextBlock.type == BlockType.Axle) ? this.measurements.axlePinAdapterSize : 0;
 		if (nextBlock == null) {
-			endOffset += 2 * PIN_LIP_RADIUS;
+			endOffset += 2 * this.measurements.pinLipRadius;
 		}
 
-		this.createCylinder(block, startOffset, PIN_RADIUS, distance - startOffset - endOffset);
+		this.createCylinder(block, startOffset, this.measurements.pinRadius, distance - startOffset - endOffset);
 
 		if (nextBlock == null) {
-			this.createCircle(block, PIN_RADIUS, distance, true);
-			this.renderLip(block, distance - PIN_LIP_RADIUS);
+			this.createCircle(block, this.measurements.pinRadius, distance, true);
+			this.renderLip(block, distance - this.measurements.pinLipRadius);
 		}
 		if (previousBlock == null) {
-			this.createCircle(block, PIN_RADIUS, 0);
-			this.renderLip(block, PIN_LIP_RADIUS);
+			this.createCircle(block, this.measurements.pinRadius, 0);
+			this.renderLip(block, this.measurements.pinLipRadius);
 		}
 		if (nextBlock != null && !nextBlock.isAttachment()) {
-			this.createCircleWithHole(block, PIN_RADIUS, 0.5 - EDGE_MARGIN, distance, true, !nextBlock.rounded);
+			this.createCircleWithHole(block, this.measurements.pinRadius, 0.5 - this.measurements.edgeMargin, distance, true, !nextBlock.rounded);
 			this.hideStartEndFaces(nextBlock.position, block, false);
 		}
 		if (previousBlock != null && !previousBlock.isAttachment()) {
-			this.createCircleWithHole(block, PIN_RADIUS, 0.5 - EDGE_MARGIN, 0, false, !previousBlock.rounded);
+			this.createCircleWithHole(block, this.measurements.pinRadius, 0.5 - this.measurements.edgeMargin, 0, false, !previousBlock.rounded);
 			this.hideStartEndFaces(previousBlock.position, block, true);
 		}
 		if (nextBlock != null && nextBlock.type == BlockType.Axle) {
-			this.createCircleWithHole(block, PIN_RADIUS, AXLE_PIN_ADAPTER_RADIUS, distance - AXLE_PIN_ADAPTER_SIZE, true);
-			this.createCylinder(block, distance - AXLE_PIN_ADAPTER_SIZE, AXLE_PIN_ADAPTER_RADIUS, AXLE_PIN_ADAPTER_SIZE);
+			this.createCircleWithHole(block, this.measurements.pinRadius, this.measurements.axlePinAdapterRadius, distance - this.measurements.axlePinAdapterSize, true);
+			this.createCylinder(block, distance - this.measurements.axlePinAdapterSize, this.measurements.axlePinAdapterRadius, this.measurements.axlePinAdapterSize);
 		}
 		if (previousBlock != null && previousBlock.type == BlockType.Axle) {
-			this.createCircleWithHole(block, PIN_RADIUS, AXLE_PIN_ADAPTER_RADIUS, AXLE_PIN_ADAPTER_SIZE);
-			this.createCylinder(block, 0, AXLE_PIN_ADAPTER_RADIUS, AXLE_PIN_ADAPTER_SIZE);
+			this.createCircleWithHole(block, this.measurements.pinRadius, this.measurements.axlePinAdapterRadius, this.measurements.axlePinAdapterSize);
+			this.createCylinder(block, 0, this.measurements.axlePinAdapterRadius, this.measurements.axlePinAdapterSize);
 		}
     }
 
@@ -453,104 +454,110 @@ class PartMeshGenerator extends MeshGenerator {
 		var nextBlock = this.getNextBlock(block);
 		var previousBlock = this.getPreviousBlock(block);
 		
-		var start = block.getCylinderOrigin();
-		var end = start.plus(block.forward().times(block.getDepth()));
+		var start = block.getCylinderOrigin(this);
+		var end = start.plus(block.forward().times(block.getDepth(this)));
+
+		var horizontalInner = block.horizontal().times(this.measurements.axleSizeInner);
+		var horizontalOuter = block.horizontal().times(this.measurements.axleSizeOuter);
+		var verticalInner = block.vertical().times(this.measurements.axleSizeInner);
+		var verticalOuter = block.vertical().times(this.measurements.axleSizeOuter);
 
 		this.createQuad(
-            start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-            start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_OUTER)),
-            end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_OUTER)),
-            end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)), block.odd());
+            start.plus(horizontalInner).plus(verticalInner),
+            start.plus(horizontalInner).plus(verticalOuter),
+            end.plus(horizontalInner).plus(verticalOuter),
+            end.plus(horizontalInner).plus(verticalInner), block.odd());
 		this.createQuad(
-			start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-			start.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-			end.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-			end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)), !block.odd());
+			start.plus(horizontalInner).plus(verticalInner),
+			start.plus(horizontalOuter).plus(verticalInner),
+			end.plus(horizontalOuter).plus(verticalInner),
+			end.plus(horizontalInner).plus(verticalInner), !block.odd());
 		this.createQuad(
-			end.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
-			start.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
-			start.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-			end.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)), block.odd());
+			end.plus(horizontalOuter),
+			start.plus(horizontalOuter),
+			start.plus(horizontalOuter).plus(verticalInner),
+			end.plus(horizontalOuter).plus(verticalInner), block.odd());
 		this.createQuad(
-			end.plus(block.vertical().times(AXLE_SIZE_OUTER)),
-			start.plus(block.vertical().times(AXLE_SIZE_OUTER)),
-			start.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
-			end.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)), !block.odd());
+			end.plus(verticalOuter),
+			start.plus(verticalOuter),
+			start.plus(verticalOuter).plus(horizontalInner),
+			end.plus(verticalOuter).plus(horizontalInner), !block.odd());
 
 		if (nextBlock == null) {
 			this.createQuad(
-				end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-				end.plus(block.vertical().times(AXLE_SIZE_INNER)),
+				end.plus(horizontalInner).plus(verticalInner),
+				end.plus(verticalInner),
 				end,
-				end.plus(block.horizontal().times(AXLE_SIZE_INNER)), block.odd());
+				end.plus(horizontalInner), block.odd());
 			this.createQuad(
-				end.plus(block.horizontal().times(AXLE_SIZE_INNER)),
-				end.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
-				end.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-				end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)), block.odd());
+				end.plus(horizontalInner),
+				end.plus(horizontalOuter),
+				end.plus(horizontalOuter).plus(verticalInner),
+				end.plus(horizontalInner).plus(verticalInner), block.odd());
 			this.createQuad(
-				end.plus(block.vertical().times(AXLE_SIZE_INNER)),
-				end.plus(block.vertical().times(AXLE_SIZE_OUTER)),
-				end.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
-				end.plus(block.vertical().times(AXLE_SIZE_INNER)).plus(block.horizontal().times(AXLE_SIZE_INNER)), !block.odd());
+				end.plus(verticalInner),
+				end.plus(verticalOuter),
+				end.plus(verticalOuter).plus(horizontalInner),
+				end.plus(verticalInner).plus(horizontalInner), !block.odd());
 		}
 		if (previousBlock == null) {
 			this.createQuad(
-				start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-				start.plus(block.vertical().times(AXLE_SIZE_INNER)),
+				start.plus(horizontalInner).plus(verticalInner),
+				start.plus(verticalInner),
 				start,
-				start.plus(block.horizontal().times(AXLE_SIZE_INNER)), !block.odd());
+				start.plus(horizontalInner), !block.odd());
 			this.createQuad(
-				start.plus(block.horizontal().times(AXLE_SIZE_INNER)),
-				start.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
-				start.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-				start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)), !block.odd());
+				start.plus(horizontalInner),
+				start.plus(horizontalOuter),
+				start.plus(horizontalOuter).plus(verticalInner),
+				start.plus(horizontalInner).plus(verticalInner), !block.odd());
 			this.createQuad(
-				start.plus(block.vertical().times(AXLE_SIZE_INNER)),
-				start.plus(block.vertical().times(AXLE_SIZE_OUTER)),
-				start.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
-				start.plus(block.vertical().times(AXLE_SIZE_INNER)).plus(block.horizontal().times(AXLE_SIZE_INNER)), block.odd());
+				start.plus(verticalInner),
+				start.plus(verticalOuter),
+				start.plus(verticalOuter).plus(horizontalInner),
+				start.plus(verticalInner).plus(horizontalInner), block.odd());
 		}
 
+		var blockSizeWithoutMargin = 0.5 - this.measurements.edgeMargin;
 		if (nextBlock != null && nextBlock.type != block.type && !nextBlock.rounded) {
 			this.createQuad(
-				end.plus(block.horizontal().times((0.5 - EDGE_MARGIN))),
-				end.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
-				end.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-				end.plus(block.horizontal().times((0.5 - EDGE_MARGIN))).plus(block.vertical().times(AXLE_SIZE_INNER)), block.odd());
+				end.plus(block.horizontal().times(blockSizeWithoutMargin)),
+				end.plus(horizontalOuter),
+				end.plus(horizontalOuter).plus(verticalInner),
+				end.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(verticalInner), block.odd());
 			this.createQuad(
-				end.plus(block.vertical().times((0.5 - EDGE_MARGIN))),
-				end.plus(block.vertical().times(AXLE_SIZE_OUTER)),
-				end.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
-				end.plus(block.vertical().times((0.5 - EDGE_MARGIN))).plus(block.horizontal().times(AXLE_SIZE_INNER)), !block.odd());
+				end.plus(block.vertical().times(blockSizeWithoutMargin)),
+				end.plus(verticalOuter),
+				end.plus(verticalOuter).plus(horizontalInner),
+				end.plus(block.vertical().times(blockSizeWithoutMargin)).plus(horizontalInner), !block.odd());
 			this.createQuad(
-				end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-				end.plus(block.horizontal().times((0.5 - EDGE_MARGIN))).plus(block.vertical().times(AXLE_SIZE_INNER)),
-				end.plus(block.horizontal().times((0.5 - EDGE_MARGIN))).plus(block.vertical().times((0.5 - EDGE_MARGIN))),
-				end.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times((0.5 - EDGE_MARGIN))), !block.odd());
+				end.plus(horizontalInner).plus(verticalInner),
+				end.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(verticalInner),
+				end.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(block.vertical().times(blockSizeWithoutMargin)),
+				end.plus(horizontalInner).plus(block.vertical().times(blockSizeWithoutMargin)), !block.odd());
 		}
 		if (previousBlock != null && previousBlock.type != block.type && !previousBlock.rounded) {
 			this.createQuad(
-				start.plus(block.horizontal().times((0.5 - EDGE_MARGIN))),
-				start.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
-				start.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-				start.plus(block.horizontal().times((0.5 - EDGE_MARGIN))).plus(block.vertical().times(AXLE_SIZE_INNER)), !block.odd());
+				start.plus(block.horizontal().times(blockSizeWithoutMargin)),
+				start.plus(horizontalOuter),
+				start.plus(horizontalOuter).plus(verticalInner),
+				start.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(verticalInner), !block.odd());
 			this.createQuad(
-				start.plus(block.vertical().times((0.5 - EDGE_MARGIN))),
-				start.plus(block.vertical().times(AXLE_SIZE_OUTER)),
-				start.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
-				start.plus(block.vertical().times((0.5 - EDGE_MARGIN))).plus(block.horizontal().times(AXLE_SIZE_INNER)), block.odd());
+				start.plus(block.vertical().times(blockSizeWithoutMargin)),
+				start.plus(verticalOuter),
+				start.plus(verticalOuter).plus(horizontalInner),
+				start.plus(block.vertical().times(blockSizeWithoutMargin)).plus(horizontalInner), block.odd());
 			this.createQuad(
-				start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_INNER)),
-				start.plus(block.horizontal().times((0.5 - EDGE_MARGIN))).plus(block.vertical().times(AXLE_SIZE_INNER)),
-				start.plus(block.horizontal().times((0.5 - EDGE_MARGIN))).plus(block.vertical().times((0.5 - EDGE_MARGIN))),
-				start.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times((0.5 - EDGE_MARGIN))), block.odd());
+				start.plus(horizontalInner).plus(verticalInner),
+				start.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(verticalInner),
+				start.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(block.vertical().times(blockSizeWithoutMargin)),
+				start.plus(horizontalInner).plus(block.vertical().times(blockSizeWithoutMargin)), block.odd());
 		}
 		if (nextBlock != null && nextBlock.type != block.type && nextBlock.rounded) {
-			this.createAxleToCircleAdapter(end, block, nextBlock.type == BlockType.Pin ? AXLE_PIN_ADAPTER_RADIUS : 0.5 - EDGE_MARGIN);
+			this.createAxleToCircleAdapter(end, block, nextBlock.type == BlockType.Pin ? this.measurements.axlePinAdapterRadius : blockSizeWithoutMargin);
 		}
 		if (previousBlock != null && previousBlock.type != block.type && previousBlock.rounded) {
-			this.createAxleToCircleAdapter(start, block, previousBlock.type == BlockType.Pin ? AXLE_PIN_ADAPTER_RADIUS : 0.5 - EDGE_MARGIN, true);
+			this.createAxleToCircleAdapter(start, block, previousBlock.type == BlockType.Pin ? this.measurements.axlePinAdapterRadius : blockSizeWithoutMargin, true);
 		}
 		if (nextBlock != null && !nextBlock.isAttachment()) {
 			this.hideStartEndFaces(nextBlock.position, block, false);
@@ -561,31 +568,36 @@ class PartMeshGenerator extends MeshGenerator {
     }
     
     private createAxleToCircleAdapter(center: Vector3, block: SmallBlock, radius: number, flipped = false) {
-		for (var i = 0; i < SUBDIVISIONS; i++) {
+		var horizontalInner = block.horizontal().times(this.measurements.axleSizeInner);
+		var horizontalOuter = block.horizontal().times(this.measurements.axleSizeOuter);
+		var verticalInner = block.vertical().times(this.measurements.axleSizeInner);
+		var verticalOuter = block.vertical().times(this.measurements.axleSizeOuter);
+
+		for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
 			var focus = center.copy();
-			if (i < SUBDIVISIONS / 2 == !block.odd()) {
-				focus = focus.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_OUTER));
+			if (i < this.measurements.subdivisionsPerQuarter / 2 == !block.odd()) {
+				focus = focus.plus(horizontalInner).plus(verticalOuter);
 			} else {
-				focus = focus.plus(block.horizontal().times(AXLE_SIZE_OUTER)).plus(block.vertical().times(AXLE_SIZE_INNER));
+				focus = focus.plus(horizontalOuter).plus(verticalInner);
 			}
 
 			this.triangles.push(new Triangle(focus,
-				center.plus(block.getOnCircle(Math.PI / 2 * i / SUBDIVISIONS, radius)),
-				center.plus(block.getOnCircle(Math.PI / 2 * (i + 1) / SUBDIVISIONS, radius)), flipped));
+				center.plus(block.getOnCircle(Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter, radius)),
+				center.plus(block.getOnCircle(Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter, radius)), flipped));
 		}
 		this.triangles.push(new Triangle(
-			center.plus(block.horizontal().times(AXLE_SIZE_INNER)).plus(block.vertical().times(AXLE_SIZE_OUTER)),
-			center.plus(block.vertical().times(AXLE_SIZE_OUTER)),
+			center.plus(horizontalInner).plus(verticalOuter),
+			center.plus(verticalOuter),
 			center.plus(block.vertical().times(radius)), block.odd() != flipped));
 		this.triangles.push(new Triangle(
-			center.plus(block.vertical().times(AXLE_SIZE_INNER)).plus(block.horizontal().times(AXLE_SIZE_OUTER)),
-			center.plus(block.horizontal().times(AXLE_SIZE_OUTER)),
+			center.plus(verticalInner).plus(horizontalOuter),
+			center.plus(horizontalOuter),
 			center.plus(block.horizontal().times(radius)), block.odd() == flipped));
 		this.createQuad(
-			center.plus(block.vertical().times(AXLE_SIZE_INNER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
-			center.plus(block.vertical().times(AXLE_SIZE_OUTER)).plus(block.horizontal().times(AXLE_SIZE_INNER)),
+			center.plus(verticalInner).plus(horizontalInner),
+			center.plus(verticalOuter).plus(horizontalInner),
 			center.plus(block.getOnCircle(45 * DEG_TO_RAD, radius)),
-			center.plus(block.vertical().times(AXLE_SIZE_INNER)).plus(block.horizontal().times(AXLE_SIZE_OUTER)), block.odd() != flipped);
+			center.plus(verticalInner).plus(horizontalOuter), block.odd() != flipped);
 	}
 
     private showInteriorCap(currentBlock: SmallBlock, neighbor: SmallBlock): boolean {
@@ -610,32 +622,37 @@ class PartMeshGenerator extends MeshGenerator {
     private renderPinHoleInterior(block: TinyBlock) {
 		var nextBlock = this.getNextBlock(block);
         var previousBlock = this.getPreviousBlock(block);
-        var distance = block.getDepth();
+        var distance = block.getDepth(this);
 
         var hasOpenEnd = this.hasOpenEnd(block);
         var hasOpenStart = this.hasOpenStart(block);
         var showInteriorEndCap = this.showInteriorCap(block, nextBlock) || (nextBlock == null && !hasOpenEnd);
-        var showInteriorStartCap = this.showInteriorCap(block, previousBlock) || (previousBlock == null && !hasOpenStart);
+		var showInteriorStartCap = this.showInteriorCap(block, previousBlock) || (previousBlock == null && !hasOpenStart);
+		
+		var offset = this.measurements.pinHoleOffset;
+		var endMargin = showInteriorEndCap ? this.measurements.interiorEndMargin : 0;
+		var startMargin = showInteriorStartCap ? this.measurements.interiorEndMargin : 0;
+        var offsetStart = (hasOpenStart || showInteriorStartCap ? offset : 0) + startMargin;
+		var offsetEnd = (hasOpenEnd || showInteriorEndCap ? offset : 0) + endMargin;
+		var interiorRadius = this.measurements.interiorRadius;
 
-        var offsetStart = (hasOpenStart || showInteriorStartCap ? PIN_HOLE_OFFSET : 0) + (showInteriorStartCap ? INTERIOR_END_MARGIN : 0);
-		var offsetEnd = (hasOpenEnd || showInteriorEndCap ? PIN_HOLE_OFFSET : 0) + (showInteriorEndCap ? INTERIOR_END_MARGIN : 0);
-		this.createCylinder(block, offsetStart, PIN_HOLE_RADIUS, distance - offsetStart - offsetEnd, true);
+		this.createCylinder(block, offsetStart, this.measurements.pinHoleRadius, distance - offsetStart - offsetEnd, true);
 
         if (hasOpenStart || showInteriorStartCap) {
-            this.createCylinder(block, showInteriorStartCap ? INTERIOR_END_MARGIN : 0, INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
-            this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, PIN_HOLE_OFFSET + (showInteriorStartCap ? INTERIOR_END_MARGIN : 0), true);
+            this.createCylinder(block, startMargin, interiorRadius, offset, true);
+            this.createCircleWithHole(block, this.measurements.pinHoleRadius, interiorRadius, offset + startMargin, true);
         }
 
         if (hasOpenEnd || showInteriorEndCap) {
-            this.createCylinder(block, distance - PIN_HOLE_OFFSET - (showInteriorEndCap ? INTERIOR_END_MARGIN : 0), INTERIOR_RADIUS, PIN_HOLE_OFFSET, true);
-            this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, distance - PIN_HOLE_OFFSET - (showInteriorEndCap ? INTERIOR_END_MARGIN : 0), false);
+            this.createCylinder(block, distance - offset - endMargin, interiorRadius, offset, true);
+            this.createCircleWithHole(block, this.measurements.pinHoleRadius, interiorRadius, distance - offset - endMargin, false);
         }
 
         if (showInteriorEndCap) {
-            this.createCircle(block, INTERIOR_RADIUS, distance - INTERIOR_END_MARGIN, false);
+            this.createCircle(block, interiorRadius, distance - endMargin, false);
         }
         if (showInteriorStartCap) {
-            this.createCircle(block, INTERIOR_RADIUS, INTERIOR_END_MARGIN, true);
+            this.createCircle(block, interiorRadius, startMargin, true);
         }
     }
 
@@ -648,38 +665,40 @@ class PartMeshGenerator extends MeshGenerator {
         var showInteriorEndCap = this.showInteriorCap(block, nextBlock) || (nextBlock == null && !hasOpenEnd);
         var showInteriorStartCap = this.showInteriorCap(block, previousBlock) || (previousBlock == null && !hasOpenStart);
         
-        var distance = block.getDepth();
+		var distance = block.getDepth(this);
+		var holeSize = this.measurements.axleHoleSize;
         
-        var start = block.getCylinderOrigin().plus(showInteriorStartCap ? block.forward().times(INTERIOR_END_MARGIN) : Vector3.zero());
-        var end = start.plus(block.forward().times(distance - (showInteriorStartCap ? INTERIOR_END_MARGIN : 0) - (showInteriorEndCap ? INTERIOR_END_MARGIN : 0)));
-		var axleWingAngle = Math.asin(AXLE_HOLE_SIZE / PIN_HOLE_RADIUS);
+        var start = block.getCylinderOrigin(this).plus(showInteriorStartCap ? block.forward().times(this.measurements.interiorEndMargin) : Vector3.zero());
+        var end = start.plus(block.forward().times(distance - (showInteriorStartCap ? this.measurements.interiorEndMargin : 0) - (showInteriorEndCap ? this.measurements.interiorEndMargin : 0)));
+		
+		var axleWingAngle = Math.asin(holeSize / this.measurements.pinHoleRadius);
 		var axleWingAngle2 = 90 * DEG_TO_RAD - axleWingAngle;
-		var subdivAngle = 90 / SUBDIVISIONS * DEG_TO_RAD;
-		var adjustedRadius = PIN_HOLE_RADIUS * Math.cos(subdivAngle / 2) / Math.cos(subdivAngle / 2 - (axleWingAngle - Math.floor(axleWingAngle / subdivAngle) * subdivAngle));
+		var subdivAngle = 90 / this.measurements.subdivisionsPerQuarter * DEG_TO_RAD;
+		var adjustedRadius = this.measurements.pinHoleRadius * Math.cos(subdivAngle / 2) / Math.cos(subdivAngle / 2 - (axleWingAngle - Math.floor(axleWingAngle / subdivAngle) * subdivAngle));
 		this.createQuad(
-			start.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+			start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
 			start.plus(block.getOnCircle(axleWingAngle, adjustedRadius)),
 			end.plus(block.getOnCircle(axleWingAngle, adjustedRadius)),
-			end.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+			end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
 			true);
 		this.createQuad(
-			start.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+			start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
 			start.plus(block.getOnCircle(axleWingAngle2, adjustedRadius)),
 			end.plus(block.getOnCircle(axleWingAngle2, adjustedRadius)),
-			end.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+			end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
 			false);
 
-		for (var i = 0; i < SUBDIVISIONS; i++) {
-			var angle1 = lerp(0, 90, i / SUBDIVISIONS) * DEG_TO_RAD;
-			var angle2 = lerp(0, 90, (i + 1) / SUBDIVISIONS) * DEG_TO_RAD;
+		for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
+			var angle1 = lerp(0, 90, i / this.measurements.subdivisionsPerQuarter) * DEG_TO_RAD;
+			var angle2 = lerp(0, 90, (i + 1) / this.measurements.subdivisionsPerQuarter) * DEG_TO_RAD;
 			var startAngleInside = angle1;
 			var endAngleInside = angle2;
 			var startAngleOutside = angle1;
 			var endAngleOutside = angle2;
-			var radius1Inside = PIN_HOLE_RADIUS;
-			var radius2Inside = PIN_HOLE_RADIUS;
-			var radius1Outside = PIN_HOLE_RADIUS;
-			var radius2Outside = PIN_HOLE_RADIUS;
+			var radius1Inside = this.measurements.pinHoleRadius;
+			var radius2Inside = this.measurements.pinHoleRadius;
+			var radius1Outside = this.measurements.pinHoleRadius;
+			var radius2Outside = this.measurements.pinHoleRadius;
 			if (angle1 < axleWingAngle && angle2 > axleWingAngle) {
 				endAngleInside = axleWingAngle;
 				startAngleOutside = axleWingAngle;
@@ -709,7 +728,7 @@ class PartMeshGenerator extends MeshGenerator {
 			if (hasOpenStart || (previousBlock != null && previousBlock.type == BlockType.PinHole && !showInteriorStartCap)) {
 				if (angle2 > axleWingAngle && angle1 < axleWingAngle2) {
 					this.triangles.push(new Triangle(
-						start.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+						start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
 						start.plus(block.getOnCircle(startAngleOutside, radius1Outside)),
 						start.plus(block.getOnCircle(endAngleOutside, radius2Outside))));
 				}
@@ -717,7 +736,7 @@ class PartMeshGenerator extends MeshGenerator {
 			if (hasOpenEnd || (nextBlock != null && nextBlock.type == BlockType.PinHole && !showInteriorEndCap)) {
 				if (angle2 > axleWingAngle && angle1 < axleWingAngle2) {
 					this.triangles.push(new Triangle(
-						end.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+						end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
 						end.plus(block.getOnCircle(endAngleOutside, radius2Outside)),
 						end.plus(block.getOnCircle(startAngleOutside, radius1Outside))));
 				}
@@ -738,30 +757,30 @@ class PartMeshGenerator extends MeshGenerator {
 			}
 		}
 		if (hasOpenEnd) {
-			this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, distance, false);
+			this.createCircleWithHole(block, this.measurements.pinHoleRadius, this.measurements.interiorRadius, distance, false);
 		}
 
 		if (hasOpenStart) {
-			this.createCircleWithHole(block, PIN_HOLE_RADIUS, INTERIOR_RADIUS, 0, true);
+			this.createCircleWithHole(block, this.measurements.pinHoleRadius, this.measurements.interiorRadius, 0, true);
 		}
 
 		if (showInteriorEndCap) {
 			this.triangles.push(new Triangle(
-				end.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+				end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
 				end,
 				end.plus(block.getOnCircle(axleWingAngle, adjustedRadius))));
 			this.triangles.push(new Triangle(
 				end,
-				end.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+				end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
 				end.plus(block.getOnCircle(axleWingAngle2, adjustedRadius))));
 		}
 		if (showInteriorStartCap) {
 			this.triangles.push(new Triangle(
 				start,
-				start.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+				start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
 				start.plus(block.getOnCircle(axleWingAngle, adjustedRadius))));
 			this.triangles.push(new Triangle(
-				start.plus(block.horizontal().times(AXLE_HOLE_SIZE)).plus(block.vertical().times(AXLE_HOLE_SIZE)),
+				start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
 				start,
 				start.plus(block.getOnCircle(axleWingAngle2, adjustedRadius))));
 		}
@@ -795,10 +814,10 @@ class PartMeshGenerator extends MeshGenerator {
 		}
         
         this.createQuad(
-            tinyBlockToWorld(position.plus(vertices[0].elementwiseMultiply(size))),
-            tinyBlockToWorld(position.plus(vertices[1].elementwiseMultiply(size))),
-            tinyBlockToWorld(position.plus(vertices[2].elementwiseMultiply(size))),
-            tinyBlockToWorld(position.plus(vertices[3].elementwiseMultiply(size))));
+            this.tinyBlockToWorld(position.plus(vertices[0].elementwiseMultiply(size))),
+            this.tinyBlockToWorld(position.plus(vertices[1].elementwiseMultiply(size))),
+            this.tinyBlockToWorld(position.plus(vertices[2].elementwiseMultiply(size))),
+            this.tinyBlockToWorld(position.plus(vertices[3].elementwiseMultiply(size))));
 	}
 
 	private isRowOfVisibleFaces(position: Vector3, rowDirection: Vector3, faceDirection: Vector3, count: number): boolean {

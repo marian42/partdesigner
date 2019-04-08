@@ -41,6 +41,8 @@ class Editor {
 			this.part = Part.fromString(catalog.items[Math.floor(Math.random() * catalog.items.length)].string);
 		}
 
+		this.displayMeasurements();
+		
 		this.editorState = new Block(Orientation.X, BlockType.PinHole, true);
 		this.createFullSizedBlocks = true;
 
@@ -81,6 +83,7 @@ class Editor {
 		document.getElementById("remove").addEventListener("click", (event: MouseEvent) => this.remove());
 		document.getElementById("style").addEventListener("change", (event: MouseEvent) => this.setRenderStyle(parseInt((event.srcElement as HTMLSelectElement).value)));
         window.addEventListener("resize", (e: Event) => this.camera.onResize());
+		document.getElementById("applymeasurements").addEventListener("click", (event: MouseEvent) => this.applyMeasurements());
 
 		this.initializeEditor("type", (typeName: string) => this.setType(typeName));
 		this.initializeEditor("orientation", (orientationName: string) => this.setOrientation(orientationName));
@@ -250,5 +253,19 @@ class Editor {
 		this.zoom *= event.deltaY < 0 ? this.zoomStep : 1 / this.zoomStep;
 		this.camera.size = this.zoom;
 		this.camera.render();
+	}
+
+	private displayMeasurements() {
+		for (var namedMeasurement of NAMED_MEASUREMENTS) {
+			namedMeasurement.applyToDom(this.measurements);
+		}
+	}
+
+	private applyMeasurements() {
+		for (var namedMeasurement of NAMED_MEASUREMENTS) {
+			namedMeasurement.readFromDOM(this.measurements);
+		}
+		this.displayMeasurements();
+		this.updateMesh();
 	}
 }

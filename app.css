@@ -116,7 +116,7 @@ input[type=radio]:checked + label.radiolabel {
     text-shadow: 0px 1px 6px rgba(0,0,0,0.63);
 }
 
-.group input {
+.group input[type=radio] {
     display: none;
 }
 
@@ -214,4 +214,41 @@ input[type=radio]:checked + label.radiolabel.z:hover, label.radiolabel.z:hover {
     background-color: rgb(47, 130, 255);
     color: white;
     text-shadow: 0px 1px 6px rgba(0,0,0,0.63);
+}
+
+.group .measurementhint {
+    display: table-cell;
+    width: 250px;
+    vertical-align: middle;
+}
+
+.group .measurement {
+    padding: 7px;
+    border-radius: 5px 0px 0px 5px;
+    border: 1px solid rgb(47, 130, 255);
+    border-right: none;
+    background-color: rgb(219, 219, 219);
+    display: table-cell;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: right;
+}
+
+.group .measurement:last-child {
+    border-radius: 5px;
+    border-right: none;
+    border: 1px solid rgb(47, 130, 255);
+}
+
+.unit {
+    border-radius: 5px;
+    border: 1px solid rgb(47, 130, 255);
+    background-color: rgb(219, 219, 219);
+    border-radius: 0px 5px 5px 0px;
+    border-left: none;
+    display: table-cell;
+    width: 32px;
+    box-sizing: border-box;
+    color: rgb(78, 78, 78);
+    user-select: none;
 }

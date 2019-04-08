@@ -6,7 +6,6 @@
     <title>Part Designer</title>
     <link rel="stylesheet" href="app.css" type="text/css" />
     <link rel="icon" href="favicon.png" type="image/png" sizes="16x16"/>
-    <script src="app.js"></script>
 </head>
 <body>
     <div class="sidebar">
@@ -65,13 +64,92 @@
                 <input type="radio" id="false" name="rounded" value="false">
                 <label class="radiolabel" for="false">Not Rounded</label>
             </div>
-            <div class="group" id="rounded">                
+            <div class="group">
                 <span class="editorhint"></span>
                 <button id="remove">Remove block</button>
             </div>
         </details>
         <details id="catalog">
             <summary>Catalog</summary>
+        </details>
+        <details open>
+            <summary>Measurements</summary>
+            <div class="group">
+                <span class="measurementhint">Technic Unit</span>
+                <input class="measurement" type="text" id="technicUnit">
+                <span class="unit">mm</span>
+            </div>
+            <div class="group">
+                <span class="measurementhint">Subdivisions Per Quarter</span>
+                <input class="measurement" type="text" id="subdivisionsPerQuarter">
+            </div>
+            <div class="group">
+                <span class="measurementhint">Edge Margin</span>
+                <input class="measurement" type="text" id="edgeMargin">
+                <span class="unit">mm</span>
+            </div>
+            <div class="group">
+                <span class="measurementhint">Interior Diameter</span>
+                <input class="measurement" type="text" id="interiorRadius">
+                <span class="unit">mm</span>
+            </div>
+            <div class="group">
+                <span class="measurementhint">Pin Hole Diameter</span>
+                <input class="measurement" type="text" id="pinHoleRadius">
+                <span class="unit">mm</span>
+            </div>
+            <div class="group">
+                <span class="measurementhint">Pin Hole Offset</span>
+                <input class="measurement" type="text" id="pinHoleOffset">
+                <span class="unit">mm</span>
+            </div>
+            <div class="group">
+                <span class="measurementhint">Axle Hole Size</span>
+                <input class="measurement" type="text" id="axleHoleSize">
+                <span class="unit">mm</span>
+            </div>
+            <div class="group">
+                <span class="measurementhint">Pin Diameter</span>
+                <input class="measurement" type="text" id="pinRadius">
+                <span class="unit">mm</span>
+            </div>
+            <div class="group">
+                <span class="measurementhint">Pin Lip Size</span>
+                <input class="measurement" type="text" id="pinLipRadius">
+                <span class="unit">mm</span>
+            </div>
+            <div class="group">
+                <span class="measurementhint">Lip Subdivisions</span>
+                <input class="measurement" type="text" id="lipSubdivisions">
+            </div>
+            <div class="group">
+                <span class="measurementhint">Axle Size Inner</span>
+                <input class="measurement" type="text" id="axleSizeInner">
+                <span class="unit">mm</span>
+            </div>
+            <div class="group">
+                <span class="measurementhint">Axle Size Outer</span>
+                <input class="measurement" type="text" id="axleSizeOuter">
+                <span class="unit">mm</span>
+            </div>
+            <div class="group">
+                <span class="measurementhint">Axle Pin Adapter Size</span>
+                <input class="measurement" type="text" id="axlePinAdapterSize">
+                <span class="unit">mm</span>
+            </div>
+            <div class="group">
+                <span class="measurementhint">Axle Pin Adapter Diameter</span>
+                <input class="measurement" type="text" id="axlePinAdapterRadius">
+                <span class="unit">mm</span>
+            </div>            
+            <div class="group">
+                <span class="measurementhint">Interior End Margin</span>
+                <input class="measurement" type="text" id="interiorEndMargin">
+            </div>
+            <div class="group">
+                <span class="measurementhint"></span>
+                <button id="applymeasurements">Apply</button>
+            </div>
         </details>
         
         <details open>
@@ -90,5 +168,7 @@
     <div class="canvas-container">
         <canvas id="canvas"></canvas>
     </div>
+    
+    <script src="app.js"></script>
 </body>
 </html>

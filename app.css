@@ -202,11 +202,11 @@ input[type=radio]:checked + label.radiolabel.z:hover, label.radiolabel.z:hover {
     display: table-cell;
     width: 100%;
     border-radius: 5px;
-    padding: 8px;
+    padding: 6px;
     border: 1px solid rgb(21, 98, 212);
-    background-color: rgb(21, 98, 212);
+    background-color:  rgb(219, 219, 219);
     transition: 0.1s;
-    color: white;
+    color: rgb(21, 98, 212);
 }
 
 .group select:hover, .group select:active {
@@ -263,4 +263,9 @@ input[type=radio]:checked + label.radiolabel.z:hover, label.radiolabel.z:hover {
     box-sizing: border-box;
     color: rgb(78, 78, 78);
     user-select: none;
+}
+
+.fineprint, .fineprint a, .fineprint a:visited {
+    font-size: 13px;
+    color: rgb(78, 78, 78);
 }

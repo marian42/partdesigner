@@ -103,7 +103,6 @@ const CONTOUR_FRAGMENT = `
         float depth = getDepth(uv);
         vec3 normal = getNormal(uv);
 
-        float contour = 0.0;
         float count = 0.0;
 
         for (float x = -1.0; x <= 1.0; x++) {
@@ -113,8 +112,8 @@ const CONTOUR_FRAGMENT = `
                 }
             }
         }
-        contour = count == 1.0 ? 0.0 : clamp(0.0, 1.0, (count - 0.2) / 5.0);
-
+        float contour = count == 1.0 ? 0.0 : (count - 0.2) / 5.0;
+        
         gl_FragColor = vec4(vec3(0.0), contour);
     }
 `

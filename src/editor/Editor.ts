@@ -77,7 +77,6 @@ class Editor {
 		this.canvas.addEventListener("contextmenu", (event: Event) => event.preventDefault());
 		this.canvas.addEventListener("wheel", (event: MouseWheelEvent) => this.onScroll(event));
 		document.getElementById("clear").addEventListener("click", (event: MouseEvent) => this.clear());
-		document.getElementById("randomize").addEventListener("click", (event: MouseEvent) => this.randomize());
 		document.getElementById("share").addEventListener("click", (event: MouseEvent) => this.share());
 		document.getElementById("save").addEventListener("click", (event: MouseEvent) => this.saveSTL());
 		document.getElementById("remove").addEventListener("click", (event: MouseEvent) => this.remove());
@@ -115,11 +114,6 @@ class Editor {
 
 	private clear() {
 		this.part.blocks.clear();
-		this.updateMesh();
-	}
-
-	private randomize() {
-		this.part.randomize();
 		this.updateMesh();
 	}
 
@@ -274,5 +268,6 @@ class Editor {
 	private resetMeasurements() {
 		this.measurements = new Measurements();
 		this.displayMeasurements();
+		this.updateMesh();
 	}
 }

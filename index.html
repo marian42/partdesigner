@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <title>Part Designer</title>
+    <meta name="author" content="Marian Kleineberg">
+    <meta name="description" content="A free online CAD tool to create custom LEGO&reg; Technic compatible construction parts for 3D printing.">
     <link rel="stylesheet" href="app.css" type="text/css" />
     <link rel="icon" href="favicon.png" type="image/png" sizes="16x16"/>
 </head>
@@ -13,10 +15,18 @@
             <summary>Part</summary>
             <div class="group">
                 <div class="cell"><button id="clear">Clear</button></div>
-                <div class="cell"><button id="randomize">Randomize</button></div>
                 <div class="cell"><button id="share">Share</button></div>
-            </div>            
-            <button id="save">Save STL</button>
+                <div class="cell"><button id="save">Save STL</button></div>
+            </div>
+            <div class="group">
+                <span class="measurementhint">Display style</span>
+                <select id="style">
+                    <option value="0">Contour</option>
+                    <option value="1">Solid</option>
+                    <option value="2">Wireframe</option>
+                    <option value="3">Solid Wireframe</option>
+                </select>
+            </div>
         </details>
         <details id="blockeditor" open>
             <summary>Edit Block</summary>
@@ -72,7 +82,7 @@
         <details id="catalog">
             <summary>Catalog</summary>
         </details>
-        <details open>
+        <details>
             <summary>Measurements</summary>
             <div class="group">
                 <span class="measurementhint">Technic Unit</span>
@@ -168,16 +178,14 @@
         </details>
         
         <details open>
-            <summary>Part Designer</summary>
-            <div class="group">
-                <span class="editorhint">Style</span>
-                <select id="style">
-                    <option value="0">Contour</option>
-                    <option value="1">Solid</option>
-                    <option value="2">Wireframe</option>
-                    <option value="3">Solid Wireframe</option>
-                </select>
-            </div>
+            <summary>About</summary>
+            <p>This is a free online CAD tool to create custom LEGO&reg; Technic compatible construction parts for 3D printing.</p>
+            <p>You can find the source code for this project on <a href="https://github.com/marian42/partdesigner" target="_blank">Github</a>.</p>
+            <p class="fineprint">
+                <a href="https://marian42.de/" target="_blank">marian42.de</a>&nbsp;&middot;&nbsp;
+                <a href="mailto:mail@marian42.de">Contact</a>&nbsp;&middot;&nbsp;
+                <a href="https://marian42.de/page/Imprint" target="_blank">Imprint</a>
+            </p>
         </details>
     </div>
     <div class="canvas-container">

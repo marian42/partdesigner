@@ -218,8 +218,20 @@ input[type=radio]:checked + label.radiolabel.z:hover, label.radiolabel.z:hover {
 
 .group .measurementhint {
     display: table-cell;
-    width: 250px;
+    width: 180px;
     vertical-align: middle;
+}
+.group .reset {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: right;
+    padding-right: 10px;
+    width: 50px;
+    color: rgb(21, 98, 212);
+}
+
+.group .reset:visited {
+    color: rgb(21, 98, 212);
 }
 
 .group .measurement {

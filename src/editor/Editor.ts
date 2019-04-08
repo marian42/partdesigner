@@ -84,6 +84,7 @@ class Editor {
 		document.getElementById("style").addEventListener("change", (event: MouseEvent) => this.setRenderStyle(parseInt((event.srcElement as HTMLSelectElement).value)));
         window.addEventListener("resize", (e: Event) => this.camera.onResize());
 		document.getElementById("applymeasurements").addEventListener("click", (event: MouseEvent) => this.applyMeasurements());
+		document.getElementById("resetmeasurements").addEventListener("click", (event: MouseEvent) => this.resetMeasurements());
 
 		this.initializeEditor("type", (typeName: string) => this.setType(typeName));
 		this.initializeEditor("orientation", (orientationName: string) => this.setOrientation(orientationName));
@@ -261,11 +262,17 @@ class Editor {
 		}
 	}
 
-	private applyMeasurements() {
+	public applyMeasurements() {
 		for (var namedMeasurement of NAMED_MEASUREMENTS) {
 			namedMeasurement.readFromDOM(this.measurements);
 		}
+		this.measurements.enforceConstraints();
 		this.displayMeasurements();
 		this.updateMesh();
+	}
+
+	private resetMeasurements() {
+		this.measurements = new Measurements();
+		this.displayMeasurements();
 	}
 }

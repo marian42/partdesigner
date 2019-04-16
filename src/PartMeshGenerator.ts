@@ -56,6 +56,7 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private canBeRounded(block: SmallBlock): boolean {
+		return true;
         var next = this.smallBlocks.getOrNull(block.position.plus(block.forward()));
         if (next != null && next.orientation == block.orientation && next.quadrant != block.quadrant) {
             return false;
@@ -231,7 +232,7 @@ class PartMeshGenerator extends MeshGenerator {
 			return true;
 		}
 
-		var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
+		var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal()));
 		if (neighbor2 != null && !neighbor2.isAttachment() && neighbor2.rounded && neighbor2.orientation != block.orientation) {
 			return true;
 		}
@@ -243,20 +244,25 @@ class PartMeshGenerator extends MeshGenerator {
 		if (!block1.rounded || block1.isAttachment()) {
 			return false;
 		}
-		if (!block1.smallBlockPosition().equals(block2.smallBlockPosition())) {
-			return this.hasPerpendicularRoundedNeighbor(this.smallBlocks.get(block1.smallBlockPosition()))
-				&& this.hasPerpendicularRoundedNeighbor(this.smallBlocks.get(block2.smallBlockPosition()));
-		}
 		
-		var smallBlock = this.smallBlocks.get(block1.smallBlockPosition());
-		if (!this.hasPerpendicularRoundedNeighbor(smallBlock)) {
+		if (!this.hasPerpendicularRoundedNeighbor(this.smallBlocks.get(block1.smallBlockPosition()))
+			|| !this.hasPerpendicularRoundedNeighbor(this.smallBlocks.get(block2.smallBlockPosition()))) {
 			return false;
 		}
 
 		var position1 = block1.smallBlockPosition().times(3).plus(block1.forward().times(block1.localPositon().dot(block1.forward())));
 		var position2 = block2.smallBlockPosition().times(3).plus(block2.forward().times(block2.localPositon().dot(block2.forward())));
-		return this.tinyBlocks.containsKey(position1.plus(block1.vertical().times(3))) != this.tinyBlocks.containsKey(position2.plus(block1.vertical().times(3)))
-			|| this.tinyBlocks.containsKey(position1.plus(block1.horizontal().times(3))) != this.tinyBlocks.containsKey(position2.plus(block1.horizontal().times(3)));
+		var vertical1 = this.tinyBlocks.getOrNull(position1.plus(block1.vertical().times(3)));
+		var vertical2 = this.tinyBlocks.getOrNull(position2.plus(block1.vertical().times(3)));
+		var horizontal1 = this.tinyBlocks.getOrNull(position1.plus(block2.horizontal().times(3)));
+		var horizontal2 = this.tinyBlocks.getOrNull(position2.plus(block2.horizontal().times(3)));
+
+		return horizontal1 != null && horizontal2 == null
+			|| horizontal1 == null && horizontal2 != null
+			|| (horizontal1 != null && horizontal2 != null && !horizontal1.smallBlockPosition().equals(horizontal2.smallBlockPosition()))
+			|| vertical1 != null && vertical2 == null
+			|| vertical1 == null && vertical2 != null
+			|| (vertical1 != null && vertical2 != null && !vertical1.smallBlockPosition().equals(vertical2.smallBlockPosition()));
 	}
 
     private mergeSimilarBlocks() {

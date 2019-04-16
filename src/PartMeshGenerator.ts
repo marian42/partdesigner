@@ -376,8 +376,50 @@ class PartMeshGenerator extends MeshGenerator {
             }
 
             if (block.rounded) {
+				var verticalNeighbor = this.tinyBlocks.getOrNull(block.position.plus(block.vertical().times(3)));
+				if (verticalNeighbor != null && verticalNeighbor.rounded && verticalNeighbor.forward().dot(block.vertical()) != 0) {
+					let center = block.getCylinderOrigin(this);
+					var radius = blockSizeWithoutMargin;
+
+					var forward = block.forward();
+
+					var forwardOrientation = center.dot(forward) + distance / 2 < verticalNeighbor.getCylinderOrigin(this).dot(forward);
+					
+					for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
+						var angle1 = Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter;
+						var angle2 = Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter;
+						var sincos1 = block.odd() ? Math.sin(angle1) : Math.cos(angle1);
+						var sincos2 = block.odd() ? Math.sin(angle2) : Math.cos(angle2);
+						let v1 = block.getOnCircle(angle1).times(radius).plus(forward.times(forwardOrientation ? 0 : distance));
+						let v2 = block.getOnCircle(angle2).times(radius).plus(forward.times(forwardOrientation ? 0 : distance));
+						var v3 = v2.plus(forward.times((1 - sincos2) * (forwardOrientation ? 1 : -1) * radius));
+						var v4 = v1.plus(forward.times((1 - sincos1) * (forwardOrientation ? 1 : -1) * radius));
+						this.createQuadWithNormals(
+							center.plus(v1),
+							center.plus(v2),
+							center.plus(v3),
+							center.plus(v4),
+							block.getOnCircle(angle1).times(forwardOrientation ? 1 : -1),
+							block.getOnCircle(angle2).times(forwardOrientation ? 1 : -1),
+							block.getOnCircle(angle2).times(forwardOrientation ? 1 : -1),
+							block.getOnCircle(angle1).times(forwardOrientation ? 1 : -1),
+							forwardOrientation);
+						var invertedAngle = (block.localY() != 1) != forwardOrientation;
+						this.createQuadWithNormals(
+							center.plus(v4).plus(block.vertical().times(radius * (1 - sincos1))),
+							center.plus(v3).plus(block.vertical().times(radius * (1 - sincos2))),
+							center.plus(v3),
+							center.plus(v4),
+							verticalNeighbor.getOnCircle(invertedAngle ? angle1 : Math.PI / 2 - angle1).times(forwardOrientation ? -1 : 1),
+							verticalNeighbor.getOnCircle(invertedAngle ? angle2 : Math.PI / 2 - angle2).times(forwardOrientation ? -1 : 1),
+							verticalNeighbor.getOnCircle(invertedAngle ? angle2 : Math.PI / 2 - angle2).times(forwardOrientation ? -1 : 1),
+							verticalNeighbor.getOnCircle(invertedAngle ? angle1 : Math.PI / 2 - angle1).times(forwardOrientation ? -1 : 1),
+							!forwardOrientation);
+					}
+				} else {
+					this.createCylinder(block, 0, blockSizeWithoutMargin, distance);
+				}
                 // Rounded corners
-				this.createCylinder(block, 0, blockSizeWithoutMargin, distance);
 				for (var i = 0; i < block.mergedBlocks; i++) {
 					this.hideOutsideFaces(this.tinyBlocks.get(block.position.plus(block.forward().times(i))));
 				}

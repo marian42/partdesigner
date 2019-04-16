@@ -440,12 +440,12 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             var hasOpenEnd = this.hasOpenEnd(block);
             var hasOpenStart = this.hasOpenStart(block);
             // Back cap
-            if (nextBlock == null) {
+            if (nextBlock == null && (block.rounded || block.hasInterior)) {
                 this.createCircleWithHole(block, block.hasInterior && hasOpenEnd ? this.measurements.interiorRadius : 0, blockSizeWithoutMargin, distance, false, !block.rounded);
                 this.hideStartEndFaces(block.position.plus(block.forward().times(block.mergedBlocks - 1)), block, true);
             }
             // Front cap
-            if (previousBlock == null) {
+            if (previousBlock == null && (block.rounded || block.hasInterior)) {
                 this.createCircleWithHole(block, block.hasInterior && hasOpenStart ? this.measurements.interiorRadius : 0, blockSizeWithoutMargin, 0, true, !block.rounded);
                 this.hideStartEndFaces(block.position, block, false);
             }

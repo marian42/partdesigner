@@ -121,7 +121,35 @@ class PartMeshGenerator extends MeshGenerator {
 
     private isTinyBlock(position: Vector3): boolean {
         return this.tinyBlocks.containsKey(position) && !this.tinyBlocks.get(position).isAttachment();
-    }
+	}
+	
+	private pushBlock(smallBlock: SmallBlock, forwardFactor: number) {
+		var nextBlock = this.smallBlocks.getOrNull(smallBlock.position.plus(smallBlock.forward().times(forwardFactor)));
+			
+		for (var a = -2; a <= 2; a++) {
+			for (var b = -2; b <= 2; b++) {
+				var from = smallBlock.position.times(3)
+					.plus(smallBlock.right().times(a))
+					.plus(smallBlock.up().times(b))
+					.plus(smallBlock.forward().times(forwardFactor));
+				var to = from.plus(smallBlock.forward().times(forwardFactor));
+				if (!this.tinyBlocks.containsKey(to)) {
+					continue;
+				}
+				if (!this.tinyBlocks.containsKey(from)) {
+					this.tinyBlocks.remove(to);
+					continue;
+				}
+				if (smallBlock.orientation == nextBlock.orientation) {
+					if (Math.abs(a) < 2 && Math.abs(b) < 2) {
+						this.tinyBlocks.get(to).rounded = true;
+					}
+				} else {
+					this.createTinyBlock(to, this.tinyBlocks.get(from));
+				}
+			}
+		}
+	}
 
     private processTinyBlocks() {
         // Disable interiors when adjacent quadrants are missing
@@ -142,57 +170,16 @@ class PartMeshGenerator extends MeshGenerator {
 			}
 		}
 
-		// Offset rounded to non rounded transitions to make them flush
 		for (var smallBlock of this.smallBlocks.values()) {
-			var forward = smallBlock.forward();
-			var right = smallBlock.right();
-			var up = smallBlock.up();
-
 			var nextBlock = this.smallBlocks.getOrNull(smallBlock.position.plus(smallBlock.forward()));
+			// Offset rounded to non rounded transitions to make them flush
 			if (smallBlock.rounded && nextBlock != null && !nextBlock.rounded) {
-				for (var a = -2; a <= 2; a++) {
-					for (var b = -2; b <= 2; b++) {
-						var from = smallBlock.position.times(3).plus(right.times(a)).plus(up.times(b)).plus(forward);
-						var to = from.plus(forward);
-						if (!this.tinyBlocks.containsKey(to)) {
-							continue;
-						}
-						if (!this.tinyBlocks.containsKey(from)) {
-							this.tinyBlocks.remove(to);
-							continue;
-						}
-						if (smallBlock.orientation == nextBlock.orientation) {
-							if (Math.abs(a) < 2 && Math.abs(b) < 2) {
-								this.tinyBlocks.get(to).rounded = true;
-							}
-						} else {
-							this.createTinyBlock(to, this.tinyBlocks.get(from));
-						}
-					}
-				}
+				this.pushBlock(smallBlock, 1);
 			}
 			var previousBlock = this.smallBlocks.getOrNull(smallBlock.position.minus(smallBlock.forward()));
+			// Offset rounded to non rounded transitions to make them flush
 			if (smallBlock.rounded && previousBlock != null && !previousBlock.rounded) {
-				for (var a = -2; a <= 2; a++) {
-					for (var b = -2; b <= 2; b++) {
-						var from = smallBlock.position.times(3).plus(right.times(a)).plus(up.times(b)).minus(forward);
-						var to = from.minus(forward);
-						if (!this.tinyBlocks.containsKey(to)) {
-							continue;
-						}
-						if (!this.tinyBlocks.containsKey(from)) {
-							this.tinyBlocks.remove(to);
-							continue;
-						}
-						if (smallBlock.orientation == previousBlock.orientation) {
-							if (Math.abs(a) < 2 && Math.abs(b) < 2) {
-								this.tinyBlocks.get(to).rounded = true;
-							}
-						} else {
-							this.createTinyBlock(to, this.tinyBlocks.get(from));
-						}
-					}
-				}
+				this.pushBlock(smallBlock, -1);
 			}
 		}
     }

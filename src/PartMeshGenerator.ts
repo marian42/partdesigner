@@ -219,7 +219,45 @@ class PartMeshGenerator extends MeshGenerator {
 				}
 			}
 		}
-    }
+	}
+
+	private hasPerpendicularRoundedNeighbor(block: SmallBlock): boolean {
+		if (!block.rounded || block.isAttachment()) {
+			return false;
+		}
+
+		var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
+		if (neighbor1 != null && !neighbor1.isAttachment() && neighbor1.rounded && neighbor1.orientation != block.orientation) {
+			return true;
+		}
+
+		var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
+		if (neighbor2 != null && !neighbor2.isAttachment() && neighbor2.rounded && neighbor2.orientation != block.orientation) {
+			return true;
+		}
+
+		return false;
+	}
+	
+	private preventMergingForPerpendicularRoundedBlock(block1: TinyBlock, block2: TinyBlock): boolean {
+		if (!block1.rounded || block1.isAttachment()) {
+			return false;
+		}
+		if (!block1.smallBlockPosition().equals(block2.smallBlockPosition())) {
+			return this.hasPerpendicularRoundedNeighbor(this.smallBlocks.get(block1.smallBlockPosition()))
+				&& this.hasPerpendicularRoundedNeighbor(this.smallBlocks.get(block2.smallBlockPosition()));
+		}
+		
+		var smallBlock = this.smallBlocks.get(block1.smallBlockPosition());
+		if (!this.hasPerpendicularRoundedNeighbor(smallBlock)) {
+			return false;
+		}
+
+		var position1 = block1.smallBlockPosition().times(3).plus(block1.forward().times(block1.localPositon().dot(block1.forward())));
+		var position2 = block2.smallBlockPosition().times(3).plus(block2.forward().times(block2.localPositon().dot(block2.forward())));
+		return this.tinyBlocks.containsKey(position1.plus(block1.vertical().times(3))) != this.tinyBlocks.containsKey(position2.plus(block1.vertical().times(3)))
+			|| this.tinyBlocks.containsKey(position1.plus(block1.horizontal().times(3))) != this.tinyBlocks.containsKey(position2.plus(block1.horizontal().times(3)));
+	}
 
     private mergeSimilarBlocks() {
         for (var block of this.tinyBlocks.values()) {
@@ -241,7 +279,8 @@ class PartMeshGenerator extends MeshGenerator {
 					|| this.isTinyBlock(block.position.plus(block.right())) != this.isTinyBlock(nextBlock.position.plus(block.right()))
 					|| this.isTinyBlock(block.position.minus(block.right())) != this.isTinyBlock(nextBlock.position.minus(block.right()))
 					|| this.isTinyBlock(block.position.plus(block.up())) != this.isTinyBlock(nextBlock.position.plus(block.up()))
-					|| this.isTinyBlock(block.position.minus(block.up())) != this.isTinyBlock(nextBlock.position.minus(block.up()))) {
+					|| this.isTinyBlock(block.position.minus(block.up())) != this.isTinyBlock(nextBlock.position.minus(block.up()))
+					|| this.preventMergingForPerpendicularRoundedBlock(this.tinyBlocks.get(block.position.plus(block.forward().times(amount))), nextBlock)) {
 						break;
 				}
 				amount += nextBlock.mergedBlocks;

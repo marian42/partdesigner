@@ -384,83 +384,45 @@ class PartMeshGenerator extends MeshGenerator {
             if (block.rounded) {
 				var verticalNeighbor = this.tinyBlocks.getOrNull(block.position.plus(block.vertical().times(3)));
 				var horizontalNeighbor = this.tinyBlocks.getOrNull(block.position.plus(block.horizontal().times(3)));
-				if (verticalNeighbor != null && verticalNeighbor.rounded && verticalNeighbor.forward().dot(block.vertical()) != 0) {
+				var neighbor = verticalNeighbor != null ? verticalNeighbor : horizontalNeighbor;
+				var isVertical = verticalNeighbor != null;
+				var verticalOrHorizontal = isVertical ? block.vertical() : block.horizontal();
+
+				if (neighbor != null && neighbor.rounded && neighbor.forward().dot(verticalOrHorizontal) != 0) {
 					let center = block.getCylinderOrigin(this);
 					var radius = blockSizeWithoutMargin;
 
 					var forward = block.forward();
 
-					var forwardOrientation = center.dot(forward) + distance / 2 < verticalNeighbor.getCylinderOrigin(this).dot(forward);
+					var facesForward = center.dot(forward) + distance / 2 < neighbor.getCylinderOrigin(this).dot(forward);
 					
 					for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
 						var angle1 = Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter;
 						var angle2 = Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter;
-						var sincos1 = block.odd() ? Math.sin(angle1) : Math.cos(angle1);
-						var sincos2 = block.odd() ? Math.sin(angle2) : Math.cos(angle2);
-						let v1 = block.getOnCircle(angle1).times(radius).plus(forward.times(forwardOrientation ? 0 : distance));
-						let v2 = block.getOnCircle(angle2).times(radius).plus(forward.times(forwardOrientation ? 0 : distance));
-						var v3 = v2.plus(forward.times((1 - sincos2) * (forwardOrientation ? 1 : -1) * radius));
-						var v4 = v1.plus(forward.times((1 - sincos1) * (forwardOrientation ? 1 : -1) * radius));
-						this.createQuadWithNormals(
-							center.plus(v1),
-							center.plus(v2),
-							center.plus(v3),
-							center.plus(v4),
-							block.getOnCircle(angle1).times(forwardOrientation ? 1 : -1),
-							block.getOnCircle(angle2).times(forwardOrientation ? 1 : -1),
-							block.getOnCircle(angle2).times(forwardOrientation ? 1 : -1),
-							block.getOnCircle(angle1).times(forwardOrientation ? 1 : -1),
-							forwardOrientation);
-						var invertedAngle = (block.localY() != 1) != forwardOrientation;
-						this.createQuadWithNormals(
-							center.plus(v4).plus(block.vertical().times(radius * (1 - sincos1))),
-							center.plus(v3).plus(block.vertical().times(radius * (1 - sincos2))),
-							center.plus(v3),
-							center.plus(v4),
-							verticalNeighbor.getOnCircle(invertedAngle ? angle1 : Math.PI / 2 - angle1).times(forwardOrientation ? -1 : 1),
-							verticalNeighbor.getOnCircle(invertedAngle ? angle2 : Math.PI / 2 - angle2).times(forwardOrientation ? -1 : 1),
-							verticalNeighbor.getOnCircle(invertedAngle ? angle2 : Math.PI / 2 - angle2).times(forwardOrientation ? -1 : 1),
-							verticalNeighbor.getOnCircle(invertedAngle ? angle1 : Math.PI / 2 - angle1).times(forwardOrientation ? -1 : 1),
-							!forwardOrientation);
-					}
-				} if (horizontalNeighbor != null && horizontalNeighbor.rounded && horizontalNeighbor.forward().dot(block.horizontal()) != 0) {
-					let center = block.getCylinderOrigin(this);
-					var radius = blockSizeWithoutMargin;
+						var sincos1 = 1 - (block.odd() == isVertical ? Math.sin(angle1) : Math.cos(angle1));
+						var sincos2 = 1 - (block.odd() == isVertical ? Math.sin(angle2) : Math.cos(angle2));
+						
+						let vertex1 = center.plus(block.getOnCircle(angle1).times(radius)).plus(forward.times(facesForward ? 0 : distance));
+						let vertex2 = center.plus(block.getOnCircle(angle2).times(radius)).plus(forward.times(facesForward ? 0 : distance));
+						var vertex3 = vertex2.plus(forward.times(sincos2 * (facesForward ? 1 : -1) * radius));
+						var vertex4 = vertex1.plus(forward.times(sincos1 * (facesForward ? 1 : -1) * radius));
 
-					var forward = block.forward();
+						var normal1 = block.getOnCircle(angle1).times(facesForward ? 1 : -1);
+						var normal2 = block.getOnCircle(angle2).times(facesForward ? 1 : -1);
 
-					var forwardOrientation = center.dot(forward) + distance / 2 < horizontalNeighbor.getCylinderOrigin(this).dot(forward);
-					
-					for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
-						var angle1 = Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter;
-						var angle2 = Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter;
-						var sincos1 = block.odd() ? Math.cos(angle1) : Math.sin(angle1);
-						var sincos2 = block.odd() ? Math.cos(angle2) : Math.sin(angle2);
-						let v1 = block.getOnCircle(angle1).times(radius).plus(forward.times(forwardOrientation ? 0 : distance));
-						let v2 = block.getOnCircle(angle2).times(radius).plus(forward.times(forwardOrientation ? 0 : distance));
-						var v3 = v2.plus(forward.times((1 - sincos2) * (forwardOrientation ? 1 : -1) * radius));
-						var v4 = v1.plus(forward.times((1 - sincos1) * (forwardOrientation ? 1 : -1) * radius));
 						this.createQuadWithNormals(
-							center.plus(v1),
-							center.plus(v2),
-							center.plus(v3),
-							center.plus(v4),
-							block.getOnCircle(angle1).times(forwardOrientation ? 1 : -1),
-							block.getOnCircle(angle2).times(forwardOrientation ? 1 : -1),
-							block.getOnCircle(angle2).times(forwardOrientation ? 1 : -1),
-							block.getOnCircle(angle1).times(forwardOrientation ? 1 : -1),
-							forwardOrientation);
-						var invertedAngle = (block.localX() != 1) != forwardOrientation;
+							vertex1, vertex2, vertex3, vertex4,
+							normal1, normal2, normal2, normal1, facesForward);
+
+						var invertAngle = ((isVertical ? block.localY() : block.localX()) != 1) != facesForward;
+						var vertex5 = vertex4.plus(verticalOrHorizontal.times(radius * sincos1));
+						var vertex6 = vertex3.plus(verticalOrHorizontal.times(radius * sincos2));
+						var normal3 = neighbor.getOnCircle(invertAngle ? angle1 : Math.PI / 2 - angle1).times(facesForward ? -1 : 1);
+						var normal4 = neighbor.getOnCircle(invertAngle ? angle2 : Math.PI / 2 - angle2).times(facesForward ? -1 : 1);
+
 						this.createQuadWithNormals(
-							center.plus(v4).plus(block.horizontal().times(radius * (1 - sincos1))),
-							center.plus(v3).plus(block.horizontal().times(radius * (1 - sincos2))),
-							center.plus(v3),
-							center.plus(v4),
-							horizontalNeighbor.getOnCircle(invertedAngle ? angle1 : Math.PI / 2 - angle1).times(forwardOrientation ? -1 : 1),
-							horizontalNeighbor.getOnCircle(invertedAngle ? angle2 : Math.PI / 2 - angle2).times(forwardOrientation ? -1 : 1),
-							horizontalNeighbor.getOnCircle(invertedAngle ? angle2 : Math.PI / 2 - angle2).times(forwardOrientation ? -1 : 1),
-							horizontalNeighbor.getOnCircle(invertedAngle ? angle1 : Math.PI / 2 - angle1).times(forwardOrientation ? -1 : 1),
-							!forwardOrientation);
+							vertex5, vertex6, vertex3, vertex4,
+							normal3, normal4, normal4, normal3, !facesForward);
 					}
 				} else {
 					this.createCylinder(block, 0, blockSizeWithoutMargin, distance);

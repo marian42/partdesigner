@@ -181,6 +181,14 @@ class PartMeshGenerator extends MeshGenerator {
 			if (smallBlock.rounded && previousBlock != null && !previousBlock.rounded) {
 				this.pushBlock(smallBlock, -1);
 			}
+
+			if (smallBlock.rounded && nextBlock != null && nextBlock.rounded && smallBlock.orientation != nextBlock.orientation) {
+				this.pushBlock(smallBlock, 1);
+			}
+			
+			if (smallBlock.rounded && previousBlock != null && previousBlock.rounded && smallBlock.orientation != previousBlock.orientation) {
+				this.pushBlock(smallBlock, -1);
+			}
 		}
     }
 

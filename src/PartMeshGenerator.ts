@@ -71,7 +71,11 @@ class PartMeshGenerator extends MeshGenerator {
         if ((neighbor1 == null || (neighbor1.isAttachment() && neighbor1.forward().dot(block.right()) == 0))
             && (neighbor2 == null || (neighbor2.isAttachment() && neighbor2.forward().dot(block.up()) == 0))) {
             return true;
-        }
+		}
+		if ((neighbor1 == null && neighbor2 != null && neighbor2.forward().dot(block.vertical()) != 0 && neighbor2.rounded)
+			|| (neighbor2 == null && neighbor1 != null && neighbor1.forward().dot(block.horizontal()) != 0 && neighbor1.rounded)) {
+			return true;
+		}
         return false;
     }
 
@@ -222,47 +226,29 @@ class PartMeshGenerator extends MeshGenerator {
 		}
 	}
 
-	private hasPerpendicularRoundedNeighbor(block: SmallBlock): boolean {
-		if (!block.rounded || block.isAttachment()) {
-			return false;
+	private getPerpendicularRoundedNeighborOrNull(block: TinyBlock): SmallBlock {
+		var verticalNeighbor = this.smallBlocks.getOrNull(block.smallBlockPosition().plus(block.vertical()));
+		var horizontalNeighbor = this.smallBlocks.getOrNull(block.smallBlockPosition().plus(block.horizontal()));
+		var neighbor = verticalNeighbor != null ? verticalNeighbor : horizontalNeighbor;
+		var verticalOrHorizontal = verticalNeighbor != null ? block.vertical() : block.horizontal();
+		if (block.rounded && neighbor != null && neighbor.rounded && neighbor.forward().dot(verticalOrHorizontal) != 0) {
+			return neighbor;
+		} else {
+			return null;
 		}
-
-		var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
-		if (neighbor1 != null && !neighbor1.isAttachment() && neighbor1.rounded && neighbor1.orientation != block.orientation) {
-			return true;
-		}
-
-		var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal()));
-		if (neighbor2 != null && !neighbor2.isAttachment() && neighbor2.rounded && neighbor2.orientation != block.orientation) {
-			return true;
-		}
-
-		return false;
 	}
 	
 	private preventMergingForPerpendicularRoundedBlock(block1: TinyBlock, block2: TinyBlock): boolean {
-		if (!block1.rounded || block1.isAttachment()) {
+		if (!block1.rounded || !block2.rounded || !block1.isCenter()) {
 			return false;
 		}
+		var neighbor1 = this.getPerpendicularRoundedNeighborOrNull(block1);
+		var neighbor2 = this.getPerpendicularRoundedNeighborOrNull(block2);
+
+		var inside1 = neighbor1 != null && block1.position.minus(neighbor1.position.times(3)).dot(neighbor1.vertical().plus(neighbor1.horizontal())) <= 0;
+		var inside2 = neighbor2 != null && block2.position.minus(neighbor2.position.times(3)).dot(neighbor2.vertical().plus(neighbor2.horizontal())) <= 0;
 		
-		if (!this.hasPerpendicularRoundedNeighbor(this.smallBlocks.get(block1.smallBlockPosition()))
-			|| !this.hasPerpendicularRoundedNeighbor(this.smallBlocks.get(block2.smallBlockPosition()))) {
-			return false;
-		}
-
-		var position1 = block1.smallBlockPosition().times(3).plus(block1.forward().times(block1.localPositon().dot(block1.forward())));
-		var position2 = block2.smallBlockPosition().times(3).plus(block2.forward().times(block2.localPositon().dot(block2.forward())));
-		var vertical1 = this.tinyBlocks.getOrNull(position1.plus(block1.vertical().times(3)));
-		var vertical2 = this.tinyBlocks.getOrNull(position2.plus(block1.vertical().times(3)));
-		var horizontal1 = this.tinyBlocks.getOrNull(position1.plus(block2.horizontal().times(3)));
-		var horizontal2 = this.tinyBlocks.getOrNull(position2.plus(block2.horizontal().times(3)));
-
-		return horizontal1 != null && horizontal2 == null
-			|| horizontal1 == null && horizontal2 != null
-			|| (horizontal1 != null && horizontal2 != null && !horizontal1.smallBlockPosition().equals(horizontal2.smallBlockPosition()))
-			|| vertical1 != null && vertical2 == null
-			|| vertical1 == null && vertical2 != null
-			|| (vertical1 != null && vertical2 != null && !vertical1.smallBlockPosition().equals(vertical2.smallBlockPosition()));
+		return inside1 != inside2 || (inside1 && inside2 && !neighbor1.position.equals(neighbor2.position));
 	}
 
     private mergeSimilarBlocks() {
@@ -389,6 +375,10 @@ class PartMeshGenerator extends MeshGenerator {
 				var verticalOrHorizontal = isVertical ? block.vertical() : block.horizontal();
 
 				if (neighbor != null && neighbor.rounded && neighbor.forward().dot(verticalOrHorizontal) != 0) {
+					if (block.mergedBlocks != 2) {
+						console.warn("Invalid block size for rounded perpendicular adapter.");
+					}
+
 					let center = block.getCylinderOrigin(this);
 					var radius = blockSizeWithoutMargin;
 

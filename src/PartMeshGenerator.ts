@@ -56,8 +56,7 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private canBeRounded(block: SmallBlock): boolean {
-		return true;
-        var next = this.smallBlocks.getOrNull(block.position.plus(block.forward()));
+		var next = this.smallBlocks.getOrNull(block.position.plus(block.forward()));
         if (next != null && next.orientation == block.orientation && next.quadrant != block.quadrant) {
             return false;
         }
@@ -156,8 +155,22 @@ class PartMeshGenerator extends MeshGenerator {
 		}
 	}
 
+	private hasPerpendicularRoundedConnector(block: SmallBlock) {
+		if (!block.rounded || block.isAttachment()) {
+			return false;
+		}
+
+		var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
+		var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal()));
+
+		var isConnected1 = neighbor1 != null && neighbor1.rounded && neighbor1.forward().dot(block.vertical()) != 0;
+		var isConnected2 = neighbor2 != null && neighbor2.rounded && neighbor2.forward().dot(block.horizontal()) != 0;
+
+		return isConnected1 != isConnected2;
+	}
+
     private processTinyBlocks() {
-        // Disable interiors when adjacent quadrants are missing
+		// Disable interiors when adjacent quadrants are missing
 		for (var block of this.tinyBlocks.values()) {
 			if (block.isCenter()
 				&& !block.isAttachment()
@@ -178,12 +191,12 @@ class PartMeshGenerator extends MeshGenerator {
 		for (var smallBlock of this.smallBlocks.values()) {
 			var nextBlock = this.smallBlocks.getOrNull(smallBlock.position.plus(smallBlock.forward()));
 			// Offset rounded to non rounded transitions to make them flush
-			if (smallBlock.rounded && nextBlock != null && !nextBlock.rounded) {
+			if (smallBlock.rounded && nextBlock != null && !nextBlock.rounded && !this.hasPerpendicularRoundedConnector(smallBlock)) {
 				this.pushBlock(smallBlock, 1);
 			}
 			var previousBlock = this.smallBlocks.getOrNull(smallBlock.position.minus(smallBlock.forward()));
 			// Offset rounded to non rounded transitions to make them flush
-			if (smallBlock.rounded && previousBlock != null && !previousBlock.rounded) {
+			if (smallBlock.rounded && previousBlock != null && !previousBlock.rounded && !this.hasPerpendicularRoundedConnector(smallBlock)) {
 				this.pushBlock(smallBlock, -1);
 			}
 

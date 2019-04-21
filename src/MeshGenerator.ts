@@ -31,7 +31,7 @@ class MeshGenerator {
     }
 
     protected createCircleWithHole(block: TinyBlock, innerRadius: number, outerRadius: number, offset: number, inverted = false, square = false) {
-        let center = block.getCylinderOrigin(this).plus(block.forward().times(offset));
+        let center = block.getCylinderOrigin(this).plus(block.forward.times(offset));
 
         for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
             let i1 = block.getOnCircle(Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter);
@@ -40,15 +40,15 @@ class MeshGenerator {
             var o2 = i2;
 
             if (square) {
-                if (Math.abs(o1.dot(block.right())) > Math.abs(o1.dot(block.up()))) {
-                    o1 = o1.times(1 / Math.abs(o1.dot(block.right())));
+                if (Math.abs(o1.dot(block.right)) > Math.abs(o1.dot(block.up))) {
+                    o1 = o1.times(1 / Math.abs(o1.dot(block.right)));
                 } else {
-                    o1 = o1.times(1 / Math.abs(o1.dot(block.up())));
+                    o1 = o1.times(1 / Math.abs(o1.dot(block.up)));
                 }
-                if (Math.abs(o2.dot(block.right())) > Math.abs(o2.dot(block.up()))) {
-                    o2 = o2.times(1 / Math.abs(o2.dot(block.right())));
+                if (Math.abs(o2.dot(block.right)) > Math.abs(o2.dot(block.up))) {
+                    o2 = o2.times(1 / Math.abs(o2.dot(block.right)));
                 } else {
-                    o2 = o2.times(1 / Math.abs(o2.dot(block.up())));
+                    o2 = o2.times(1 / Math.abs(o2.dot(block.up)));
                 }
             }
 
@@ -62,7 +62,7 @@ class MeshGenerator {
     }
 
     protected createCircle(block: TinyBlock, radius: number, offset: number, inverted = false) {
-        let center = block.getCylinderOrigin(this).plus(block.forward().times(offset));
+        let center = block.getCylinderOrigin(this).plus(block.forward.times(offset));
 
         for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
             let p1 = block.getOnCircle(Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter, radius);
@@ -77,7 +77,7 @@ class MeshGenerator {
     }
 
     protected createCylinder(block: TinyBlock, offset: number, radius: number, distance: number, inverted = false) {
-        let center = block.getCylinderOrigin(this).plus(block.forward().times(offset));
+        let center = block.getCylinderOrigin(this).plus(block.forward.times(offset));
 
         for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
             let v1 = block.getOnCircle(Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter);
@@ -85,8 +85,8 @@ class MeshGenerator {
             this.createQuadWithNormals(
                 center.plus(v1.times(radius)),
                 center.plus(v2.times(radius)),
-                center.plus(v2.times(radius)).plus(block.forward().times(distance)),
-                center.plus(v1.times(radius)).plus(block.forward().times(distance)),
+                center.plus(v2.times(radius)).plus(block.forward.times(distance)),
+                center.plus(v1.times(radius)).plus(block.forward.times(distance)),
                 v1, v2, v2, v1,
                 !inverted);
         }

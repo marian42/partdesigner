@@ -21,7 +21,7 @@ class PartMeshGenerator extends MeshGenerator {
 		var perpendicularRoundedAdapters: SmallBlock[] = [];
 
         for (var block of this.smallBlocks.values()) {
-			if (block.isAttachment()) {
+			if (block.isAttachment) {
 				block.rounded = true;
 				continue;
 			}
@@ -29,21 +29,21 @@ class PartMeshGenerator extends MeshGenerator {
 				continue;
 			}
 
-			var next = this.smallBlocks.getOrNull(block.position.plus(block.forward()));
+			var next = this.smallBlocks.getOrNull(block.position.plus(block.forward));
 			if (next != null && next.orientation == block.orientation && next.quadrant != block.quadrant) {
 				block.rounded = false;
 				continue;
 			}
-			var previous = this.smallBlocks.getOrNull(block.position.minus(block.forward()));
+			var previous = this.smallBlocks.getOrNull(block.position.minus(block.forward));
 			if (previous != null && previous.orientation == block.orientation && previous.quadrant != block.quadrant) {
 				block.rounded = false;
 				continue;
 			}
 
-			var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal()));
-			var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
-			if ((neighbor1 == null || (neighbor1.isAttachment() && neighbor1.forward().dot(block.right()) == 0))
-				&& (neighbor2 == null || (neighbor2.isAttachment() && neighbor2.forward().dot(block.up()) == 0))) {
+			var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal));
+			var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical));
+			if ((neighbor1 == null || (neighbor1.isAttachment && neighbor1.forward.dot(block.right) == 0))
+				&& (neighbor2 == null || (neighbor2.isAttachment && neighbor2.forward.dot(block.up) == 0))) {
 				continue;
 			}
 
@@ -72,21 +72,21 @@ class PartMeshGenerator extends MeshGenerator {
     private createDummyBlocks() {
         var addedAnything = false;
 		for (var block of this.smallBlocks.values()) {
-			if (!block.isAttachment()) {
+			if (!block.isAttachment) {
 				continue;
 			}
 			var affectedPositions = [
 				block.position,
-				block.position.minus(block.horizontal()),
-				block.position.minus(block.vertical()),
-				block.position.minus(block.horizontal()).minus(block.vertical())
+				block.position.minus(block.horizontal),
+				block.position.minus(block.vertical),
+				block.position.minus(block.horizontal).minus(block.vertical)
             ];
 			for (var forwardDirection = -1; forwardDirection <= 1; forwardDirection += 2) {
-				var count = countInArray(affectedPositions, (p) => this.smallBlocks.containsKey(p.plus(block.forward().times(forwardDirection))));
+				var count = countInArray(affectedPositions, (p) => this.smallBlocks.containsKey(p.plus(block.forward.times(forwardDirection))));
 				if (count != 0 && count != 4) {
 					var source = new Block(block.orientation, BlockType.Solid, true);
 					for (var position of affectedPositions) {
-						var targetPosition = position.plus(block.forward().times(forwardDirection));
+						var targetPosition = position.plus(block.forward.times(forwardDirection));
 						if (!this.smallBlocks.containsKey(targetPosition)) {
 							this.smallBlocks.set(targetPosition, new SmallBlock(this.smallBlocks.get(position).quadrant, targetPosition, source));
 						}
@@ -101,24 +101,24 @@ class PartMeshGenerator extends MeshGenerator {
 	}
 	
 	private createPerpendicularRoundedAdapterIfPossible(block: SmallBlock): boolean {
-		var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal()));
-		var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
+		var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal));
+		var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical));
 		
-		var hasHorizontalNeighbor = neighbor2 == null && neighbor1 != null && neighbor1.forward().dot(block.horizontal()) != 0 && neighbor1.rounded;
-		var hasVerticalNeighbor = neighbor1 == null && neighbor2 != null && neighbor2.forward().dot(block.vertical()) != 0 && neighbor2.rounded;
+		var hasHorizontalNeighbor = neighbor2 == null && neighbor1 != null && neighbor1.forward.dot(block.horizontal) != 0 && neighbor1.rounded;
+		var hasVerticalNeighbor = neighbor1 == null && neighbor2 != null && neighbor2.forward.dot(block.vertical) != 0 && neighbor2.rounded;
 		
 		if (hasHorizontalNeighbor == hasVerticalNeighbor) {
 			return false;
 		}
 
 		var adapter = new PerpendicularRoundedAdapter();
-		adapter.directionToNeighbor = hasVerticalNeighbor ? block.vertical() : block.horizontal();
+		adapter.directionToNeighbor = hasVerticalNeighbor ? block.vertical : block.horizontal;
 		adapter.isVertical = hasVerticalNeighbor;
 		adapter.neighbor = hasHorizontalNeighbor ? neighbor1 : neighbor2;
-		adapter.facesForward = block.forward().dot(adapter.neighbor.horizontal().plus(adapter.neighbor.vertical())) < 0;
+		adapter.facesForward = block.forward.dot(adapter.neighbor.horizontal.plus(adapter.neighbor.vertical)) < 0;
 		adapter.sourceBlock = block;
 		
-		if (!this.smallBlocks.containsKey(block.position.plus(block.forward().times(adapter.facesForward ? 1 : -1)))) {
+		if (!this.smallBlocks.containsKey(block.position.plus(block.forward.times(adapter.facesForward ? 1 : -1)))) {
 			return false;
 		}
 
@@ -130,7 +130,7 @@ class PartMeshGenerator extends MeshGenerator {
         this.tinyBlocks = new VectorDictionary<TinyBlock>();
 
         for (let block of this.smallBlocks.values()) {
-            if (block.isAttachment()) {
+            if (block.isAttachment) {
                 continue;
             }
 
@@ -153,18 +153,18 @@ class PartMeshGenerator extends MeshGenerator {
         }
 
         for (let block of this.smallBlocks.values()) {
-            if (!block.isAttachment()) {
+            if (!block.isAttachment) {
                 continue;
             }
             for (var a = -2; a <= 2; a++) {
-                var neighbor = block.position.plus(block.forward().times(sign(a)));
-                if (!this.smallBlocks.containsKey(neighbor) || (Math.abs(a) >= 2 && this.smallBlocks.get(neighbor).isAttachment())) {
+                var neighbor = block.position.plus(block.forward.times(sign(a)));
+                if (!this.smallBlocks.containsKey(neighbor) || (Math.abs(a) >= 2 && this.smallBlocks.get(neighbor).isAttachment)) {
                     continue;
                 }
 
                 for (var b = -1; b <= 0; b++) {
                     for (var c = -1; c <= 0; c++) {
-                        this.createTinyBlock(block.position.times(3).plus(block.forward().times(a)).plus(block.horizontal().times(b)).plus(block.vertical().times(c)), block);
+                        this.createTinyBlock(block.position.times(3).plus(block.forward.times(a)).plus(block.horizontal.times(b)).plus(block.vertical.times(c)), block);
                     }
                 }
             }
@@ -172,19 +172,19 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private isTinyBlock(position: Vector3): boolean {
-        return this.tinyBlocks.containsKey(position) && !this.tinyBlocks.get(position).isAttachment();
+        return this.tinyBlocks.containsKey(position) && !this.tinyBlocks.get(position).isAttachment;
 	}
 	
 	private pushBlock(smallBlock: SmallBlock, forwardFactor: number) {
-		var nextBlock = this.smallBlocks.getOrNull(smallBlock.position.plus(smallBlock.forward().times(forwardFactor)));
+		var nextBlock = this.smallBlocks.getOrNull(smallBlock.position.plus(smallBlock.forward.times(forwardFactor)));
 			
 		for (var a = -2; a <= 2; a++) {
 			for (var b = -2; b <= 2; b++) {
 				var from = smallBlock.position.times(3)
-					.plus(smallBlock.right().times(a))
-					.plus(smallBlock.up().times(b))
-					.plus(smallBlock.forward().times(forwardFactor));
-				var to = from.plus(smallBlock.forward().times(forwardFactor));
+					.plus(smallBlock.right.times(a))
+					.plus(smallBlock.up.times(b))
+					.plus(smallBlock.forward.times(forwardFactor));
+				var to = from.plus(smallBlock.forward.times(forwardFactor));
 				if (!this.tinyBlocks.containsKey(to)) {
 					continue;
 				}
@@ -206,13 +206,13 @@ class PartMeshGenerator extends MeshGenerator {
     private processTinyBlocks() {
 		// Disable interiors when adjacent quadrants are missing
 		for (var block of this.tinyBlocks.values()) {
-			if (block.isCenter()
-				&& !block.isAttachment()
+			if (block.isCenter
+				&& !block.isAttachment
 				&& (block.hasInterior || block.rounded)
-				&& (!this.isTinyBlock(block.position.minus(block.horizontal().times(3))) || !this.isTinyBlock(block.position.minus(block.vertical().times(3))))) {
+				&& (!this.isTinyBlock(block.position.minus(block.horizontal.times(3))) || !this.isTinyBlock(block.position.minus(block.vertical.times(3))))) {
 				for (var a = -1; a <= 1; a++) {
 					for (var b = -1; b <= 1; b++) {
-						var position = block.position.plus(block.right().times(a)).plus(block.up().times(b));
+						var position = block.position.plus(block.right.times(a)).plus(block.up.times(b));
 						if (this.tinyBlocks.containsKey(position)) {
 							this.tinyBlocks.get(position).rounded = false;
 							this.tinyBlocks.get(position).hasInterior = false;
@@ -223,12 +223,12 @@ class PartMeshGenerator extends MeshGenerator {
 		}
 
 		for (var smallBlock of this.smallBlocks.values()) {
-			var nextBlock = this.smallBlocks.getOrNull(smallBlock.position.plus(smallBlock.forward()));
+			var nextBlock = this.smallBlocks.getOrNull(smallBlock.position.plus(smallBlock.forward));
 			// Offset rounded to non rounded transitions to make them flush
 			if (smallBlock.rounded && nextBlock != null && !nextBlock.rounded && smallBlock.perpendicularRoundedAdapter == null) {
 				this.pushBlock(smallBlock, 1);
 			}
-			var previousBlock = this.smallBlocks.getOrNull(smallBlock.position.minus(smallBlock.forward()));
+			var previousBlock = this.smallBlocks.getOrNull(smallBlock.position.minus(smallBlock.forward));
 			// Offset rounded to non rounded transitions to make them flush
 			if (smallBlock.rounded && previousBlock != null && !previousBlock.rounded && smallBlock.perpendicularRoundedAdapter == null) {
 				this.pushBlock(smallBlock, -1);
@@ -247,7 +247,7 @@ class PartMeshGenerator extends MeshGenerator {
     // Sets HasInterior to false for all tiny blocks that do not form coherent blocks with their neighbors
 	private checkInteriors() {
         for (var block of this.tinyBlocks.values()) {
-			if (!block.isCenter()) {
+			if (!block.isCenter) {
 				continue;
 			}
 			for (var a = 0; a <= 1; a++) {
@@ -255,7 +255,7 @@ class PartMeshGenerator extends MeshGenerator {
 					if (a == 0 && b == 0) {
 						continue;
 					}
-					var neighborPos = block.position.minus(block.horizontal().times(3 * a)).minus(block.vertical().times(3 * b));
+					var neighborPos = block.position.minus(block.horizontal.times(3 * a)).minus(block.vertical.times(3 * b));
 					if (!this.tinyBlocks.containsKey(neighborPos)) {
 						block.hasInterior = false;
 					} else {
@@ -263,8 +263,8 @@ class PartMeshGenerator extends MeshGenerator {
 						if (block.orientation != neighbor.orientation
 							|| !neighbor.hasInterior
 							|| block.type != neighbor.type
-							|| neighbor.localX() != block.localX() - a * block.directionX()
-							|| neighbor.localY() != block.localY() - b * block.directionY()) {
+							|| neighbor.localX != block.localX - a * block.directionX
+							|| neighbor.localY != block.localY - b * block.directionY) {
 							block.hasInterior = false;
 						}
 					}
@@ -274,11 +274,11 @@ class PartMeshGenerator extends MeshGenerator {
 	}
 
 	private getPerpendicularRoundedNeighborOrNull(block: TinyBlock): SmallBlock {
-		var verticalNeighbor = this.smallBlocks.getOrNull(block.smallBlockPosition().plus(block.vertical()));
-		var horizontalNeighbor = this.smallBlocks.getOrNull(block.smallBlockPosition().plus(block.horizontal()));
+		var verticalNeighbor = this.smallBlocks.getOrNull(block.smallBlockPosition.plus(block.vertical));
+		var horizontalNeighbor = this.smallBlocks.getOrNull(block.smallBlockPosition.plus(block.horizontal));
 		var neighbor = verticalNeighbor != null ? verticalNeighbor : horizontalNeighbor;
-		var verticalOrHorizontal = verticalNeighbor != null ? block.vertical() : block.horizontal();
-		if (neighbor != null && neighbor.rounded && neighbor.forward().dot(verticalOrHorizontal) != 0) {
+		var verticalOrHorizontal = verticalNeighbor != null ? block.vertical : block.horizontal;
+		if (neighbor != null && neighbor.rounded && neighbor.forward.dot(verticalOrHorizontal) != 0) {
 			return neighbor;
 		} else {
 			return null;
@@ -286,24 +286,23 @@ class PartMeshGenerator extends MeshGenerator {
 	}
 
 	private getPerpendicularRoundedNeighborOrNull2(block: TinyBlock): SmallBlock {
-		var smallBlock = this.smallBlocks.get(block.smallBlockPosition());
+		var smallBlock = this.smallBlocks.get(block.smallBlockPosition);
 		if (smallBlock.perpendicularRoundedAdapter != null) {
 			return smallBlock.perpendicularRoundedAdapter.neighbor;
 		} else {
 			return null;
 		}
 	}
-
 	
 	private preventMergingForPerpendicularRoundedBlock(block1: TinyBlock, block2: TinyBlock): boolean {
-		if (!block1.rounded || !block2.rounded || !block1.isCenter()) {
+		if (!block1.rounded || !block2.rounded || !block1.isCenter) {
 			return false;
 		}
 		var neighbor1 = this.getPerpendicularRoundedNeighborOrNull(block1);
 		var neighbor2 = this.getPerpendicularRoundedNeighborOrNull(block2);
 
-		var inside1 = neighbor1 != null && block1.position.minus(neighbor1.position.times(3)).dot(neighbor1.vertical().plus(neighbor1.horizontal())) <= 0;
-		var inside2 = neighbor2 != null && block2.position.minus(neighbor2.position.times(3)).dot(neighbor2.vertical().plus(neighbor2.horizontal())) <= 0;
+		var inside1 = neighbor1 != null && block1.position.minus(neighbor1.position.times(3)).dot(neighbor1.vertical.plus(neighbor1.horizontal)) <= 0;
+		var inside2 = neighbor2 != null && block2.position.minus(neighbor2.position.times(3)).dot(neighbor2.vertical.plus(neighbor2.horizontal)) <= 0;
 		
 		return inside1 != inside2 || (inside1 && inside2 && !neighbor1.position.equals(neighbor2.position));
 	}
@@ -315,7 +314,7 @@ class PartMeshGenerator extends MeshGenerator {
 			}
 			var amount = 0;
 			while (true) {
-				var pos = block.position.plus(block.forward().times(amount + 1));
+				var pos = block.position.plus(block.forward.times(amount + 1));
 				if (!this.tinyBlocks.containsKey(pos)) {
 					break;
 				}
@@ -325,11 +324,11 @@ class PartMeshGenerator extends MeshGenerator {
 					|| nextBlock.type != block.type
 					|| nextBlock.hasInterior != block.hasInterior
 					|| nextBlock.rounded != block.rounded
-					|| this.isTinyBlock(block.position.plus(block.right())) != this.isTinyBlock(nextBlock.position.plus(block.right()))
-					|| this.isTinyBlock(block.position.minus(block.right())) != this.isTinyBlock(nextBlock.position.minus(block.right()))
-					|| this.isTinyBlock(block.position.plus(block.up())) != this.isTinyBlock(nextBlock.position.plus(block.up()))
-					|| this.isTinyBlock(block.position.minus(block.up())) != this.isTinyBlock(nextBlock.position.minus(block.up()))
-					|| this.preventMergingForPerpendicularRoundedBlock(this.tinyBlocks.get(block.position.plus(block.forward().times(amount))), nextBlock)) {
+					|| this.isTinyBlock(block.position.plus(block.right)) != this.isTinyBlock(nextBlock.position.plus(block.right))
+					|| this.isTinyBlock(block.position.minus(block.right)) != this.isTinyBlock(nextBlock.position.minus(block.right))
+					|| this.isTinyBlock(block.position.plus(block.up)) != this.isTinyBlock(nextBlock.position.plus(block.up))
+					|| this.isTinyBlock(block.position.minus(block.up)) != this.isTinyBlock(nextBlock.position.minus(block.up))
+					|| this.preventMergingForPerpendicularRoundedBlock(this.tinyBlocks.get(block.position.plus(block.forward.times(amount))), nextBlock)) {
 						break;
 				}
 				amount += nextBlock.mergedBlocks;
@@ -343,7 +342,7 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private isSmallBlock(position: Vector3): boolean {
-        return this.smallBlocks.containsKey(position) && !this.smallBlocks.get(position).isAttachment();
+        return this.smallBlocks.containsKey(position) && !this.smallBlocks.get(position).isAttachment;
     }
 
     private createTinyBlock(position: Vector3, source: SmallBlock) {
@@ -351,35 +350,35 @@ class PartMeshGenerator extends MeshGenerator {
     }
 	
     private getNextBlock(block: TinyBlock): TinyBlock {
-        return this.tinyBlocks.getOrNull(block.position.plus(block.forward().times(block.mergedBlocks)));
+        return this.tinyBlocks.getOrNull(block.position.plus(block.forward.times(block.mergedBlocks)));
     }
 
     private getPreviousBlock(block: TinyBlock): TinyBlock {
-        return this.tinyBlocks.getOrNull(block.position.minus(block.forward()));
+        return this.tinyBlocks.getOrNull(block.position.minus(block.forward));
     }
 
     private hasOpenEnd(block: TinyBlock): boolean {
         var pos = block.position;
-        return !this.tinyBlocks.containsKey(pos.plus(block.forward().times(block.mergedBlocks)))
-            && !this.tinyBlocks.containsKey(pos.plus(block.forward().times(block.mergedBlocks)).minus(block.horizontal().times(3)))
-            && !this.tinyBlocks.containsKey(pos.plus(block.forward().times(block.mergedBlocks)).minus(block.vertical().times(3)))
-            && !this.tinyBlocks.containsKey(pos.plus(block.forward().times(block.mergedBlocks)).minus(block.horizontal().times(3)).minus(block.vertical().times(3)));
+        return !this.tinyBlocks.containsKey(pos.plus(block.forward.times(block.mergedBlocks)))
+            && !this.tinyBlocks.containsKey(pos.plus(block.forward.times(block.mergedBlocks)).minus(block.horizontal.times(3)))
+            && !this.tinyBlocks.containsKey(pos.plus(block.forward.times(block.mergedBlocks)).minus(block.vertical.times(3)))
+            && !this.tinyBlocks.containsKey(pos.plus(block.forward.times(block.mergedBlocks)).minus(block.horizontal.times(3)).minus(block.vertical.times(3)));
     }
 
     private hasOpenStart(block: TinyBlock): boolean {
         var pos = block.position;
-        return !this.tinyBlocks.containsKey(pos.minus(block.forward()))
-            && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.horizontal().times(3)))
-            && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.vertical().times(3)))
-            && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.horizontal().times(3)).minus(block.vertical().times(3)));
+        return !this.tinyBlocks.containsKey(pos.minus(block.forward))
+            && !this.tinyBlocks.containsKey(pos.minus(block.forward).minus(block.horizontal.times(3)))
+            && !this.tinyBlocks.containsKey(pos.minus(block.forward).minus(block.vertical.times(3)))
+            && !this.tinyBlocks.containsKey(pos.minus(block.forward).minus(block.horizontal.times(3)).minus(block.vertical.times(3)));
 	}
 	
 	private hideStartEndFaces(position: Vector3, block: TinyBlock, forward: boolean) {
-		var direction = forward ? block.forward() : block.forward().times(-1);
+		var direction = forward ? block.forward : block.forward.times(-1);
 		this.hideFaceIfExists(position, direction);
-		this.hideFaceIfExists(position.minus(block.horizontal()), direction);
-		this.hideFaceIfExists(position.minus(block.vertical()), direction);
-		this.hideFaceIfExists(position.minus(block.vertical()).minus(block.horizontal()), direction);
+		this.hideFaceIfExists(position.minus(block.horizontal), direction);
+		this.hideFaceIfExists(position.minus(block.vertical), direction);
+		this.hideFaceIfExists(position.minus(block.vertical).minus(block.horizontal), direction);
 	}
 
 	private hideFaceIfExists(position: Vector3, direction: Vector3) {
@@ -389,8 +388,8 @@ class PartMeshGenerator extends MeshGenerator {
 	}
 
 	private hideOutsideFaces(centerBlock: TinyBlock) {
-		var vertical = centerBlock.vertical();
-		var horizontal = centerBlock.horizontal();
+		var vertical = centerBlock.vertical;
+		var horizontal = centerBlock.horizontal;
 		centerBlock.hideFace(vertical);
 		centerBlock.hideFace(horizontal);
 		this.tinyBlocks.get(centerBlock.position.minus(vertical)).hideFace(horizontal);
@@ -404,11 +403,11 @@ class PartMeshGenerator extends MeshGenerator {
 			}
 			
 			var adapter = block.perpendicularRoundedAdapter;
-			var center = block.forward().times(this.tinyIndexToWorld(block.forward().dot(block.position) * 3 - (adapter.facesForward ? 0 : 1)))
-				.plus(block.right().times((block.position.dot(block.right()) + (1 - block.localX())) * 0.5))
-				.plus(block.up().times((block.position.dot(block.up()) + (1 - block.localY())) * 0.5));
+			var center = block.forward.times(this.tinyIndexToWorld(block.forward.dot(block.position) * 3 - (adapter.facesForward ? 0 : 1)))
+				.plus(block.right.times((block.position.dot(block.right) + (1 - block.localX)) * 0.5))
+				.plus(block.up.times((block.position.dot(block.up) + (1 - block.localY)) * 0.5));
 			var radius = 0.5 - this.measurements.edgeMargin;
-			var forward = block.forward();
+			var forward = block.forward;
 								
 			for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
 				var angle1 = Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter;
@@ -428,7 +427,7 @@ class PartMeshGenerator extends MeshGenerator {
 					vertex1, vertex2, vertex3, vertex4,
 					normal1, normal2, normal2, normal1, adapter.facesForward);
 
-				var invertAngle = ((adapter.isVertical ? block.localY() : block.localX()) != 1) != adapter.facesForward;
+				var invertAngle = ((adapter.isVertical ? block.localY : block.localX) != 1) != adapter.facesForward;
 				var vertex5 = vertex4.plus(adapter.directionToNeighbor.times(radius * sincos1));
 				var vertex6 = vertex3.plus(adapter.directionToNeighbor.times(radius * sincos2));
 				var normal3 = adapter.neighbor.getOnCircle(invertAngle ? angle1 : Math.PI / 2 - angle1).times(adapter.facesForward ? -1 : 1);
@@ -445,7 +444,7 @@ class PartMeshGenerator extends MeshGenerator {
 		if (block.perpendicularRoundedAdapter == null) {
 			return false;
 		}
-		var localForward = block.position.minus(block.perpendicularRoundedAdapter.sourceBlock.position.times(3)).dot(block.forward());
+		var localForward = block.position.minus(block.perpendicularRoundedAdapter.sourceBlock.position.times(3)).dot(block.forward);
 		return localForward == 0 || (localForward > 0) == block.perpendicularRoundedAdapter.facesForward;
 	}
 
@@ -453,7 +452,7 @@ class PartMeshGenerator extends MeshGenerator {
 		var blockSizeWithoutMargin = 0.5 - this.measurements.edgeMargin;
 		
         for (let block of this.tinyBlocks.values()) {
-            if (block.merged || !block.isCenter() || block.isAttachment()) {
+            if (block.merged || !block.isCenter || block.isAttachment) {
                 continue;
             }
 
@@ -467,7 +466,7 @@ class PartMeshGenerator extends MeshGenerator {
             // Back cap
             if (nextBlock == null && (block.rounded || block.hasInterior)) {
 				this.createCircleWithHole(block, block.hasInterior && hasOpenEnd ? this.measurements.interiorRadius : 0, blockSizeWithoutMargin, distance, false, !block.rounded);
-				this.hideStartEndFaces(block.position.plus(block.forward().times(block.mergedBlocks - 1)), block, true);
+				this.hideStartEndFaces(block.position.plus(block.forward.times(block.mergedBlocks - 1)), block, true);
             }
 
             // Front cap
@@ -482,7 +481,7 @@ class PartMeshGenerator extends MeshGenerator {
 				}
                 // Rounded corners
 				for (var i = 0; i < block.mergedBlocks; i++) {
-					this.hideOutsideFaces(this.tinyBlocks.get(block.position.plus(block.forward().times(i))));
+					this.hideOutsideFaces(this.tinyBlocks.get(block.position.plus(block.forward.times(i))));
 				}
 
                 // Rounded to non rounded adapter
@@ -507,7 +506,7 @@ class PartMeshGenerator extends MeshGenerator {
 
     private renderAttachments() {
         for (var block of this.tinyBlocks.values()) {
-            if (block.merged || !block.isCenter()) {
+            if (block.merged || !block.isCenter) {
                 continue;
             }
 
@@ -522,7 +521,7 @@ class PartMeshGenerator extends MeshGenerator {
 	}
 
 	private renderLip(block: TinyBlock, zOffset: number) {		
-		var center = block.getCylinderOrigin(this).plus(block.forward().times(zOffset));
+		var center = block.getCylinderOrigin(this).plus(block.forward.times(zOffset));
 		
 		for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
 			var out1 = block.getOnCircle(i / 2 * Math.PI / this.measurements.subdivisionsPerQuarter);
@@ -532,14 +531,14 @@ class PartMeshGenerator extends MeshGenerator {
 				var angleJ = j * Math.PI / this.measurements.lipSubdivisions;
 				var angleJ2 = (j + 1) * Math.PI / this.measurements.lipSubdivisions;
 				this.createQuadWithNormals(
-					center.plus(out1.times(this.measurements.pinRadius)).plus(out1.times(Math.sin(angleJ) * this.measurements.pinLipRadius).plus(block.forward().times(Math.cos(angleJ) * this.measurements.pinLipRadius))),
-					center.plus(out2.times(this.measurements.pinRadius)).plus(out2.times(Math.sin(angleJ) * this.measurements.pinLipRadius).plus(block.forward().times(Math.cos(angleJ) * this.measurements.pinLipRadius))),
-					center.plus(out2.times(this.measurements.pinRadius)).plus(out2.times(Math.sin(angleJ2) * this.measurements.pinLipRadius).plus(block.forward().times(Math.cos(angleJ2) * this.measurements.pinLipRadius))),
-					center.plus(out1.times(this.measurements.pinRadius)).plus(out1.times(Math.sin(angleJ2) * this.measurements.pinLipRadius).plus(block.forward().times(Math.cos(angleJ2) * this.measurements.pinLipRadius))),
-					out1.times(-Math.sin(angleJ)).plus(block.forward().times(-Math.cos(angleJ))),
-					out2.times(-Math.sin(angleJ)).plus(block.forward().times(-Math.cos(angleJ))),
-					out2.times(-Math.sin(angleJ2)).plus(block.forward().times(-Math.cos(angleJ2))),
-					out1.times(-Math.sin(angleJ2)).plus(block.forward().times(-Math.cos(angleJ2))));
+					center.plus(out1.times(this.measurements.pinRadius)).plus(out1.times(Math.sin(angleJ) * this.measurements.pinLipRadius).plus(block.forward.times(Math.cos(angleJ) * this.measurements.pinLipRadius))),
+					center.plus(out2.times(this.measurements.pinRadius)).plus(out2.times(Math.sin(angleJ) * this.measurements.pinLipRadius).plus(block.forward.times(Math.cos(angleJ) * this.measurements.pinLipRadius))),
+					center.plus(out2.times(this.measurements.pinRadius)).plus(out2.times(Math.sin(angleJ2) * this.measurements.pinLipRadius).plus(block.forward.times(Math.cos(angleJ2) * this.measurements.pinLipRadius))),
+					center.plus(out1.times(this.measurements.pinRadius)).plus(out1.times(Math.sin(angleJ2) * this.measurements.pinLipRadius).plus(block.forward.times(Math.cos(angleJ2) * this.measurements.pinLipRadius))),
+					out1.times(-Math.sin(angleJ)).plus(block.forward.times(-Math.cos(angleJ))),
+					out2.times(-Math.sin(angleJ)).plus(block.forward.times(-Math.cos(angleJ))),
+					out2.times(-Math.sin(angleJ2)).plus(block.forward.times(-Math.cos(angleJ2))),
+					out1.times(-Math.sin(angleJ2)).plus(block.forward.times(-Math.cos(angleJ2))));
 			}
 		}
 	}
@@ -569,11 +568,11 @@ class PartMeshGenerator extends MeshGenerator {
 			this.createCircle(block, this.measurements.pinRadius, 0);
 			this.renderLip(block, this.measurements.pinLipRadius);
 		}
-		if (nextBlock != null && !nextBlock.isAttachment()) {
+		if (nextBlock != null && !nextBlock.isAttachment) {
 			this.createCircleWithHole(block, this.measurements.pinRadius, 0.5 - this.measurements.edgeMargin, distance, true, !nextBlock.rounded);
 			this.hideStartEndFaces(nextBlock.position, block, false);
 		}
-		if (previousBlock != null && !previousBlock.isAttachment()) {
+		if (previousBlock != null && !previousBlock.isAttachment) {
 			this.createCircleWithHole(block, this.measurements.pinRadius, 0.5 - this.measurements.edgeMargin, 0, false, !previousBlock.rounded);
 			this.hideStartEndFaces(previousBlock.position, block, true);
 		}
@@ -592,12 +591,12 @@ class PartMeshGenerator extends MeshGenerator {
 		var previousBlock = this.getPreviousBlock(block);
 		
 		var start = block.getCylinderOrigin(this);
-		var end = start.plus(block.forward().times(block.getDepth(this)));
+		var end = start.plus(block.forward.times(block.getDepth(this)));
 
-		var horizontalInner = block.horizontal().times(this.measurements.axleSizeInner);
-		var horizontalOuter = block.horizontal().times(this.measurements.axleSizeOuter);
-		var verticalInner = block.vertical().times(this.measurements.axleSizeInner);
-		var verticalOuter = block.vertical().times(this.measurements.axleSizeOuter);
+		var horizontalInner = block.horizontal.times(this.measurements.axleSizeInner);
+		var horizontalOuter = block.horizontal.times(this.measurements.axleSizeOuter);
+		var verticalInner = block.vertical.times(this.measurements.axleSizeInner);
+		var verticalOuter = block.vertical.times(this.measurements.axleSizeOuter);
 
 		this.createQuad(
             start.plus(horizontalInner).plus(verticalInner),
@@ -658,37 +657,37 @@ class PartMeshGenerator extends MeshGenerator {
 		var blockSizeWithoutMargin = 0.5 - this.measurements.edgeMargin;
 		if (nextBlock != null && nextBlock.type != block.type && !nextBlock.rounded) {
 			this.createQuad(
-				end.plus(block.horizontal().times(blockSizeWithoutMargin)),
+				end.plus(block.horizontal.times(blockSizeWithoutMargin)),
 				end.plus(horizontalOuter),
 				end.plus(horizontalOuter).plus(verticalInner),
-				end.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(verticalInner), block.odd());
+				end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), block.odd());
 			this.createQuad(
-				end.plus(block.vertical().times(blockSizeWithoutMargin)),
+				end.plus(block.vertical.times(blockSizeWithoutMargin)),
 				end.plus(verticalOuter),
 				end.plus(verticalOuter).plus(horizontalInner),
-				end.plus(block.vertical().times(blockSizeWithoutMargin)).plus(horizontalInner), !block.odd());
+				end.plus(block.vertical.times(blockSizeWithoutMargin)).plus(horizontalInner), !block.odd());
 			this.createQuad(
 				end.plus(horizontalInner).plus(verticalInner),
-				end.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(verticalInner),
-				end.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(block.vertical().times(blockSizeWithoutMargin)),
-				end.plus(horizontalInner).plus(block.vertical().times(blockSizeWithoutMargin)), !block.odd());
+				end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner),
+				end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(block.vertical.times(blockSizeWithoutMargin)),
+				end.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), !block.odd());
 		}
 		if (previousBlock != null && previousBlock.type != block.type && !previousBlock.rounded) {
 			this.createQuad(
-				start.plus(block.horizontal().times(blockSizeWithoutMargin)),
+				start.plus(block.horizontal.times(blockSizeWithoutMargin)),
 				start.plus(horizontalOuter),
 				start.plus(horizontalOuter).plus(verticalInner),
-				start.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(verticalInner), !block.odd());
+				start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), !block.odd());
 			this.createQuad(
-				start.plus(block.vertical().times(blockSizeWithoutMargin)),
+				start.plus(block.vertical.times(blockSizeWithoutMargin)),
 				start.plus(verticalOuter),
 				start.plus(verticalOuter).plus(horizontalInner),
-				start.plus(block.vertical().times(blockSizeWithoutMargin)).plus(horizontalInner), block.odd());
+				start.plus(block.vertical.times(blockSizeWithoutMargin)).plus(horizontalInner), block.odd());
 			this.createQuad(
 				start.plus(horizontalInner).plus(verticalInner),
-				start.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(verticalInner),
-				start.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(block.vertical().times(blockSizeWithoutMargin)),
-				start.plus(horizontalInner).plus(block.vertical().times(blockSizeWithoutMargin)), block.odd());
+				start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner),
+				start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(block.vertical.times(blockSizeWithoutMargin)),
+				start.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), block.odd());
 		}
 		if (nextBlock != null && nextBlock.type != block.type && nextBlock.rounded) {
 			this.createAxleToCircleAdapter(end, block, nextBlock.type == BlockType.Pin ? this.measurements.axlePinAdapterRadius : blockSizeWithoutMargin);
@@ -696,19 +695,19 @@ class PartMeshGenerator extends MeshGenerator {
 		if (previousBlock != null && previousBlock.type != block.type && previousBlock.rounded) {
 			this.createAxleToCircleAdapter(start, block, previousBlock.type == BlockType.Pin ? this.measurements.axlePinAdapterRadius : blockSizeWithoutMargin, true);
 		}
-		if (nextBlock != null && !nextBlock.isAttachment()) {
+		if (nextBlock != null && !nextBlock.isAttachment) {
 			this.hideStartEndFaces(nextBlock.position, block, false);
 		}
-		if (previousBlock != null && !previousBlock.isAttachment()) {
+		if (previousBlock != null && !previousBlock.isAttachment) {
 			this.hideStartEndFaces(previousBlock.position, block, true);
 		}
     }
     
     private createAxleToCircleAdapter(center: Vector3, block: SmallBlock, radius: number, flipped = false) {
-		var horizontalInner = block.horizontal().times(this.measurements.axleSizeInner);
-		var horizontalOuter = block.horizontal().times(this.measurements.axleSizeOuter);
-		var verticalInner = block.vertical().times(this.measurements.axleSizeInner);
-		var verticalOuter = block.vertical().times(this.measurements.axleSizeOuter);
+		var horizontalInner = block.horizontal.times(this.measurements.axleSizeInner);
+		var horizontalOuter = block.horizontal.times(this.measurements.axleSizeOuter);
+		var verticalInner = block.vertical.times(this.measurements.axleSizeInner);
+		var verticalOuter = block.vertical.times(this.measurements.axleSizeOuter);
 
 		for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
 			var focus = center.copy();
@@ -725,11 +724,11 @@ class PartMeshGenerator extends MeshGenerator {
 		this.triangles.push(new Triangle(
 			center.plus(horizontalInner).plus(verticalOuter),
 			center.plus(verticalOuter),
-			center.plus(block.vertical().times(radius)), block.odd() != flipped));
+			center.plus(block.vertical.times(radius)), block.odd() != flipped));
 		this.triangles.push(new Triangle(
 			center.plus(verticalInner).plus(horizontalOuter),
 			center.plus(horizontalOuter),
-			center.plus(block.horizontal().times(radius)), block.odd() == flipped));
+			center.plus(block.horizontal.times(radius)), block.odd() == flipped));
 		this.createQuad(
 			center.plus(verticalInner).plus(horizontalInner),
 			center.plus(verticalOuter).plus(horizontalInner),
@@ -805,24 +804,24 @@ class PartMeshGenerator extends MeshGenerator {
 		var distance = block.getDepth(this);
 		var holeSize = this.measurements.axleHoleSize;
         
-        var start = block.getCylinderOrigin(this).plus(showInteriorStartCap ? block.forward().times(this.measurements.interiorEndMargin) : Vector3.zero());
-        var end = start.plus(block.forward().times(distance - (showInteriorStartCap ? this.measurements.interiorEndMargin : 0) - (showInteriorEndCap ? this.measurements.interiorEndMargin : 0)));
+        var start = block.getCylinderOrigin(this).plus(showInteriorStartCap ? block.forward.times(this.measurements.interiorEndMargin) : Vector3.zero());
+        var end = start.plus(block.forward.times(distance - (showInteriorStartCap ? this.measurements.interiorEndMargin : 0) - (showInteriorEndCap ? this.measurements.interiorEndMargin : 0)));
 		
 		var axleWingAngle = Math.asin(holeSize / this.measurements.pinHoleRadius);
 		var axleWingAngle2 = 90 * DEG_TO_RAD - axleWingAngle;
 		var subdivAngle = 90 / this.measurements.subdivisionsPerQuarter * DEG_TO_RAD;
 		var adjustedRadius = this.measurements.pinHoleRadius * Math.cos(subdivAngle / 2) / Math.cos(subdivAngle / 2 - (axleWingAngle - Math.floor(axleWingAngle / subdivAngle) * subdivAngle));
 		this.createQuad(
-			start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
+			start.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)),
 			start.plus(block.getOnCircle(axleWingAngle, adjustedRadius)),
 			end.plus(block.getOnCircle(axleWingAngle, adjustedRadius)),
-			end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
+			end.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)),
 			true);
 		this.createQuad(
-			start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
+			start.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)),
 			start.plus(block.getOnCircle(axleWingAngle2, adjustedRadius)),
 			end.plus(block.getOnCircle(axleWingAngle2, adjustedRadius)),
-			end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
+			end.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)),
 			false);
 
 		for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
@@ -865,7 +864,7 @@ class PartMeshGenerator extends MeshGenerator {
 			if (hasOpenStart || (previousBlock != null && previousBlock.type == BlockType.PinHole && !showInteriorStartCap)) {
 				if (angle2 > axleWingAngle && angle1 < axleWingAngle2) {
 					this.triangles.push(new Triangle(
-						start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
+						start.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)),
 						start.plus(block.getOnCircle(startAngleOutside, radius1Outside)),
 						start.plus(block.getOnCircle(endAngleOutside, radius2Outside))));
 				}
@@ -873,7 +872,7 @@ class PartMeshGenerator extends MeshGenerator {
 			if (hasOpenEnd || (nextBlock != null && nextBlock.type == BlockType.PinHole && !showInteriorEndCap)) {
 				if (angle2 > axleWingAngle && angle1 < axleWingAngle2) {
 					this.triangles.push(new Triangle(
-						end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
+						end.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)),
 						end.plus(block.getOnCircle(endAngleOutside, radius2Outside)),
 						end.plus(block.getOnCircle(startAngleOutside, radius1Outside))));
 				}
@@ -903,21 +902,21 @@ class PartMeshGenerator extends MeshGenerator {
 
 		if (showInteriorEndCap) {
 			this.triangles.push(new Triangle(
-				end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
+				end.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)),
 				end,
 				end.plus(block.getOnCircle(axleWingAngle, adjustedRadius))));
 			this.triangles.push(new Triangle(
 				end,
-				end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
+				end.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)),
 				end.plus(block.getOnCircle(axleWingAngle2, adjustedRadius))));
 		}
 		if (showInteriorStartCap) {
 			this.triangles.push(new Triangle(
 				start,
-				start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
+				start.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)),
 				start.plus(block.getOnCircle(axleWingAngle, adjustedRadius))));
 			this.triangles.push(new Triangle(
-				start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)),
+				start.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)),
 				start,
 				start.plus(block.getOnCircle(axleWingAngle2, adjustedRadius))));
 		}
@@ -927,7 +926,7 @@ class PartMeshGenerator extends MeshGenerator {
 		var block = this.tinyBlocks.getOrNull(position);
 		return block != null
 			&& !this.isTinyBlock(block.position.plus(direction))
-			&& !block.isAttachment()
+			&& !block.isAttachment
 			&& block.isFaceVisible(direction);
 	}
 

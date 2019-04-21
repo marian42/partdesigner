@@ -1,9 +1,17 @@
 ﻿class SmallBlock extends Block {
-	public quadrant: Quadrant;
-	public position: Vector3;
+	public readonly quadrant: Quadrant;
+	public readonly position: Vector3;
 	public hasInterior: boolean;
 
 	public perpendicularRoundedAdapter: PerpendicularRoundedAdapter = null;
+
+	public readonly localX: number;
+	public readonly localY: number;
+	public readonly directionX: number;
+	public readonly directionY: number;
+	public readonly horizontal: Vector3;
+	public readonly vertical: Vector3;
+	public readonly isAttachment: boolean;
 
 	constructor(quadrant: Quadrant, positon: Vector3, source: Block) {
 		super(source.orientation, source.type, source.rounded);
@@ -11,42 +19,22 @@
 		this.position = positon;
 
 		this.hasInterior = source.type != BlockType.Solid;
+
+		this.localX = localX(this.quadrant);
+		this.localY = localY(this.quadrant);
+		this.directionX = this.localX == 1 ? 1 : -1;
+		this.directionY = this.localY == 1 ? 1 : -1;
+		this.horizontal = this.right.times(this.directionX);
+		this.vertical = this.up.times(this.directionY);
+		this.isAttachment = this.type == BlockType.Pin || this.type == BlockType.Axle;
 	}
 
 	public static createFromLocalCoordinates(localX: number, localY: number, position: Vector3, source: Block) {
 		return new SmallBlock(SmallBlock.getQuadrantFromLocal(localX, localY), position, source);
 	}
-
-	public localX(): number {
-		return localX(this.quadrant);
-	}
-
-	public localY(): number {
-		return localY(this.quadrant);
-	}
-
-	public directionX(): number {
-		return this.localX() == 1 ? 1 : -1;
-	}
-
-	public directionY(): number {
-		return this.localY() == 1 ? 1 : -1;
-	}
 	
 	public odd(): boolean {
 		return this.quadrant == Quadrant.BottomRight || this.quadrant == Quadrant.TopLeft;
-	}
-
-	public horizontal(): Vector3 {
-		return this.right().times(this.directionX());
-	}
-
-	public vertical(): Vector3 {
-		return this.up().times(this.directionY());
-	}
-
-	public isAttachment(): boolean {
-		return this.type == BlockType.Pin || this.type == BlockType.Axle;
 	}
 
 	private static getQuadrantFromLocal(x: number, y: number): Quadrant {
@@ -66,8 +54,8 @@
 	}
 
 	public getOnCircle(angle: number, radius = 1): Vector3 {
-		return this.right().times(Math.sin(angle + getAngle(this.quadrant)) * radius).plus(
-			this.up().times(Math.cos(angle + getAngle(this.quadrant)) * radius));
+		return this.right.times(Math.sin(angle + getAngle(this.quadrant)) * radius).plus(
+			this.up.times(Math.cos(angle + getAngle(this.quadrant)) * radius));
 	}
 }
  

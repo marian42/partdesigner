@@ -20,10 +20,10 @@ class Part {
 		for (let position of this.blocks.keys()) {
 			let block = this.blocks.get(position);
 			for (let local of CUBE) {
-				if (block.forward().dot(local) == 1) {
+				if (block.forward.dot(local) == 1) {
 					continue;
 				}
-				result.set(position.plus(local), SmallBlock.createFromLocalCoordinates(block.right().dot(local), block.up().dot(local), position.plus(local), block));
+				result.set(position.plus(local), SmallBlock.createFromLocalCoordinates(block.right.dot(local), block.up.dot(local), position.plus(local), block));
 			}
 		}
 
@@ -36,7 +36,7 @@ class Part {
 				continue;
 			}
 			var block = this.blocks.get(position.minus(local));
-			if (block.forward().dot(local) == 1) {
+			if (block.forward.dot(local) == 1) {
 				return false;
 			}
 		}
@@ -49,7 +49,7 @@ class Part {
 				continue;
 			}
 			var block = this.blocks.get(position.minus(local));
-			if (block.forward().dot(local) != 1) {
+			if (block.forward.dot(local) != 1) {
 				this.blocks.remove(position.minus(local));
 			}
 		}

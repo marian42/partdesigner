@@ -3,21 +3,17 @@
 	public type: BlockType;
 	public rounded: boolean;
 
+	public readonly right: Vector3;
+	public readonly up: Vector3;
+	public readonly forward: Vector3;
+
 	constructor(orientation: Orientation, type: BlockType, rounded: boolean) {
 		this.orientation = orientation;
 		this.type = type;
 		this.rounded = rounded;
-	}
 
-	public right(): Vector3 {
-		return right(this.orientation);
-	}
-
-	public up(): Vector3 {
-		return up(this.orientation);
-	}
-
-	public forward(): Vector3 {
-		return forward(this.orientation);
+		this.right = right(this.orientation);
+		this.up = up(this.orientation);
+		this.forward = forward(this.orientation);
 	}
 }

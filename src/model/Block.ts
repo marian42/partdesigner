@@ -12,8 +12,8 @@
 		this.type = type;
 		this.rounded = rounded;
 
-		this.right = right(this.orientation);
-		this.up = up(this.orientation);
-		this.forward = forward(this.orientation);
+		this.right = RIGHT[this.orientation];
+		this.up = UP[this.orientation];
+		this.forward = FORWARD[this.orientation];
 	}
 }

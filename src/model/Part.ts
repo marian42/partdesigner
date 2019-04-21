@@ -57,7 +57,7 @@ class Part {
 
 	public clearBlock(position: Vector3, orientation: Orientation) {
 		for (let local of CUBE) {
-			if (forward(orientation).dot(local) != 1) {
+			if (FORWARD[orientation].dot(local) != 1) {
 				this.clearSingle(position.plus(local));
 			}
 		}
@@ -65,7 +65,7 @@ class Part {
 
 	public isBlockPlaceable(position: Vector3, orientation: Orientation, doubleSize: boolean): boolean {
 		for (let local of CUBE) {
-			if (!doubleSize && forward(orientation).dot(local) == 1) {
+			if (!doubleSize && FORWARD[orientation].dot(local) == 1) {
 				continue;
 			}
 			if (!this.isSmallBlockFree(position.plus(local))) {
@@ -91,7 +91,7 @@ class Part {
 			this.placeBlockForced(position, block);
 			if (createFullSizeBlocks) {
 				var block2 = new Block(orientation, type, true);
-				this.placeBlockForced(position.plus(forward(orientation)), block2);
+				this.placeBlockForced(position.plus(FORWARD[orientation]), block2);
 			}
 		}
 	}

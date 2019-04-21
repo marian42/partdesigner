@@ -1,7 +1,7 @@
 ﻿enum Orientation {
-	X,
-	Y,
-	Z
+	X = 0,
+	Y = 1,
+	Z = 2
 }
 
 const ORIENTATION = {
@@ -10,47 +10,20 @@ const ORIENTATION = {
 	"z": Orientation.Z
 };
 
-function forward(orientation: Orientation): Vector3 {
-	switch (orientation) {
-		case Orientation.X: {
-			return new Vector3(1, 0, 0);
-		}
-		case Orientation.Y: {
-			return new Vector3(0, 1, 0);
-		}
-		case Orientation.Z: {
-			return new Vector3(0, 0, 1);
-		}
-	}
-	throw new Error("Unknown orientation: " + orientation);
-}
+const FORWARD = {
+	0: new Vector3(1, 0, 0),
+	1: new Vector3(0, 1, 0),
+	2: new Vector3(0, 0, 1)
+};
 
-function right(orientation: Orientation): Vector3 {
-	switch (orientation) {
-		case Orientation.X: {
-			return new Vector3(0, 1, 0);
-		}
-		case Orientation.Y: {
-			return new Vector3(0, 0, 1);
-		}
-		case Orientation.Z: {
-			return new Vector3(1, 0, 0);
-		}
-	}
-	throw new Error("Unknown orientation: " + orientation);
-}
+const RIGHT = {
+	0: new Vector3(0, 1, 0),
+	1: new Vector3(0, 0, 1),
+	2: new Vector3(1, 0, 0)
+};
 
-function up(orientation: Orientation): Vector3 {
-	switch (orientation) {
-		case Orientation.X: {
-			return new Vector3(0, 0, 1);
-		}
-		case Orientation.Y: {
-			return new Vector3(1, 0, 0);
-		}
-		case Orientation.Z: {
-			return new Vector3(0, 1, 0);
-		}
-	}
-	throw new Error("Unknown orientation: " + orientation);
+const UP = {
+	0: new Vector3(0, 0, 1),
+	1: new Vector3(1, 0, 0),
+	2: new Vector3(0, 1, 0)
 }

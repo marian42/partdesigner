@@ -56,7 +56,7 @@ class Handles implements Renderer {
 		if (this.fullSize) {
 			return this.block.plus(Vector3.one()).times(0.5);
 		} else {
-			return this.block.plus(Vector3.one()).times(0.5).minus(forward(this.orientation).times(0.25));
+			return this.block.plus(Vector3.one()).times(0.5).minus(FORWARD[this.orientation].times(0.25));
 		}
 	}
 
@@ -64,7 +64,7 @@ class Handles implements Renderer {
 		if (this.fullSize) {
 			return worldPosition.times(2).minus(Vector3.one().times(0.5)).floor();
 		} else {
-			return worldPosition.times(2).minus(Vector3.one().minus(forward(this.orientation)).times(0.5)).floor();
+			return worldPosition.times(2).minus(Vector3.one().minus(FORWARD[this.orientation]).times(0.5)).floor();
 		}
 	}
 
@@ -269,7 +269,7 @@ class Handles implements Renderer {
 		var targetPosition = this.getBlockCenter(this.block);
 		var targetSize = Vector3.one();
 		if (!this.fullSize) {
-			targetSize = targetSize.minus(forward(this.orientation).times(0.5));
+			targetSize = targetSize.minus(FORWARD[this.orientation].times(0.5));
 		}
 		
 		if (!animate) {

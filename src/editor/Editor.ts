@@ -26,8 +26,7 @@ class Editor {
 
 	handles: Handles;
 
-	editorState: Block;
-	createFullSizedBlocks: boolean;
+	editorState: EditorState;
 
 	style: RenderStyle = RenderStyle.Contour;
 
@@ -43,8 +42,7 @@ class Editor {
 
 		this.displayMeasurements();
 		
-		this.editorState = new Block(Orientation.X, BlockType.PinHole, true);
-		this.createFullSizedBlocks = true;
+		this.editorState = new EditorState();
 
 		this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
 		this.camera = new Camera(this.canvas);
@@ -123,8 +121,8 @@ class Editor {
 
 	private remove() {
 		this.part.clearBlock(this.handles.getSelectedBlock(), this.editorState.orientation);
-		if (this.createFullSizedBlocks) {
-			this.part.clearBlock(this.handles.getSelectedBlock().plus(this.editorState.forward), this.editorState.orientation);
+		if (this.editorState.fullSize) {
+			this.part.clearBlock(this.handles.getSelectedBlock().plus(FORWARD[this.editorState.orientation]), this.editorState.orientation);
 		}
 		this.updateMesh();
 	}
@@ -136,13 +134,13 @@ class Editor {
 
 	private setOrientation(orientatioName: string) {
 		this.editorState.orientation = ORIENTATION[orientatioName];
-		this.handles.setMode(this.createFullSizedBlocks, this.editorState.orientation);
+		this.handles.setMode(this.editorState.fullSize, this.editorState.orientation);
 		this.updateBlock();
 	}
 
 	private setSize(sizeName: string) {
-		this.createFullSizedBlocks = sizeName == "full";
-		this.handles.setMode(this.createFullSizedBlocks, this.editorState.orientation);
+		this.editorState.fullSize = sizeName == "full";
+		this.handles.setMode(this.editorState.fullSize, this.editorState.orientation);
 		this.camera.render();
 	}
 
@@ -162,8 +160,8 @@ class Editor {
 
 	private updateBlock() {
 		this.part.placeBlockForced(this.handles.getSelectedBlock(), new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
-		if (this.createFullSizedBlocks) {
-			this.part.placeBlockForced(this.handles.getSelectedBlock().plus(this.editorState.forward),
+		if (this.editorState.fullSize) {
+			this.part.placeBlockForced(this.handles.getSelectedBlock().plus(FORWARD[this.editorState.orientation]),
 				new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
 		}
 		this.updateMesh();

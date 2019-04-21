@@ -2,7 +2,7 @@
 	public mergedBlocks = 1;
 	public merged = false;
 
-	private visibleFaces: [boolean, boolean, boolean, boolean, boolean, boolean] = null;
+	private readonly visibleFaces: [boolean, boolean, boolean, boolean, boolean, boolean] = null;
 
 	public readonly angle: number;
 	public readonly isCenter: boolean;

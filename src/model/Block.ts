@@ -1,6 +1,6 @@
 ﻿class Block {
-	public orientation: Orientation;
-	public type: BlockType;
+	public readonly orientation: Orientation;
+	public readonly type: BlockType;
 	public rounded: boolean;
 
 	public readonly right: Vector3;

@@ -10,7 +10,8 @@ class PartMeshGenerator extends MeshGenerator {
         this.createTinyBlocks();
         this.processTinyBlocks();
         this.checkInteriors();
-        this.mergeSimilarBlocks();
+		this.mergeSimilarBlocks();
+		this.renderPerpendicularRoundedAdapters();
         this.renderTinyBlocks();
         this.renderAttachments();
         this.renderTinyBlockFaces();
@@ -395,6 +396,58 @@ class PartMeshGenerator extends MeshGenerator {
 		this.tinyBlocks.get(centerBlock.position.minus(vertical)).hideFace(horizontal);
 		this.tinyBlocks.get(centerBlock.position.minus(horizontal)).hideFace(vertical);
 	}
+	
+	private renderPerpendicularRoundedAdapters() {
+		for (var block of this.smallBlocks.values()) {
+			if (block.perpendicularRoundedAdapter == null) {
+				continue;
+			}
+			
+			var adapter = block.perpendicularRoundedAdapter;
+			var center = block.forward().times(this.tinyIndexToWorld(block.forward().dot(block.position) * 3 - (adapter.facesForward ? 0 : 1)))
+				.plus(block.right().times((block.position.dot(block.right()) + (1 - block.localX())) * 0.5))
+				.plus(block.up().times((block.position.dot(block.up()) + (1 - block.localY())) * 0.5));
+			var radius = 0.5 - this.measurements.edgeMargin;
+			var forward = block.forward();
+								
+			for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
+				var angle1 = Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter;
+				var angle2 = Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter;
+				var sincos1 = 1 - (block.odd() == adapter.isVertical ? Math.sin(angle1) : Math.cos(angle1));
+				var sincos2 = 1 - (block.odd() == adapter.isVertical ? Math.sin(angle2) : Math.cos(angle2));
+				
+				let vertex1 = center.plus(block.getOnCircle(angle1).times(radius)).plus(forward.times(adapter.facesForward ? 0 : radius));
+				let vertex2 = center.plus(block.getOnCircle(angle2).times(radius)).plus(forward.times(adapter.facesForward ? 0 : radius));
+				var vertex3 = vertex2.plus(forward.times(sincos2 * (adapter.facesForward ? 1 : -1) * radius));
+				var vertex4 = vertex1.plus(forward.times(sincos1 * (adapter.facesForward ? 1 : -1) * radius));
+
+				var normal1 = block.getOnCircle(angle1).times(adapter.facesForward ? 1 : -1);
+				var normal2 = block.getOnCircle(angle2).times(adapter.facesForward ? 1 : -1);
+
+				this.createQuadWithNormals(
+					vertex1, vertex2, vertex3, vertex4,
+					normal1, normal2, normal2, normal1, adapter.facesForward);
+
+				var invertAngle = ((adapter.isVertical ? block.localY() : block.localX()) != 1) != adapter.facesForward;
+				var vertex5 = vertex4.plus(adapter.directionToNeighbor.times(radius * sincos1));
+				var vertex6 = vertex3.plus(adapter.directionToNeighbor.times(radius * sincos2));
+				var normal3 = adapter.neighbor.getOnCircle(invertAngle ? angle1 : Math.PI / 2 - angle1).times(adapter.facesForward ? -1 : 1);
+				var normal4 = adapter.neighbor.getOnCircle(invertAngle ? angle2 : Math.PI / 2 - angle2).times(adapter.facesForward ? -1 : 1);
+
+				this.createQuadWithNormals(
+					vertex5, vertex6, vertex3, vertex4,
+					normal3, normal4, normal4, normal3, !adapter.facesForward);
+			}
+		}
+	}
+
+	private isPerpendicularRoundedAdapter(block: TinyBlock) {
+		if (block.perpendicularRoundedAdapter == null) {
+			return false;
+		}
+		var localForward = block.position.minus(block.perpendicularRoundedAdapter.sourceBlock.position.times(3)).dot(block.forward());
+		return localForward == 0 || (localForward > 0) == block.perpendicularRoundedAdapter.facesForward;
+	}
 
     private renderTinyBlocks() {
 		var blockSizeWithoutMargin = 0.5 - this.measurements.edgeMargin;
@@ -424,48 +477,7 @@ class PartMeshGenerator extends MeshGenerator {
             }
 
             if (block.rounded) {
-				if (block.perpendicularRoundedAdapter != null && this.tinyBlocks.containsKey(block.position.plus(block.perpendicularRoundedAdapter.directionToNeighbor.times(3)))) {
-					if (block.mergedBlocks != 2) {
-						console.warn("Invalid block size for rounded perpendicular adapter.");
-					}
-					var adapter = block.perpendicularRoundedAdapter;
-					var neighbor = this.tinyBlocks.getOrNull(block.position.plus(adapter.directionToNeighbor.times(3)));
-
-
-					let center = block.getCylinderOrigin(this);
-					var radius = blockSizeWithoutMargin;
-
-					var forward = block.forward();
-										
-					for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
-						var angle1 = Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter;
-						var angle2 = Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter;
-						var sincos1 = 1 - (block.odd() == adapter.isVertical ? Math.sin(angle1) : Math.cos(angle1));
-						var sincos2 = 1 - (block.odd() == adapter.isVertical ? Math.sin(angle2) : Math.cos(angle2));
-						
-						let vertex1 = center.plus(block.getOnCircle(angle1).times(radius)).plus(forward.times(adapter.facesForward ? 0 : distance));
-						let vertex2 = center.plus(block.getOnCircle(angle2).times(radius)).plus(forward.times(adapter.facesForward ? 0 : distance));
-						var vertex3 = vertex2.plus(forward.times(sincos2 * (adapter.facesForward ? 1 : -1) * radius));
-						var vertex4 = vertex1.plus(forward.times(sincos1 * (adapter.facesForward ? 1 : -1) * radius));
-
-						var normal1 = block.getOnCircle(angle1).times(adapter.facesForward ? 1 : -1);
-						var normal2 = block.getOnCircle(angle2).times(adapter.facesForward ? 1 : -1);
-
-						this.createQuadWithNormals(
-							vertex1, vertex2, vertex3, vertex4,
-							normal1, normal2, normal2, normal1, adapter.facesForward);
-
-						var invertAngle = ((adapter.isVertical ? block.localY() : block.localX()) != 1) != adapter.facesForward;
-						var vertex5 = vertex4.plus(adapter.directionToNeighbor.times(radius * sincos1));
-						var vertex6 = vertex3.plus(adapter.directionToNeighbor.times(radius * sincos2));
-						var normal3 = neighbor.getOnCircle(invertAngle ? angle1 : Math.PI / 2 - angle1).times(adapter.facesForward ? -1 : 1);
-						var normal4 = neighbor.getOnCircle(invertAngle ? angle2 : Math.PI / 2 - angle2).times(adapter.facesForward ? -1 : 1);
-
-						this.createQuadWithNormals(
-							vertex5, vertex6, vertex3, vertex4,
-							normal3, normal4, normal4, normal3, !adapter.facesForward);
-					}
-				} else {
+				if (!this.isPerpendicularRoundedAdapter(block)) {
 					this.createCylinder(block, 0, blockSizeWithoutMargin, distance);
 				}
                 // Rounded corners

@@ -246,22 +246,18 @@ class PartMeshGenerator extends MeshGenerator {
 
     // Sets HasInterior to false for all tiny blocks that do not form coherent blocks with their neighbors
 	private checkInteriors() {
-        for (var block of this.tinyBlocks.values()) {
-			if (!block.isCenter) {
+		for (var block of this.tinyBlocks.values()) {
+			if (!block.isCenter || !block.hasInterior) {
 				continue;
 			}
 			for (var a = 0; a <= 1; a++) {
-				for (var b = 0; b <= 1; b++) {
-					if (a == 0 && b == 0) {
-						continue;
-					}
+				for (var b = 1 - a; b <= 1; b++) {
 					var neighborPos = block.position.minus(block.horizontal.times(3 * a)).minus(block.vertical.times(3 * b));
 					if (!this.tinyBlocks.containsKey(neighborPos)) {
 						block.hasInterior = false;
 					} else {
 						var neighbor = this.tinyBlocks.get(neighborPos);
 						if (block.orientation != neighbor.orientation
-							|| !neighbor.hasInterior
 							|| block.type != neighbor.type
 							|| neighbor.localX != block.localX - a * block.directionX
 							|| neighbor.localY != block.localY - b * block.directionY) {

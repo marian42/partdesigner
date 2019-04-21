@@ -349,7 +349,8 @@ class PartMeshGenerator extends MeshGenerator {
 					break;
 				}
 				var nextBlock = this.tinyBlocks.get(pos);
-				if (nextBlock.orientation != block.orientation
+				if (!nextBlock.hasInterior
+					|| nextBlock.orientation != block.orientation
 					|| nextBlock.quadrant != block.quadrant
 					|| nextBlock.type != block.type) {
 						break;

@@ -504,19 +504,19 @@ class PartMeshGenerator extends MeshGenerator {
             if (block.rounded) {
 				if (!this.isPerpendicularRoundedAdapter(block)) {
 					this.createCylinder(block, 0, blockSizeWithoutMargin, distance);
+
+					// Rounded to non rounded adapter
+					if (nextBlock != null && !nextBlock.rounded) {
+						this.createCircleWithHole(block, blockSizeWithoutMargin, blockSizeWithoutMargin, distance, true, true);
+					}
+					if (previousBlock != null && !previousBlock.rounded) {
+						this.createCircleWithHole(block, blockSizeWithoutMargin, blockSizeWithoutMargin, 0, false, true);
+					}
 				}
                 // Rounded corners
 				for (var i = 0; i < block.exteriorMergedBlocks; i++) {
 					this.hideOutsideFaces(this.tinyBlocks.get(block.position.plus(block.forward.times(i))));
 				}
-
-                // Rounded to non rounded adapter
-                if (nextBlock != null && !nextBlock.rounded) {
-                    this.createCircleWithHole(block, blockSizeWithoutMargin, blockSizeWithoutMargin, distance, true, true);
-                }
-                if (previousBlock != null && !previousBlock.rounded) {
-                    this.createCircleWithHole(block, blockSizeWithoutMargin, blockSizeWithoutMargin, 0, false, true);
-                }
             }
         }
 	}

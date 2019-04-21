@@ -24,8 +24,8 @@
 		this.localY = localY(this.quadrant);
 		this.directionX = this.localX == 1 ? 1 : -1;
 		this.directionY = this.localY == 1 ? 1 : -1;
-		this.horizontal = this.right.times(this.directionX);
-		this.vertical = this.up.times(this.directionY);
+		this.horizontal = this.localX == 1 ? RIGHT[this.orientation] : LEFT[this.orientation];
+		this.vertical = this.localY == 1 ? UP[this.orientation] : DOWN[this.orientation];
 		this.isAttachment = this.type == BlockType.Pin || this.type == BlockType.Axle;
 	}
 

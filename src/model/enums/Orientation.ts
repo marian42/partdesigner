@@ -27,3 +27,15 @@ const UP = {
 	1: new Vector3(1, 0, 0),
 	2: new Vector3(0, 1, 0)
 }
+
+const LEFT = {
+	0: new Vector3(0, -1, 0),
+	1: new Vector3(0, 0, -1),
+	2: new Vector3(-1, 0, 0)
+};
+
+const DOWN = {
+	0: new Vector3(0, 0, -1),
+	1: new Vector3(-1, 0, 0),
+	2: new Vector3(0, -1, 0)
+}

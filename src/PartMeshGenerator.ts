@@ -598,60 +598,61 @@ class PartMeshGenerator extends MeshGenerator {
 		var verticalInner = block.vertical.times(this.measurements.axleSizeInner);
 		var verticalOuter = block.vertical.times(this.measurements.axleSizeOuter);
 
+		var odd = block.odd();
 		this.createQuad(
             start.plus(horizontalInner).plus(verticalInner),
             start.plus(horizontalInner).plus(verticalOuter),
             end.plus(horizontalInner).plus(verticalOuter),
-            end.plus(horizontalInner).plus(verticalInner), block.odd());
+            end.plus(horizontalInner).plus(verticalInner), odd);
 		this.createQuad(
 			start.plus(horizontalInner).plus(verticalInner),
 			start.plus(horizontalOuter).plus(verticalInner),
 			end.plus(horizontalOuter).plus(verticalInner),
-			end.plus(horizontalInner).plus(verticalInner), !block.odd());
+			end.plus(horizontalInner).plus(verticalInner), !odd);
 		this.createQuad(
 			end.plus(horizontalOuter),
 			start.plus(horizontalOuter),
 			start.plus(horizontalOuter).plus(verticalInner),
-			end.plus(horizontalOuter).plus(verticalInner), block.odd());
+			end.plus(horizontalOuter).plus(verticalInner), odd);
 		this.createQuad(
 			end.plus(verticalOuter),
 			start.plus(verticalOuter),
 			start.plus(verticalOuter).plus(horizontalInner),
-			end.plus(verticalOuter).plus(horizontalInner), !block.odd());
+			end.plus(verticalOuter).plus(horizontalInner), !odd);
 
 		if (nextBlock == null) {
 			this.createQuad(
 				end.plus(horizontalInner).plus(verticalInner),
 				end.plus(verticalInner),
 				end,
-				end.plus(horizontalInner), block.odd());
+				end.plus(horizontalInner), odd);
 			this.createQuad(
 				end.plus(horizontalInner),
 				end.plus(horizontalOuter),
 				end.plus(horizontalOuter).plus(verticalInner),
-				end.plus(horizontalInner).plus(verticalInner), block.odd());
+				end.plus(horizontalInner).plus(verticalInner), odd);
 			this.createQuad(
 				end.plus(verticalInner),
 				end.plus(verticalOuter),
 				end.plus(verticalOuter).plus(horizontalInner),
-				end.plus(verticalInner).plus(horizontalInner), !block.odd());
+				end.plus(verticalInner).plus(horizontalInner), !odd);
 		}
 		if (previousBlock == null) {
 			this.createQuad(
 				start.plus(horizontalInner).plus(verticalInner),
 				start.plus(verticalInner),
 				start,
-				start.plus(horizontalInner), !block.odd());
+				start.plus(horizontalInner), !odd);
 			this.createQuad(
 				start.plus(horizontalInner),
 				start.plus(horizontalOuter),
 				start.plus(horizontalOuter).plus(verticalInner),
-				start.plus(horizontalInner).plus(verticalInner), !block.odd());
+				start.plus(horizontalInner).plus(verticalInner), !odd);
 			this.createQuad(
 				start.plus(verticalInner),
 				start.plus(verticalOuter),
 				start.plus(verticalOuter).plus(horizontalInner),
-				start.plus(verticalInner).plus(horizontalInner), block.odd());
+				start.plus(verticalInner).plus(horizontalInner), odd);
 		}
 
 		var blockSizeWithoutMargin = 0.5 - this.measurements.edgeMargin;
@@ -660,34 +661,34 @@ class PartMeshGenerator extends MeshGenerator {
 				end.plus(block.horizontal.times(blockSizeWithoutMargin)),
 				end.plus(horizontalOuter),
 				end.plus(horizontalOuter).plus(verticalInner),
-				end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), block.odd());
+				end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), odd);
 			this.createQuad(
 				end.plus(block.vertical.times(blockSizeWithoutMargin)),
 				end.plus(verticalOuter),
 				end.plus(verticalOuter).plus(horizontalInner),
-				end.plus(block.vertical.times(blockSizeWithoutMargin)).plus(horizontalInner), !block.odd());
+				end.plus(block.vertical.times(blockSizeWithoutMargin)).plus(horizontalInner), !odd);
 			this.createQuad(
 				end.plus(horizontalInner).plus(verticalInner),
 				end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner),
 				end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(block.vertical.times(blockSizeWithoutMargin)),
-				end.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), !block.odd());
+				end.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), !odd);
 		}
 		if (previousBlock != null && previousBlock.type != block.type && !previousBlock.rounded) {
 			this.createQuad(
 				start.plus(block.horizontal.times(blockSizeWithoutMargin)),
 				start.plus(horizontalOuter),
 				start.plus(horizontalOuter).plus(verticalInner),
-				start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), !block.odd());
+				start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), !odd);
 			this.createQuad(
 				start.plus(block.vertical.times(blockSizeWithoutMargin)),
 				start.plus(verticalOuter),
 				start.plus(verticalOuter).plus(horizontalInner),
-				start.plus(block.vertical.times(blockSizeWithoutMargin)).plus(horizontalInner), block.odd());
+				start.plus(block.vertical.times(blockSizeWithoutMargin)).plus(horizontalInner), odd);
 			this.createQuad(
 				start.plus(horizontalInner).plus(verticalInner),
 				start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner),
 				start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(block.vertical.times(blockSizeWithoutMargin)),
-				start.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), block.odd());
+				start.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), odd);
 		}
 		if (nextBlock != null && nextBlock.type != block.type && nextBlock.rounded) {
 			this.createAxleToCircleAdapter(end, block, nextBlock.type == BlockType.Pin ? this.measurements.axlePinAdapterRadius : blockSizeWithoutMargin);
@@ -708,10 +709,11 @@ class PartMeshGenerator extends MeshGenerator {
 		var horizontalOuter = block.horizontal.times(this.measurements.axleSizeOuter);
 		var verticalInner = block.vertical.times(this.measurements.axleSizeInner);
 		var verticalOuter = block.vertical.times(this.measurements.axleSizeOuter);
+		var odd = block.odd();
 
 		for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
 			var focus = center.copy();
-			if (i < this.measurements.subdivisionsPerQuarter / 2 == !block.odd()) {
+			if (i < this.measurements.subdivisionsPerQuarter / 2 == !odd) {
 				focus = focus.plus(horizontalInner).plus(verticalOuter);
 			} else {
 				focus = focus.plus(horizontalOuter).plus(verticalInner);
@@ -724,16 +726,16 @@ class PartMeshGenerator extends MeshGenerator {
 		this.triangles.push(new Triangle(
 			center.plus(horizontalInner).plus(verticalOuter),
 			center.plus(verticalOuter),
-			center.plus(block.vertical.times(radius)), block.odd() != flipped));
+			center.plus(block.vertical.times(radius)), odd != flipped));
 		this.triangles.push(new Triangle(
 			center.plus(verticalInner).plus(horizontalOuter),
 			center.plus(horizontalOuter),
-			center.plus(block.horizontal.times(radius)), block.odd() == flipped));
+			center.plus(block.horizontal.times(radius)), odd == flipped));
 		this.createQuad(
 			center.plus(verticalInner).plus(horizontalInner),
 			center.plus(verticalOuter).plus(horizontalInner),
 			center.plus(block.getOnCircle(45 * DEG_TO_RAD, radius)),
-			center.plus(verticalInner).plus(horizontalOuter), block.odd() != flipped);
+			center.plus(verticalInner).plus(horizontalOuter), odd != flipped);
 	}
 
     private showInteriorCap(currentBlock: SmallBlock, neighbor: SmallBlock): boolean {

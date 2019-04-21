@@ -20,11 +20,11 @@ function inverseTetrahedralNumber(s: number): number {
 
 let DEG_TO_RAD = Math.PI / 180;
 
-function min<T>(array: T[], selector: (item: T) => number): number {
+function min<T>(iterable: Iterable<T>, selector: (item: T) => number): number {
 	var initialized = false;
 	var minValue: number;
 
-	for (let item of array) {
+	for (let item of iterable) {
 		let currentValue = selector(item);
 		if (!initialized || currentValue < minValue) {
 			initialized = true;

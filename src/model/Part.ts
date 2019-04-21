@@ -145,7 +145,7 @@ class Part {
 	}
 
 	private getBoundingBox(): [Vector3, Vector3] {
-		let defaultPosition = this.blocks.keys()[0];
+		let defaultPosition = this.blocks.keys().next().value;
 		var minX = defaultPosition.x;
 		var minY = defaultPosition.y;
 		var minZ = defaultPosition.z;

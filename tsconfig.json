@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
         "outFile": "app.js",
-        "sourceMap": true
+        "sourceMap": true,
+        "target": "es6",
     },
 	"compileOnSave": true,
     "include": [

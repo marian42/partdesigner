@@ -45,32 +45,24 @@
 		this.data = {};
 	}
 
-	keys(): Vector3[] {
-		let result: Vector3[] = [];
-
+	*keys(): IterableIterator<Vector3> {
 		for (let x in this.data) {
 			for (let y in this.data[x]) {
 				for (let z in this.data[x][y]) {
-					result.push(new Vector3(parseInt(x), parseInt(y), parseInt(z)));
+					yield new Vector3(parseInt(x), parseInt(y), parseInt(z));
 				}
 			}
 		}
-
-		return result;
 	}
 
-	values(): T[] {
-		let result: T[] = [];
-
+	*values(): IterableIterator<T> {
 		for (let x in this.data) {
 			for (let y in this.data[x]) {
 				for (let z in this.data[x][y]) {
-					result.push(this.data[x][y][z]);
+					yield this.data[x][y][z];
 				}
 			}
 		}
-
-		return result;
 	}
 
 	any(): boolean {

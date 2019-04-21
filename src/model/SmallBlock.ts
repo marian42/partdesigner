@@ -3,6 +3,8 @@
 	public position: Vector3;
 	public hasInterior: boolean;
 
+	public perpendicularRoundedAdapter: PerpendicularRoundedAdapter = null;
+
 	constructor(quadrant: Quadrant, positon: Vector3, source: Block) {
 		super(source.orientation, source.type, source.rounded);
 		this.quadrant = quadrant;

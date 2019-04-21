@@ -1,10 +1,11 @@
 class PartMeshGenerator extends MeshGenerator {
     private smallBlocks: VectorDictionary<SmallBlock>;
 	private tinyBlocks: VectorDictionary<TinyBlock>;
-    constructor(part: Part, measurements: Measurements) {
+
+	constructor(part: Part, measurements: Measurements) {
         super(measurements);
         this.smallBlocks = part.createSmallBlocks();
-        this.createDummyBlocks();
+		this.createDummyBlocks();
         this.updateRounded();
         this.createTinyBlocks();
         this.processTinyBlocks();
@@ -16,12 +17,55 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private updateRounded() {
+		var perpendicularRoundedAdapters: SmallBlock[] = [];
+
         for (var block of this.smallBlocks.values()) {
-            block.rounded = block.rounded && this.canBeRounded(block);
-            if (block.isAttachment()) {
-                block.rounded = true;
-            }
-        }
+			if (block.isAttachment()) {
+				block.rounded = true;
+				continue;
+			}
+			if (!block.rounded) {
+				continue;
+			}
+
+			var next = this.smallBlocks.getOrNull(block.position.plus(block.forward()));
+			if (next != null && next.orientation == block.orientation && next.quadrant != block.quadrant) {
+				block.rounded = false;
+				continue;
+			}
+			var previous = this.smallBlocks.getOrNull(block.position.minus(block.forward()));
+			if (previous != null && previous.orientation == block.orientation && previous.quadrant != block.quadrant) {
+				block.rounded = false;
+				continue;
+			}
+
+			var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal()));
+			var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
+			if ((neighbor1 == null || (neighbor1.isAttachment() && neighbor1.forward().dot(block.right()) == 0))
+				&& (neighbor2 == null || (neighbor2.isAttachment() && neighbor2.forward().dot(block.up()) == 0))) {
+				continue;
+			}
+
+			if (this.createPerpendicularRoundedAdapterIfPossible(block)) {
+				perpendicularRoundedAdapters.push(block);
+				continue;
+			}
+
+			block.rounded = false;
+		}
+
+		// Remove adapters where the neighbor was later changed from rounded to not rounded
+		var anythingChanged: boolean;
+		do {
+			anythingChanged = false;
+			for (var block of perpendicularRoundedAdapters) {
+				if (block.perpendicularRoundedAdapter != null && !block.perpendicularRoundedAdapter.neighbor.rounded) {
+					block.perpendicularRoundedAdapter = null;
+					block.rounded = false;
+					anythingChanged = true;
+				}
+			}
+		} while (anythingChanged);
     }
 
     private createDummyBlocks() {
@@ -53,30 +97,33 @@ class PartMeshGenerator extends MeshGenerator {
 		if (addedAnything) {
 			this.createDummyBlocks();
 		}
-    }
-
-    private canBeRounded(block: SmallBlock): boolean {
-		var next = this.smallBlocks.getOrNull(block.position.plus(block.forward()));
-        if (next != null && next.orientation == block.orientation && next.quadrant != block.quadrant) {
-            return false;
-        }
-        var previous = this.smallBlocks.getOrNull(block.position.minus(block.forward()));
-        if (previous != null && previous.orientation == block.orientation && previous.quadrant != block.quadrant) {
-            return false;
-        }
-
-        var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal()));
-        var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
-        if ((neighbor1 == null || (neighbor1.isAttachment() && neighbor1.forward().dot(block.right()) == 0))
-            && (neighbor2 == null || (neighbor2.isAttachment() && neighbor2.forward().dot(block.up()) == 0))) {
-            return true;
+	}
+	
+	private createPerpendicularRoundedAdapterIfPossible(block: SmallBlock): boolean {
+		var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal()));
+		var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
+		
+		var hasHorizontalNeighbor = neighbor2 == null && neighbor1 != null && neighbor1.forward().dot(block.horizontal()) != 0 && neighbor1.rounded;
+		var hasVerticalNeighbor = neighbor1 == null && neighbor2 != null && neighbor2.forward().dot(block.vertical()) != 0 && neighbor2.rounded;
+		
+		if (hasHorizontalNeighbor == hasVerticalNeighbor) {
+			return false;
 		}
-		if ((neighbor1 == null && neighbor2 != null && neighbor2.forward().dot(block.vertical()) != 0 && neighbor2.rounded)
-			|| (neighbor2 == null && neighbor1 != null && neighbor1.forward().dot(block.horizontal()) != 0 && neighbor1.rounded)) {
-			return true;
+
+		var adapter = new PerpendicularRoundedAdapter();
+		adapter.directionToNeighbor = hasVerticalNeighbor ? block.vertical() : block.horizontal();
+		adapter.isVertical = hasVerticalNeighbor;
+		adapter.neighbor = hasHorizontalNeighbor ? neighbor1 : neighbor2;
+		adapter.facesForward = block.forward().dot(adapter.neighbor.horizontal().plus(adapter.neighbor.vertical())) < 0;
+		adapter.sourceBlock = block;
+		
+		if (!this.smallBlocks.containsKey(block.position.plus(block.forward().times(adapter.facesForward ? 1 : -1)))) {
+			return false;
 		}
-        return false;
-    }
+
+		block.perpendicularRoundedAdapter = adapter;
+		return true;
+	}
 
     private createTinyBlocks() {
         this.tinyBlocks = new VectorDictionary<TinyBlock>();
@@ -155,20 +202,6 @@ class PartMeshGenerator extends MeshGenerator {
 		}
 	}
 
-	private hasPerpendicularRoundedConnector(block: SmallBlock) {
-		if (!block.rounded || block.isAttachment()) {
-			return false;
-		}
-
-		var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
-		var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal()));
-
-		var isConnected1 = neighbor1 != null && neighbor1.rounded && neighbor1.forward().dot(block.vertical()) != 0;
-		var isConnected2 = neighbor2 != null && neighbor2.rounded && neighbor2.forward().dot(block.horizontal()) != 0;
-
-		return isConnected1 != isConnected2;
-	}
-
     private processTinyBlocks() {
 		// Disable interiors when adjacent quadrants are missing
 		for (var block of this.tinyBlocks.values()) {
@@ -191,12 +224,12 @@ class PartMeshGenerator extends MeshGenerator {
 		for (var smallBlock of this.smallBlocks.values()) {
 			var nextBlock = this.smallBlocks.getOrNull(smallBlock.position.plus(smallBlock.forward()));
 			// Offset rounded to non rounded transitions to make them flush
-			if (smallBlock.rounded && nextBlock != null && !nextBlock.rounded && !this.hasPerpendicularRoundedConnector(smallBlock)) {
+			if (smallBlock.rounded && nextBlock != null && !nextBlock.rounded && smallBlock.perpendicularRoundedAdapter == null) {
 				this.pushBlock(smallBlock, 1);
 			}
 			var previousBlock = this.smallBlocks.getOrNull(smallBlock.position.minus(smallBlock.forward()));
 			// Offset rounded to non rounded transitions to make them flush
-			if (smallBlock.rounded && previousBlock != null && !previousBlock.rounded && !this.hasPerpendicularRoundedConnector(smallBlock)) {
+			if (smallBlock.rounded && previousBlock != null && !previousBlock.rounded && smallBlock.perpendicularRoundedAdapter == null) {
 				this.pushBlock(smallBlock, -1);
 			}
 
@@ -244,12 +277,22 @@ class PartMeshGenerator extends MeshGenerator {
 		var horizontalNeighbor = this.smallBlocks.getOrNull(block.smallBlockPosition().plus(block.horizontal()));
 		var neighbor = verticalNeighbor != null ? verticalNeighbor : horizontalNeighbor;
 		var verticalOrHorizontal = verticalNeighbor != null ? block.vertical() : block.horizontal();
-		if (block.rounded && neighbor != null && neighbor.rounded && neighbor.forward().dot(verticalOrHorizontal) != 0) {
+		if (neighbor != null && neighbor.rounded && neighbor.forward().dot(verticalOrHorizontal) != 0) {
 			return neighbor;
 		} else {
 			return null;
 		}
 	}
+
+	private getPerpendicularRoundedNeighborOrNull2(block: TinyBlock): SmallBlock {
+		var smallBlock = this.smallBlocks.get(block.smallBlockPosition());
+		if (smallBlock.perpendicularRoundedAdapter != null) {
+			return smallBlock.perpendicularRoundedAdapter.neighbor;
+		} else {
+			return null;
+		}
+	}
+
 	
 	private preventMergingForPerpendicularRoundedBlock(block1: TinyBlock, block2: TinyBlock): boolean {
 		if (!block1.rounded || !block2.rounded || !block1.isCenter()) {
@@ -381,51 +424,46 @@ class PartMeshGenerator extends MeshGenerator {
             }
 
             if (block.rounded) {
-				var verticalNeighbor = this.tinyBlocks.getOrNull(block.position.plus(block.vertical().times(3)));
-				var horizontalNeighbor = this.tinyBlocks.getOrNull(block.position.plus(block.horizontal().times(3)));
-				var neighbor = verticalNeighbor != null ? verticalNeighbor : horizontalNeighbor;
-				var isVertical = verticalNeighbor != null;
-				var verticalOrHorizontal = isVertical ? block.vertical() : block.horizontal();
-
-				if (neighbor != null && neighbor.rounded && neighbor.forward().dot(verticalOrHorizontal) != 0) {
+				if (block.perpendicularRoundedAdapter != null && this.tinyBlocks.containsKey(block.position.plus(block.perpendicularRoundedAdapter.directionToNeighbor.times(3)))) {
 					if (block.mergedBlocks != 2) {
 						console.warn("Invalid block size for rounded perpendicular adapter.");
 					}
+					var adapter = block.perpendicularRoundedAdapter;
+					var neighbor = this.tinyBlocks.getOrNull(block.position.plus(adapter.directionToNeighbor.times(3)));
+
 
 					let center = block.getCylinderOrigin(this);
 					var radius = blockSizeWithoutMargin;
 
 					var forward = block.forward();
-
-					var facesForward = center.dot(forward) + distance / 2 < neighbor.getCylinderOrigin(this).dot(forward);
-					
+										
 					for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
 						var angle1 = Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter;
 						var angle2 = Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter;
-						var sincos1 = 1 - (block.odd() == isVertical ? Math.sin(angle1) : Math.cos(angle1));
-						var sincos2 = 1 - (block.odd() == isVertical ? Math.sin(angle2) : Math.cos(angle2));
+						var sincos1 = 1 - (block.odd() == adapter.isVertical ? Math.sin(angle1) : Math.cos(angle1));
+						var sincos2 = 1 - (block.odd() == adapter.isVertical ? Math.sin(angle2) : Math.cos(angle2));
 						
-						let vertex1 = center.plus(block.getOnCircle(angle1).times(radius)).plus(forward.times(facesForward ? 0 : distance));
-						let vertex2 = center.plus(block.getOnCircle(angle2).times(radius)).plus(forward.times(facesForward ? 0 : distance));
-						var vertex3 = vertex2.plus(forward.times(sincos2 * (facesForward ? 1 : -1) * radius));
-						var vertex4 = vertex1.plus(forward.times(sincos1 * (facesForward ? 1 : -1) * radius));
+						let vertex1 = center.plus(block.getOnCircle(angle1).times(radius)).plus(forward.times(adapter.facesForward ? 0 : distance));
+						let vertex2 = center.plus(block.getOnCircle(angle2).times(radius)).plus(forward.times(adapter.facesForward ? 0 : distance));
+						var vertex3 = vertex2.plus(forward.times(sincos2 * (adapter.facesForward ? 1 : -1) * radius));
+						var vertex4 = vertex1.plus(forward.times(sincos1 * (adapter.facesForward ? 1 : -1) * radius));
 
-						var normal1 = block.getOnCircle(angle1).times(facesForward ? 1 : -1);
-						var normal2 = block.getOnCircle(angle2).times(facesForward ? 1 : -1);
+						var normal1 = block.getOnCircle(angle1).times(adapter.facesForward ? 1 : -1);
+						var normal2 = block.getOnCircle(angle2).times(adapter.facesForward ? 1 : -1);
 
 						this.createQuadWithNormals(
 							vertex1, vertex2, vertex3, vertex4,
-							normal1, normal2, normal2, normal1, facesForward);
+							normal1, normal2, normal2, normal1, adapter.facesForward);
 
-						var invertAngle = ((isVertical ? block.localY() : block.localX()) != 1) != facesForward;
-						var vertex5 = vertex4.plus(verticalOrHorizontal.times(radius * sincos1));
-						var vertex6 = vertex3.plus(verticalOrHorizontal.times(radius * sincos2));
-						var normal3 = neighbor.getOnCircle(invertAngle ? angle1 : Math.PI / 2 - angle1).times(facesForward ? -1 : 1);
-						var normal4 = neighbor.getOnCircle(invertAngle ? angle2 : Math.PI / 2 - angle2).times(facesForward ? -1 : 1);
+						var invertAngle = ((adapter.isVertical ? block.localY() : block.localX()) != 1) != adapter.facesForward;
+						var vertex5 = vertex4.plus(adapter.directionToNeighbor.times(radius * sincos1));
+						var vertex6 = vertex3.plus(adapter.directionToNeighbor.times(radius * sincos2));
+						var normal3 = neighbor.getOnCircle(invertAngle ? angle1 : Math.PI / 2 - angle1).times(adapter.facesForward ? -1 : 1);
+						var normal4 = neighbor.getOnCircle(invertAngle ? angle2 : Math.PI / 2 - angle2).times(adapter.facesForward ? -1 : 1);
 
 						this.createQuadWithNormals(
 							vertex5, vertex6, vertex3, vertex4,
-							normal3, normal4, normal4, normal3, !facesForward);
+							normal3, normal4, normal4, normal3, !adapter.facesForward);
 					}
 				} else {
 					this.createCylinder(block, 0, blockSizeWithoutMargin, distance);

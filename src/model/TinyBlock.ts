@@ -39,6 +39,7 @@
 	constructor(position: Vector3, source: SmallBlock) {
 		super(source.quadrant, position, source);
 		this.visibleFaces = [true, true, true, true, true, true];
+		this.perpendicularRoundedAdapter = source.perpendicularRoundedAdapter;
 	}
 
 	public isFaceVisible(direction: Vector3): boolean {

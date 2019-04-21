@@ -60,24 +60,24 @@ var MeshGenerator = /** @class */ (function () {
     MeshGenerator.prototype.createCircleWithHole = function (block, innerRadius, outerRadius, offset, inverted, square) {
         if (inverted === void 0) { inverted = false; }
         if (square === void 0) { square = false; }
-        var center = block.getCylinderOrigin(this).plus(block.forward().times(offset));
+        var center = block.getCylinderOrigin(this).plus(block.forward.times(offset));
         for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
             var i1 = block.getOnCircle(Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter);
             var i2 = block.getOnCircle(Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter);
             var o1 = i1;
             var o2 = i2;
             if (square) {
-                if (Math.abs(o1.dot(block.right())) > Math.abs(o1.dot(block.up()))) {
-                    o1 = o1.times(1 / Math.abs(o1.dot(block.right())));
+                if (Math.abs(o1.dot(block.right)) > Math.abs(o1.dot(block.up))) {
+                    o1 = o1.times(1 / Math.abs(o1.dot(block.right)));
                 }
                 else {
-                    o1 = o1.times(1 / Math.abs(o1.dot(block.up())));
+                    o1 = o1.times(1 / Math.abs(o1.dot(block.up)));
                 }
-                if (Math.abs(o2.dot(block.right())) > Math.abs(o2.dot(block.up()))) {
-                    o2 = o2.times(1 / Math.abs(o2.dot(block.right())));
+                if (Math.abs(o2.dot(block.right)) > Math.abs(o2.dot(block.up))) {
+                    o2 = o2.times(1 / Math.abs(o2.dot(block.right)));
                 }
                 else {
-                    o2 = o2.times(1 / Math.abs(o2.dot(block.up())));
+                    o2 = o2.times(1 / Math.abs(o2.dot(block.up)));
                 }
             }
             this.createQuad(i1.times(innerRadius).plus(center), i2.times(innerRadius).plus(center), o2.times(outerRadius).plus(center), o1.times(outerRadius).plus(center), inverted);
@@ -85,7 +85,7 @@ var MeshGenerator = /** @class */ (function () {
     };
     MeshGenerator.prototype.createCircle = function (block, radius, offset, inverted) {
         if (inverted === void 0) { inverted = false; }
-        var center = block.getCylinderOrigin(this).plus(block.forward().times(offset));
+        var center = block.getCylinderOrigin(this).plus(block.forward.times(offset));
         for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
             var p1 = block.getOnCircle(Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter, radius);
             var p2 = block.getOnCircle(Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter, radius);
@@ -99,11 +99,11 @@ var MeshGenerator = /** @class */ (function () {
     };
     MeshGenerator.prototype.createCylinder = function (block, offset, radius, distance, inverted) {
         if (inverted === void 0) { inverted = false; }
-        var center = block.getCylinderOrigin(this).plus(block.forward().times(offset));
+        var center = block.getCylinderOrigin(this).plus(block.forward.times(offset));
         for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
             var v1 = block.getOnCircle(Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter);
             var v2 = block.getOnCircle(Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter);
-            this.createQuadWithNormals(center.plus(v1.times(radius)), center.plus(v2.times(radius)), center.plus(v2.times(radius)).plus(block.forward().times(distance)), center.plus(v1.times(radius)).plus(block.forward().times(distance)), v1, v2, v2, v1, !inverted);
+            this.createQuadWithNormals(center.plus(v1.times(radius)), center.plus(v2.times(radius)), center.plus(v2.times(radius)).plus(block.forward.times(distance)), center.plus(v1.times(radius)).plus(block.forward.times(distance)), v1, v2, v2, v1, !inverted);
         }
     };
     MeshGenerator.prototype.tinyIndexToWorld = function (p) {
@@ -134,41 +134,80 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         _this.processTinyBlocks();
         _this.checkInteriors();
         _this.mergeSimilarBlocks();
+        _this.renderPerpendicularRoundedAdapters();
         _this.renderTinyBlocks();
         _this.renderAttachments();
         _this.renderTinyBlockFaces();
         return _this;
     }
     PartMeshGenerator.prototype.updateRounded = function () {
+        var perpendicularRoundedAdapters = [];
         for (var _i = 0, _a = this.smallBlocks.values(); _i < _a.length; _i++) {
             var block = _a[_i];
-            block.rounded = block.rounded && this.canBeRounded(block);
-            if (block.isAttachment()) {
+            if (block.isAttachment) {
                 block.rounded = true;
+                continue;
             }
+            if (!block.rounded) {
+                continue;
+            }
+            var next = this.smallBlocks.getOrNull(block.position.plus(block.forward));
+            if (next != null && next.orientation == block.orientation && next.quadrant != block.quadrant) {
+                block.rounded = false;
+                continue;
+            }
+            var previous = this.smallBlocks.getOrNull(block.position.minus(block.forward));
+            if (previous != null && previous.orientation == block.orientation && previous.quadrant != block.quadrant) {
+                block.rounded = false;
+                continue;
+            }
+            var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal));
+            var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical));
+            if ((neighbor1 == null || (neighbor1.isAttachment && neighbor1.forward.dot(block.right) == 0))
+                && (neighbor2 == null || (neighbor2.isAttachment && neighbor2.forward.dot(block.up) == 0))) {
+                continue;
+            }
+            if (this.createPerpendicularRoundedAdapterIfPossible(block)) {
+                perpendicularRoundedAdapters.push(block);
+                continue;
+            }
+            block.rounded = false;
         }
+        // Remove adapters where the neighbor was later changed from rounded to not rounded
+        var anythingChanged;
+        do {
+            anythingChanged = false;
+            for (var _b = 0, perpendicularRoundedAdapters_1 = perpendicularRoundedAdapters; _b < perpendicularRoundedAdapters_1.length; _b++) {
+                var block = perpendicularRoundedAdapters_1[_b];
+                if (block.perpendicularRoundedAdapter != null && !block.perpendicularRoundedAdapter.neighbor.rounded) {
+                    block.perpendicularRoundedAdapter = null;
+                    block.rounded = false;
+                    anythingChanged = true;
+                }
+            }
+        } while (anythingChanged);
     };
     PartMeshGenerator.prototype.createDummyBlocks = function () {
         var _this = this;
         var addedAnything = false;
         for (var _i = 0, _a = this.smallBlocks.values(); _i < _a.length; _i++) {
             var block = _a[_i];
-            if (!block.isAttachment()) {
+            if (!block.isAttachment) {
                 continue;
             }
             var affectedPositions = [
                 block.position,
-                block.position.minus(block.horizontal()),
-                block.position.minus(block.vertical()),
-                block.position.minus(block.horizontal()).minus(block.vertical())
+                block.position.minus(block.horizontal),
+                block.position.minus(block.vertical),
+                block.position.minus(block.horizontal).minus(block.vertical)
             ];
             for (var forwardDirection = -1; forwardDirection <= 1; forwardDirection += 2) {
-                var count = countInArray(affectedPositions, function (p) { return _this.smallBlocks.containsKey(p.plus(block.forward().times(forwardDirection))); });
+                var count = countInArray(affectedPositions, function (p) { return _this.smallBlocks.containsKey(p.plus(block.forward.times(forwardDirection))); });
                 if (count != 0 && count != 4) {
                     var source = new Block(block.orientation, BlockType.Solid, true);
                     for (var _b = 0, affectedPositions_1 = affectedPositions; _b < affectedPositions_1.length; _b++) {
                         var position = affectedPositions_1[_b];
-                        var targetPosition = position.plus(block.forward().times(forwardDirection));
+                        var targetPosition = position.plus(block.forward.times(forwardDirection));
                         if (!this.smallBlocks.containsKey(targetPosition)) {
                             this.smallBlocks.set(targetPosition, new SmallBlock(this.smallBlocks.get(position).quadrant, targetPosition, source));
                         }
@@ -181,28 +220,31 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             this.createDummyBlocks();
         }
     };
-    PartMeshGenerator.prototype.canBeRounded = function (block) {
-        var next = this.smallBlocks.getOrNull(block.position.plus(block.forward()));
-        if (next != null && next.orientation == block.orientation && next.quadrant != block.quadrant) {
+    PartMeshGenerator.prototype.createPerpendicularRoundedAdapterIfPossible = function (block) {
+        var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal));
+        var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical));
+        var hasHorizontalNeighbor = neighbor2 == null && neighbor1 != null && neighbor1.forward.dot(block.horizontal) != 0 && neighbor1.rounded;
+        var hasVerticalNeighbor = neighbor1 == null && neighbor2 != null && neighbor2.forward.dot(block.vertical) != 0 && neighbor2.rounded;
+        if (hasHorizontalNeighbor == hasVerticalNeighbor) {
             return false;
         }
-        var previous = this.smallBlocks.getOrNull(block.position.minus(block.forward()));
-        if (previous != null && previous.orientation == block.orientation && previous.quadrant != block.quadrant) {
+        var adapter = new PerpendicularRoundedAdapter();
+        adapter.directionToNeighbor = hasVerticalNeighbor ? block.vertical : block.horizontal;
+        adapter.isVertical = hasVerticalNeighbor;
+        adapter.neighbor = hasHorizontalNeighbor ? neighbor1 : neighbor2;
+        adapter.facesForward = block.forward.dot(adapter.neighbor.horizontal.plus(adapter.neighbor.vertical)) < 0;
+        adapter.sourceBlock = block;
+        if (!this.smallBlocks.containsKey(block.position.plus(block.forward.times(adapter.facesForward ? 1 : -1)))) {
             return false;
         }
-        var neighbor1 = this.smallBlocks.getOrNull(block.position.plus(block.horizontal()));
-        var neighbor2 = this.smallBlocks.getOrNull(block.position.plus(block.vertical()));
-        if ((neighbor1 == null || (neighbor1.isAttachment() && neighbor1.forward().dot(block.right()) == 0))
-            && (neighbor2 == null || (neighbor2.isAttachment() && neighbor2.forward().dot(block.up()) == 0))) {
-            return true;
-        }
-        return false;
+        block.perpendicularRoundedAdapter = adapter;
+        return true;
     };
     PartMeshGenerator.prototype.createTinyBlocks = function () {
         this.tinyBlocks = new VectorDictionary();
         for (var _i = 0, _a = this.smallBlocks.values(); _i < _a.length; _i++) {
             var block = _a[_i];
-            if (block.isAttachment()) {
+            if (block.isAttachment) {
                 continue;
             }
             var pos = block.position;
@@ -224,36 +266,63 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         }
         for (var _b = 0, _c = this.smallBlocks.values(); _b < _c.length; _b++) {
             var block = _c[_b];
-            if (!block.isAttachment()) {
+            if (!block.isAttachment) {
                 continue;
             }
             for (var a = -2; a <= 2; a++) {
-                var neighbor = block.position.plus(block.forward().times(sign(a)));
-                if (!this.smallBlocks.containsKey(neighbor) || (Math.abs(a) >= 2 && this.smallBlocks.get(neighbor).isAttachment())) {
+                var neighbor = block.position.plus(block.forward.times(sign(a)));
+                if (!this.smallBlocks.containsKey(neighbor) || (Math.abs(a) >= 2 && this.smallBlocks.get(neighbor).isAttachment)) {
                     continue;
                 }
                 for (var b = -1; b <= 0; b++) {
                     for (var c = -1; c <= 0; c++) {
-                        this.createTinyBlock(block.position.times(3).plus(block.forward().times(a)).plus(block.horizontal().times(b)).plus(block.vertical().times(c)), block);
+                        this.createTinyBlock(block.position.times(3).plus(block.forward.times(a)).plus(block.horizontal.times(b)).plus(block.vertical.times(c)), block);
                     }
                 }
             }
         }
     };
     PartMeshGenerator.prototype.isTinyBlock = function (position) {
-        return this.tinyBlocks.containsKey(position) && !this.tinyBlocks.get(position).isAttachment();
+        return this.tinyBlocks.containsKey(position) && !this.tinyBlocks.get(position).isAttachment;
+    };
+    PartMeshGenerator.prototype.pushBlock = function (smallBlock, forwardFactor) {
+        var nextBlock = this.smallBlocks.getOrNull(smallBlock.position.plus(smallBlock.forward.times(forwardFactor)));
+        for (var a = -2; a <= 2; a++) {
+            for (var b = -2; b <= 2; b++) {
+                var from = smallBlock.position.times(3)
+                    .plus(smallBlock.right.times(a))
+                    .plus(smallBlock.up.times(b))
+                    .plus(smallBlock.forward.times(forwardFactor));
+                var to = from.plus(smallBlock.forward.times(forwardFactor));
+                if (!this.tinyBlocks.containsKey(to)) {
+                    continue;
+                }
+                if (!this.tinyBlocks.containsKey(from)) {
+                    this.tinyBlocks.remove(to);
+                    continue;
+                }
+                if (smallBlock.orientation == nextBlock.orientation) {
+                    if (Math.abs(a) < 2 && Math.abs(b) < 2) {
+                        this.tinyBlocks.get(to).rounded = true;
+                    }
+                }
+                else {
+                    this.createTinyBlock(to, this.tinyBlocks.get(from));
+                }
+            }
+        }
     };
     PartMeshGenerator.prototype.processTinyBlocks = function () {
         // Disable interiors when adjacent quadrants are missing
         for (var _i = 0, _a = this.tinyBlocks.values(); _i < _a.length; _i++) {
             var block = _a[_i];
-            if (block.isCenter()
-                && !block.isAttachment()
+            if (block.isCenter
+                && !block.isAttachment
                 && (block.hasInterior || block.rounded)
-                && (!this.isTinyBlock(block.position.minus(block.horizontal().times(3))) || !this.isTinyBlock(block.position.minus(block.vertical().times(3))))) {
+                && (!this.isTinyBlock(block.position.minus(block.horizontal.times(3))) || !this.isTinyBlock(block.position.minus(block.vertical.times(3))))) {
                 for (var a = -1; a <= 1; a++) {
                     for (var b = -1; b <= 1; b++) {
-                        var position = block.position.plus(block.right().times(a)).plus(block.up().times(b));
+                        var position = block.position.plus(block.right.times(a)).plus(block.up.times(b));
                         if (this.tinyBlocks.containsKey(position)) {
                             this.tinyBlocks.get(position).rounded = false;
                             this.tinyBlocks.get(position).hasInterior = false;
@@ -262,59 +331,23 @@ var PartMeshGenerator = /** @class */ (function (_super) {
                 }
             }
         }
-        // Offset rounded to non rounded transitions to make them flush
         for (var _b = 0, _c = this.smallBlocks.values(); _b < _c.length; _b++) {
             var smallBlock = _c[_b];
-            var forward = smallBlock.forward();
-            var right = smallBlock.right();
-            var up = smallBlock.up();
-            var nextBlock = this.smallBlocks.getOrNull(smallBlock.position.plus(smallBlock.forward()));
-            if (smallBlock.rounded && nextBlock != null && !nextBlock.rounded) {
-                for (var a = -2; a <= 2; a++) {
-                    for (var b = -2; b <= 2; b++) {
-                        var from = smallBlock.position.times(3).plus(right.times(a)).plus(up.times(b)).plus(forward);
-                        var to = from.plus(forward);
-                        if (!this.tinyBlocks.containsKey(to)) {
-                            continue;
-                        }
-                        if (!this.tinyBlocks.containsKey(from)) {
-                            this.tinyBlocks.remove(to);
-                            continue;
-                        }
-                        if (smallBlock.orientation == nextBlock.orientation) {
-                            if (Math.abs(a) < 2 && Math.abs(b) < 2) {
-                                this.tinyBlocks.get(to).rounded = true;
-                            }
-                        }
-                        else {
-                            this.createTinyBlock(to, this.tinyBlocks.get(from));
-                        }
-                    }
-                }
+            var nextBlock = this.smallBlocks.getOrNull(smallBlock.position.plus(smallBlock.forward));
+            // Offset rounded to non rounded transitions to make them flush
+            if (smallBlock.rounded && nextBlock != null && !nextBlock.rounded && smallBlock.perpendicularRoundedAdapter == null) {
+                this.pushBlock(smallBlock, 1);
             }
-            var previousBlock = this.smallBlocks.getOrNull(smallBlock.position.minus(smallBlock.forward()));
-            if (smallBlock.rounded && previousBlock != null && !previousBlock.rounded) {
-                for (var a = -2; a <= 2; a++) {
-                    for (var b = -2; b <= 2; b++) {
-                        var from = smallBlock.position.times(3).plus(right.times(a)).plus(up.times(b)).minus(forward);
-                        var to = from.minus(forward);
-                        if (!this.tinyBlocks.containsKey(to)) {
-                            continue;
-                        }
-                        if (!this.tinyBlocks.containsKey(from)) {
-                            this.tinyBlocks.remove(to);
-                            continue;
-                        }
-                        if (smallBlock.orientation == previousBlock.orientation) {
-                            if (Math.abs(a) < 2 && Math.abs(b) < 2) {
-                                this.tinyBlocks.get(to).rounded = true;
-                            }
-                        }
-                        else {
-                            this.createTinyBlock(to, this.tinyBlocks.get(from));
-                        }
-                    }
-                }
+            var previousBlock = this.smallBlocks.getOrNull(smallBlock.position.minus(smallBlock.forward));
+            // Offset rounded to non rounded transitions to make them flush
+            if (smallBlock.rounded && previousBlock != null && !previousBlock.rounded && smallBlock.perpendicularRoundedAdapter == null) {
+                this.pushBlock(smallBlock, -1);
+            }
+            if (smallBlock.rounded && nextBlock != null && nextBlock.rounded && smallBlock.orientation != nextBlock.orientation) {
+                this.pushBlock(smallBlock, 1);
+            }
+            if (smallBlock.rounded && previousBlock != null && previousBlock.rounded && smallBlock.orientation != previousBlock.orientation) {
+                this.pushBlock(smallBlock, -1);
             }
         }
     };
@@ -322,7 +355,7 @@ var PartMeshGenerator = /** @class */ (function (_super) {
     PartMeshGenerator.prototype.checkInteriors = function () {
         for (var _i = 0, _a = this.tinyBlocks.values(); _i < _a.length; _i++) {
             var block = _a[_i];
-            if (!block.isCenter()) {
+            if (!block.isCenter) {
                 continue;
             }
             for (var a = 0; a <= 1; a++) {
@@ -330,7 +363,7 @@ var PartMeshGenerator = /** @class */ (function (_super) {
                     if (a == 0 && b == 0) {
                         continue;
                     }
-                    var neighborPos = block.position.minus(block.horizontal().times(3 * a)).minus(block.vertical().times(3 * b));
+                    var neighborPos = block.position.minus(block.horizontal.times(3 * a)).minus(block.vertical.times(3 * b));
                     if (!this.tinyBlocks.containsKey(neighborPos)) {
                         block.hasInterior = false;
                     }
@@ -339,14 +372,45 @@ var PartMeshGenerator = /** @class */ (function (_super) {
                         if (block.orientation != neighbor.orientation
                             || !neighbor.hasInterior
                             || block.type != neighbor.type
-                            || neighbor.localX() != block.localX() - a * block.directionX()
-                            || neighbor.localY() != block.localY() - b * block.directionY()) {
+                            || neighbor.localX != block.localX - a * block.directionX
+                            || neighbor.localY != block.localY - b * block.directionY) {
                             block.hasInterior = false;
                         }
                     }
                 }
             }
         }
+    };
+    PartMeshGenerator.prototype.getPerpendicularRoundedNeighborOrNull = function (block) {
+        var verticalNeighbor = this.smallBlocks.getOrNull(block.smallBlockPosition.plus(block.vertical));
+        var horizontalNeighbor = this.smallBlocks.getOrNull(block.smallBlockPosition.plus(block.horizontal));
+        var neighbor = verticalNeighbor != null ? verticalNeighbor : horizontalNeighbor;
+        var verticalOrHorizontal = verticalNeighbor != null ? block.vertical : block.horizontal;
+        if (neighbor != null && neighbor.rounded && neighbor.forward.dot(verticalOrHorizontal) != 0) {
+            return neighbor;
+        }
+        else {
+            return null;
+        }
+    };
+    PartMeshGenerator.prototype.getPerpendicularRoundedNeighborOrNull2 = function (block) {
+        var smallBlock = this.smallBlocks.get(block.smallBlockPosition);
+        if (smallBlock.perpendicularRoundedAdapter != null) {
+            return smallBlock.perpendicularRoundedAdapter.neighbor;
+        }
+        else {
+            return null;
+        }
+    };
+    PartMeshGenerator.prototype.preventMergingForPerpendicularRoundedBlock = function (block1, block2) {
+        if (!block1.rounded || !block2.rounded || !block1.isCenter) {
+            return false;
+        }
+        var neighbor1 = this.getPerpendicularRoundedNeighborOrNull(block1);
+        var neighbor2 = this.getPerpendicularRoundedNeighborOrNull(block2);
+        var inside1 = neighbor1 != null && block1.position.minus(neighbor1.position.times(3)).dot(neighbor1.vertical.plus(neighbor1.horizontal)) <= 0;
+        var inside2 = neighbor2 != null && block2.position.minus(neighbor2.position.times(3)).dot(neighbor2.vertical.plus(neighbor2.horizontal)) <= 0;
+        return inside1 != inside2 || (inside1 && inside2 && !neighbor1.position.equals(neighbor2.position));
     };
     PartMeshGenerator.prototype.mergeSimilarBlocks = function () {
         for (var _i = 0, _a = this.tinyBlocks.values(); _i < _a.length; _i++) {
@@ -356,7 +420,7 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             }
             var amount = 0;
             while (true) {
-                var pos = block.position.plus(block.forward().times(amount + 1));
+                var pos = block.position.plus(block.forward.times(amount + 1));
                 if (!this.tinyBlocks.containsKey(pos)) {
                     break;
                 }
@@ -366,10 +430,11 @@ var PartMeshGenerator = /** @class */ (function (_super) {
                     || nextBlock.type != block.type
                     || nextBlock.hasInterior != block.hasInterior
                     || nextBlock.rounded != block.rounded
-                    || this.isTinyBlock(block.position.plus(block.right())) != this.isTinyBlock(nextBlock.position.plus(block.right()))
-                    || this.isTinyBlock(block.position.minus(block.right())) != this.isTinyBlock(nextBlock.position.minus(block.right()))
-                    || this.isTinyBlock(block.position.plus(block.up())) != this.isTinyBlock(nextBlock.position.plus(block.up()))
-                    || this.isTinyBlock(block.position.minus(block.up())) != this.isTinyBlock(nextBlock.position.minus(block.up()))) {
+                    || this.isTinyBlock(block.position.plus(block.right)) != this.isTinyBlock(nextBlock.position.plus(block.right))
+                    || this.isTinyBlock(block.position.minus(block.right)) != this.isTinyBlock(nextBlock.position.minus(block.right))
+                    || this.isTinyBlock(block.position.plus(block.up)) != this.isTinyBlock(nextBlock.position.plus(block.up))
+                    || this.isTinyBlock(block.position.minus(block.up)) != this.isTinyBlock(nextBlock.position.minus(block.up))
+                    || this.preventMergingForPerpendicularRoundedBlock(this.tinyBlocks.get(block.position.plus(block.forward.times(amount))), nextBlock)) {
                     break;
                 }
                 amount += nextBlock.mergedBlocks;
@@ -382,37 +447,37 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         }
     };
     PartMeshGenerator.prototype.isSmallBlock = function (position) {
-        return this.smallBlocks.containsKey(position) && !this.smallBlocks.get(position).isAttachment();
+        return this.smallBlocks.containsKey(position) && !this.smallBlocks.get(position).isAttachment;
     };
     PartMeshGenerator.prototype.createTinyBlock = function (position, source) {
         this.tinyBlocks.set(position, new TinyBlock(position, source));
     };
     PartMeshGenerator.prototype.getNextBlock = function (block) {
-        return this.tinyBlocks.getOrNull(block.position.plus(block.forward().times(block.mergedBlocks)));
+        return this.tinyBlocks.getOrNull(block.position.plus(block.forward.times(block.mergedBlocks)));
     };
     PartMeshGenerator.prototype.getPreviousBlock = function (block) {
-        return this.tinyBlocks.getOrNull(block.position.minus(block.forward()));
+        return this.tinyBlocks.getOrNull(block.position.minus(block.forward));
     };
     PartMeshGenerator.prototype.hasOpenEnd = function (block) {
         var pos = block.position;
-        return !this.tinyBlocks.containsKey(pos.plus(block.forward().times(block.mergedBlocks)))
-            && !this.tinyBlocks.containsKey(pos.plus(block.forward().times(block.mergedBlocks)).minus(block.horizontal().times(3)))
-            && !this.tinyBlocks.containsKey(pos.plus(block.forward().times(block.mergedBlocks)).minus(block.vertical().times(3)))
-            && !this.tinyBlocks.containsKey(pos.plus(block.forward().times(block.mergedBlocks)).minus(block.horizontal().times(3)).minus(block.vertical().times(3)));
+        return !this.tinyBlocks.containsKey(pos.plus(block.forward.times(block.mergedBlocks)))
+            && !this.tinyBlocks.containsKey(pos.plus(block.forward.times(block.mergedBlocks)).minus(block.horizontal.times(3)))
+            && !this.tinyBlocks.containsKey(pos.plus(block.forward.times(block.mergedBlocks)).minus(block.vertical.times(3)))
+            && !this.tinyBlocks.containsKey(pos.plus(block.forward.times(block.mergedBlocks)).minus(block.horizontal.times(3)).minus(block.vertical.times(3)));
     };
     PartMeshGenerator.prototype.hasOpenStart = function (block) {
         var pos = block.position;
-        return !this.tinyBlocks.containsKey(pos.minus(block.forward()))
-            && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.horizontal().times(3)))
-            && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.vertical().times(3)))
-            && !this.tinyBlocks.containsKey(pos.minus(block.forward()).minus(block.horizontal().times(3)).minus(block.vertical().times(3)));
+        return !this.tinyBlocks.containsKey(pos.minus(block.forward))
+            && !this.tinyBlocks.containsKey(pos.minus(block.forward).minus(block.horizontal.times(3)))
+            && !this.tinyBlocks.containsKey(pos.minus(block.forward).minus(block.vertical.times(3)))
+            && !this.tinyBlocks.containsKey(pos.minus(block.forward).minus(block.horizontal.times(3)).minus(block.vertical.times(3)));
     };
     PartMeshGenerator.prototype.hideStartEndFaces = function (position, block, forward) {
-        var direction = forward ? block.forward() : block.forward().times(-1);
+        var direction = forward ? block.forward : block.forward.times(-1);
         this.hideFaceIfExists(position, direction);
-        this.hideFaceIfExists(position.minus(block.horizontal()), direction);
-        this.hideFaceIfExists(position.minus(block.vertical()), direction);
-        this.hideFaceIfExists(position.minus(block.vertical()).minus(block.horizontal()), direction);
+        this.hideFaceIfExists(position.minus(block.horizontal), direction);
+        this.hideFaceIfExists(position.minus(block.vertical), direction);
+        this.hideFaceIfExists(position.minus(block.vertical).minus(block.horizontal), direction);
     };
     PartMeshGenerator.prototype.hideFaceIfExists = function (position, direction) {
         if (this.tinyBlocks.containsKey(position)) {
@@ -420,18 +485,58 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         }
     };
     PartMeshGenerator.prototype.hideOutsideFaces = function (centerBlock) {
-        var vertical = centerBlock.vertical();
-        var horizontal = centerBlock.horizontal();
+        var vertical = centerBlock.vertical;
+        var horizontal = centerBlock.horizontal;
         centerBlock.hideFace(vertical);
         centerBlock.hideFace(horizontal);
         this.tinyBlocks.get(centerBlock.position.minus(vertical)).hideFace(horizontal);
         this.tinyBlocks.get(centerBlock.position.minus(horizontal)).hideFace(vertical);
     };
+    PartMeshGenerator.prototype.renderPerpendicularRoundedAdapters = function () {
+        for (var _i = 0, _a = this.smallBlocks.values(); _i < _a.length; _i++) {
+            var block = _a[_i];
+            if (block.perpendicularRoundedAdapter == null) {
+                continue;
+            }
+            var adapter = block.perpendicularRoundedAdapter;
+            var center = block.forward.times(this.tinyIndexToWorld(block.forward.dot(block.position) * 3 - (adapter.facesForward ? 0 : 1)))
+                .plus(block.right.times((block.position.dot(block.right) + (1 - block.localX)) * 0.5))
+                .plus(block.up.times((block.position.dot(block.up) + (1 - block.localY)) * 0.5));
+            var radius = 0.5 - this.measurements.edgeMargin;
+            var forward = block.forward;
+            for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
+                var angle1 = Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter;
+                var angle2 = Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter;
+                var sincos1 = 1 - (block.odd() == adapter.isVertical ? Math.sin(angle1) : Math.cos(angle1));
+                var sincos2 = 1 - (block.odd() == adapter.isVertical ? Math.sin(angle2) : Math.cos(angle2));
+                var vertex1 = center.plus(block.getOnCircle(angle1).times(radius)).plus(forward.times(adapter.facesForward ? 0 : radius));
+                var vertex2 = center.plus(block.getOnCircle(angle2).times(radius)).plus(forward.times(adapter.facesForward ? 0 : radius));
+                var vertex3 = vertex2.plus(forward.times(sincos2 * (adapter.facesForward ? 1 : -1) * radius));
+                var vertex4 = vertex1.plus(forward.times(sincos1 * (adapter.facesForward ? 1 : -1) * radius));
+                var normal1 = block.getOnCircle(angle1).times(adapter.facesForward ? 1 : -1);
+                var normal2 = block.getOnCircle(angle2).times(adapter.facesForward ? 1 : -1);
+                this.createQuadWithNormals(vertex1, vertex2, vertex3, vertex4, normal1, normal2, normal2, normal1, adapter.facesForward);
+                var invertAngle = ((adapter.isVertical ? block.localY : block.localX) != 1) != adapter.facesForward;
+                var vertex5 = vertex4.plus(adapter.directionToNeighbor.times(radius * sincos1));
+                var vertex6 = vertex3.plus(adapter.directionToNeighbor.times(radius * sincos2));
+                var normal3 = adapter.neighbor.getOnCircle(invertAngle ? angle1 : Math.PI / 2 - angle1).times(adapter.facesForward ? -1 : 1);
+                var normal4 = adapter.neighbor.getOnCircle(invertAngle ? angle2 : Math.PI / 2 - angle2).times(adapter.facesForward ? -1 : 1);
+                this.createQuadWithNormals(vertex5, vertex6, vertex3, vertex4, normal3, normal4, normal4, normal3, !adapter.facesForward);
+            }
+        }
+    };
+    PartMeshGenerator.prototype.isPerpendicularRoundedAdapter = function (block) {
+        if (block.perpendicularRoundedAdapter == null) {
+            return false;
+        }
+        var localForward = block.position.minus(block.perpendicularRoundedAdapter.sourceBlock.position.times(3)).dot(block.forward);
+        return localForward == 0 || (localForward > 0) == block.perpendicularRoundedAdapter.facesForward;
+    };
     PartMeshGenerator.prototype.renderTinyBlocks = function () {
         var blockSizeWithoutMargin = 0.5 - this.measurements.edgeMargin;
         for (var _i = 0, _a = this.tinyBlocks.values(); _i < _a.length; _i++) {
             var block = _a[_i];
-            if (block.merged || !block.isCenter() || block.isAttachment()) {
+            if (block.merged || !block.isCenter || block.isAttachment) {
                 continue;
             }
             var nextBlock = this.getNextBlock(block);
@@ -442,7 +547,7 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             // Back cap
             if (nextBlock == null && (block.rounded || block.hasInterior)) {
                 this.createCircleWithHole(block, block.hasInterior && hasOpenEnd ? this.measurements.interiorRadius : 0, blockSizeWithoutMargin, distance, false, !block.rounded);
-                this.hideStartEndFaces(block.position.plus(block.forward().times(block.mergedBlocks - 1)), block, true);
+                this.hideStartEndFaces(block.position.plus(block.forward.times(block.mergedBlocks - 1)), block, true);
             }
             // Front cap
             if (previousBlock == null && (block.rounded || block.hasInterior)) {
@@ -450,10 +555,12 @@ var PartMeshGenerator = /** @class */ (function (_super) {
                 this.hideStartEndFaces(block.position, block, false);
             }
             if (block.rounded) {
+                if (!this.isPerpendicularRoundedAdapter(block)) {
+                    this.createCylinder(block, 0, blockSizeWithoutMargin, distance);
+                }
                 // Rounded corners
-                this.createCylinder(block, 0, blockSizeWithoutMargin, distance);
                 for (var i = 0; i < block.mergedBlocks; i++) {
-                    this.hideOutsideFaces(this.tinyBlocks.get(block.position.plus(block.forward().times(i))));
+                    this.hideOutsideFaces(this.tinyBlocks.get(block.position.plus(block.forward.times(i))));
                 }
                 // Rounded to non rounded adapter
                 if (nextBlock != null && !nextBlock.rounded) {
@@ -477,7 +584,7 @@ var PartMeshGenerator = /** @class */ (function (_super) {
     PartMeshGenerator.prototype.renderAttachments = function () {
         for (var _i = 0, _a = this.tinyBlocks.values(); _i < _a.length; _i++) {
             var block = _a[_i];
-            if (block.merged || !block.isCenter()) {
+            if (block.merged || !block.isCenter) {
                 continue;
             }
             switch (block.type) {
@@ -490,14 +597,14 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         }
     };
     PartMeshGenerator.prototype.renderLip = function (block, zOffset) {
-        var center = block.getCylinderOrigin(this).plus(block.forward().times(zOffset));
+        var center = block.getCylinderOrigin(this).plus(block.forward.times(zOffset));
         for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
             var out1 = block.getOnCircle(i / 2 * Math.PI / this.measurements.subdivisionsPerQuarter);
             var out2 = block.getOnCircle((i + 1) / 2 * Math.PI / this.measurements.subdivisionsPerQuarter);
             for (var j = 0; j < this.measurements.lipSubdivisions; j++) {
                 var angleJ = j * Math.PI / this.measurements.lipSubdivisions;
                 var angleJ2 = (j + 1) * Math.PI / this.measurements.lipSubdivisions;
-                this.createQuadWithNormals(center.plus(out1.times(this.measurements.pinRadius)).plus(out1.times(Math.sin(angleJ) * this.measurements.pinLipRadius).plus(block.forward().times(Math.cos(angleJ) * this.measurements.pinLipRadius))), center.plus(out2.times(this.measurements.pinRadius)).plus(out2.times(Math.sin(angleJ) * this.measurements.pinLipRadius).plus(block.forward().times(Math.cos(angleJ) * this.measurements.pinLipRadius))), center.plus(out2.times(this.measurements.pinRadius)).plus(out2.times(Math.sin(angleJ2) * this.measurements.pinLipRadius).plus(block.forward().times(Math.cos(angleJ2) * this.measurements.pinLipRadius))), center.plus(out1.times(this.measurements.pinRadius)).plus(out1.times(Math.sin(angleJ2) * this.measurements.pinLipRadius).plus(block.forward().times(Math.cos(angleJ2) * this.measurements.pinLipRadius))), out1.times(-Math.sin(angleJ)).plus(block.forward().times(-Math.cos(angleJ))), out2.times(-Math.sin(angleJ)).plus(block.forward().times(-Math.cos(angleJ))), out2.times(-Math.sin(angleJ2)).plus(block.forward().times(-Math.cos(angleJ2))), out1.times(-Math.sin(angleJ2)).plus(block.forward().times(-Math.cos(angleJ2))));
+                this.createQuadWithNormals(center.plus(out1.times(this.measurements.pinRadius)).plus(out1.times(Math.sin(angleJ) * this.measurements.pinLipRadius).plus(block.forward.times(Math.cos(angleJ) * this.measurements.pinLipRadius))), center.plus(out2.times(this.measurements.pinRadius)).plus(out2.times(Math.sin(angleJ) * this.measurements.pinLipRadius).plus(block.forward.times(Math.cos(angleJ) * this.measurements.pinLipRadius))), center.plus(out2.times(this.measurements.pinRadius)).plus(out2.times(Math.sin(angleJ2) * this.measurements.pinLipRadius).plus(block.forward.times(Math.cos(angleJ2) * this.measurements.pinLipRadius))), center.plus(out1.times(this.measurements.pinRadius)).plus(out1.times(Math.sin(angleJ2) * this.measurements.pinLipRadius).plus(block.forward.times(Math.cos(angleJ2) * this.measurements.pinLipRadius))), out1.times(-Math.sin(angleJ)).plus(block.forward.times(-Math.cos(angleJ))), out2.times(-Math.sin(angleJ)).plus(block.forward.times(-Math.cos(angleJ))), out2.times(-Math.sin(angleJ2)).plus(block.forward.times(-Math.cos(angleJ2))), out1.times(-Math.sin(angleJ2)).plus(block.forward.times(-Math.cos(angleJ2))));
             }
         }
     };
@@ -522,11 +629,11 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             this.createCircle(block, this.measurements.pinRadius, 0);
             this.renderLip(block, this.measurements.pinLipRadius);
         }
-        if (nextBlock != null && !nextBlock.isAttachment()) {
+        if (nextBlock != null && !nextBlock.isAttachment) {
             this.createCircleWithHole(block, this.measurements.pinRadius, 0.5 - this.measurements.edgeMargin, distance, true, !nextBlock.rounded);
             this.hideStartEndFaces(nextBlock.position, block, false);
         }
-        if (previousBlock != null && !previousBlock.isAttachment()) {
+        if (previousBlock != null && !previousBlock.isAttachment) {
             this.createCircleWithHole(block, this.measurements.pinRadius, 0.5 - this.measurements.edgeMargin, 0, false, !previousBlock.rounded);
             this.hideStartEndFaces(previousBlock.position, block, true);
         }
@@ -543,11 +650,11 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         var nextBlock = this.getNextBlock(block);
         var previousBlock = this.getPreviousBlock(block);
         var start = block.getCylinderOrigin(this);
-        var end = start.plus(block.forward().times(block.getDepth(this)));
-        var horizontalInner = block.horizontal().times(this.measurements.axleSizeInner);
-        var horizontalOuter = block.horizontal().times(this.measurements.axleSizeOuter);
-        var verticalInner = block.vertical().times(this.measurements.axleSizeInner);
-        var verticalOuter = block.vertical().times(this.measurements.axleSizeOuter);
+        var end = start.plus(block.forward.times(block.getDepth(this)));
+        var horizontalInner = block.horizontal.times(this.measurements.axleSizeInner);
+        var horizontalOuter = block.horizontal.times(this.measurements.axleSizeOuter);
+        var verticalInner = block.vertical.times(this.measurements.axleSizeInner);
+        var verticalOuter = block.vertical.times(this.measurements.axleSizeOuter);
         this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(horizontalInner).plus(verticalOuter), end.plus(horizontalInner).plus(verticalOuter), end.plus(horizontalInner).plus(verticalInner), block.odd());
         this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(horizontalOuter).plus(verticalInner), end.plus(horizontalOuter).plus(verticalInner), end.plus(horizontalInner).plus(verticalInner), !block.odd());
         this.createQuad(end.plus(horizontalOuter), start.plus(horizontalOuter), start.plus(horizontalOuter).plus(verticalInner), end.plus(horizontalOuter).plus(verticalInner), block.odd());
@@ -564,14 +671,14 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         }
         var blockSizeWithoutMargin = 0.5 - this.measurements.edgeMargin;
         if (nextBlock != null && nextBlock.type != block.type && !nextBlock.rounded) {
-            this.createQuad(end.plus(block.horizontal().times(blockSizeWithoutMargin)), end.plus(horizontalOuter), end.plus(horizontalOuter).plus(verticalInner), end.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(verticalInner), block.odd());
-            this.createQuad(end.plus(block.vertical().times(blockSizeWithoutMargin)), end.plus(verticalOuter), end.plus(verticalOuter).plus(horizontalInner), end.plus(block.vertical().times(blockSizeWithoutMargin)).plus(horizontalInner), !block.odd());
-            this.createQuad(end.plus(horizontalInner).plus(verticalInner), end.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(verticalInner), end.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(block.vertical().times(blockSizeWithoutMargin)), end.plus(horizontalInner).plus(block.vertical().times(blockSizeWithoutMargin)), !block.odd());
+            this.createQuad(end.plus(block.horizontal.times(blockSizeWithoutMargin)), end.plus(horizontalOuter), end.plus(horizontalOuter).plus(verticalInner), end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), block.odd());
+            this.createQuad(end.plus(block.vertical.times(blockSizeWithoutMargin)), end.plus(verticalOuter), end.plus(verticalOuter).plus(horizontalInner), end.plus(block.vertical.times(blockSizeWithoutMargin)).plus(horizontalInner), !block.odd());
+            this.createQuad(end.plus(horizontalInner).plus(verticalInner), end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(block.vertical.times(blockSizeWithoutMargin)), end.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), !block.odd());
         }
         if (previousBlock != null && previousBlock.type != block.type && !previousBlock.rounded) {
-            this.createQuad(start.plus(block.horizontal().times(blockSizeWithoutMargin)), start.plus(horizontalOuter), start.plus(horizontalOuter).plus(verticalInner), start.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(verticalInner), !block.odd());
-            this.createQuad(start.plus(block.vertical().times(blockSizeWithoutMargin)), start.plus(verticalOuter), start.plus(verticalOuter).plus(horizontalInner), start.plus(block.vertical().times(blockSizeWithoutMargin)).plus(horizontalInner), block.odd());
-            this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(verticalInner), start.plus(block.horizontal().times(blockSizeWithoutMargin)).plus(block.vertical().times(blockSizeWithoutMargin)), start.plus(horizontalInner).plus(block.vertical().times(blockSizeWithoutMargin)), block.odd());
+            this.createQuad(start.plus(block.horizontal.times(blockSizeWithoutMargin)), start.plus(horizontalOuter), start.plus(horizontalOuter).plus(verticalInner), start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), !block.odd());
+            this.createQuad(start.plus(block.vertical.times(blockSizeWithoutMargin)), start.plus(verticalOuter), start.plus(verticalOuter).plus(horizontalInner), start.plus(block.vertical.times(blockSizeWithoutMargin)).plus(horizontalInner), block.odd());
+            this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(block.vertical.times(blockSizeWithoutMargin)), start.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), block.odd());
         }
         if (nextBlock != null && nextBlock.type != block.type && nextBlock.rounded) {
             this.createAxleToCircleAdapter(end, block, nextBlock.type == BlockType.Pin ? this.measurements.axlePinAdapterRadius : blockSizeWithoutMargin);
@@ -579,19 +686,19 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         if (previousBlock != null && previousBlock.type != block.type && previousBlock.rounded) {
             this.createAxleToCircleAdapter(start, block, previousBlock.type == BlockType.Pin ? this.measurements.axlePinAdapterRadius : blockSizeWithoutMargin, true);
         }
-        if (nextBlock != null && !nextBlock.isAttachment()) {
+        if (nextBlock != null && !nextBlock.isAttachment) {
             this.hideStartEndFaces(nextBlock.position, block, false);
         }
-        if (previousBlock != null && !previousBlock.isAttachment()) {
+        if (previousBlock != null && !previousBlock.isAttachment) {
             this.hideStartEndFaces(previousBlock.position, block, true);
         }
     };
     PartMeshGenerator.prototype.createAxleToCircleAdapter = function (center, block, radius, flipped) {
         if (flipped === void 0) { flipped = false; }
-        var horizontalInner = block.horizontal().times(this.measurements.axleSizeInner);
-        var horizontalOuter = block.horizontal().times(this.measurements.axleSizeOuter);
-        var verticalInner = block.vertical().times(this.measurements.axleSizeInner);
-        var verticalOuter = block.vertical().times(this.measurements.axleSizeOuter);
+        var horizontalInner = block.horizontal.times(this.measurements.axleSizeInner);
+        var horizontalOuter = block.horizontal.times(this.measurements.axleSizeOuter);
+        var verticalInner = block.vertical.times(this.measurements.axleSizeInner);
+        var verticalOuter = block.vertical.times(this.measurements.axleSizeOuter);
         for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
             var focus = center.copy();
             if (i < this.measurements.subdivisionsPerQuarter / 2 == !block.odd()) {
@@ -602,8 +709,8 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             }
             this.triangles.push(new Triangle(focus, center.plus(block.getOnCircle(Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter, radius)), center.plus(block.getOnCircle(Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter, radius)), flipped));
         }
-        this.triangles.push(new Triangle(center.plus(horizontalInner).plus(verticalOuter), center.plus(verticalOuter), center.plus(block.vertical().times(radius)), block.odd() != flipped));
-        this.triangles.push(new Triangle(center.plus(verticalInner).plus(horizontalOuter), center.plus(horizontalOuter), center.plus(block.horizontal().times(radius)), block.odd() == flipped));
+        this.triangles.push(new Triangle(center.plus(horizontalInner).plus(verticalOuter), center.plus(verticalOuter), center.plus(block.vertical.times(radius)), block.odd() != flipped));
+        this.triangles.push(new Triangle(center.plus(verticalInner).plus(horizontalOuter), center.plus(horizontalOuter), center.plus(block.horizontal.times(radius)), block.odd() == flipped));
         this.createQuad(center.plus(verticalInner).plus(horizontalInner), center.plus(verticalOuter).plus(horizontalInner), center.plus(block.getOnCircle(45 * DEG_TO_RAD, radius)), center.plus(verticalInner).plus(horizontalOuter), block.odd() != flipped);
     };
     PartMeshGenerator.prototype.showInteriorCap = function (currentBlock, neighbor) {
@@ -661,14 +768,14 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         var showInteriorStartCap = this.showInteriorCap(block, previousBlock) || (previousBlock == null && !hasOpenStart);
         var distance = block.getDepth(this);
         var holeSize = this.measurements.axleHoleSize;
-        var start = block.getCylinderOrigin(this).plus(showInteriorStartCap ? block.forward().times(this.measurements.interiorEndMargin) : Vector3.zero());
-        var end = start.plus(block.forward().times(distance - (showInteriorStartCap ? this.measurements.interiorEndMargin : 0) - (showInteriorEndCap ? this.measurements.interiorEndMargin : 0)));
+        var start = block.getCylinderOrigin(this).plus(showInteriorStartCap ? block.forward.times(this.measurements.interiorEndMargin) : Vector3.zero());
+        var end = start.plus(block.forward.times(distance - (showInteriorStartCap ? this.measurements.interiorEndMargin : 0) - (showInteriorEndCap ? this.measurements.interiorEndMargin : 0)));
         var axleWingAngle = Math.asin(holeSize / this.measurements.pinHoleRadius);
         var axleWingAngle2 = 90 * DEG_TO_RAD - axleWingAngle;
         var subdivAngle = 90 / this.measurements.subdivisionsPerQuarter * DEG_TO_RAD;
         var adjustedRadius = this.measurements.pinHoleRadius * Math.cos(subdivAngle / 2) / Math.cos(subdivAngle / 2 - (axleWingAngle - Math.floor(axleWingAngle / subdivAngle) * subdivAngle));
-        this.createQuad(start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)), start.plus(block.getOnCircle(axleWingAngle, adjustedRadius)), end.plus(block.getOnCircle(axleWingAngle, adjustedRadius)), end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)), true);
-        this.createQuad(start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)), start.plus(block.getOnCircle(axleWingAngle2, adjustedRadius)), end.plus(block.getOnCircle(axleWingAngle2, adjustedRadius)), end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)), false);
+        this.createQuad(start.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)), start.plus(block.getOnCircle(axleWingAngle, adjustedRadius)), end.plus(block.getOnCircle(axleWingAngle, adjustedRadius)), end.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)), true);
+        this.createQuad(start.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)), start.plus(block.getOnCircle(axleWingAngle2, adjustedRadius)), end.plus(block.getOnCircle(axleWingAngle2, adjustedRadius)), end.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)), false);
         for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
             var angle1 = lerp(0, 90, i / this.measurements.subdivisionsPerQuarter) * DEG_TO_RAD;
             var angle2 = lerp(0, 90, (i + 1) / this.measurements.subdivisionsPerQuarter) * DEG_TO_RAD;
@@ -701,12 +808,12 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             // Outside caps
             if (hasOpenStart || (previousBlock != null && previousBlock.type == BlockType.PinHole && !showInteriorStartCap)) {
                 if (angle2 > axleWingAngle && angle1 < axleWingAngle2) {
-                    this.triangles.push(new Triangle(start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)), start.plus(block.getOnCircle(startAngleOutside, radius1Outside)), start.plus(block.getOnCircle(endAngleOutside, radius2Outside))));
+                    this.triangles.push(new Triangle(start.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)), start.plus(block.getOnCircle(startAngleOutside, radius1Outside)), start.plus(block.getOnCircle(endAngleOutside, radius2Outside))));
                 }
             }
             if (hasOpenEnd || (nextBlock != null && nextBlock.type == BlockType.PinHole && !showInteriorEndCap)) {
                 if (angle2 > axleWingAngle && angle1 < axleWingAngle2) {
-                    this.triangles.push(new Triangle(end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)), end.plus(block.getOnCircle(endAngleOutside, radius2Outside)), end.plus(block.getOnCircle(startAngleOutside, radius1Outside))));
+                    this.triangles.push(new Triangle(end.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)), end.plus(block.getOnCircle(endAngleOutside, radius2Outside)), end.plus(block.getOnCircle(startAngleOutside, radius1Outside))));
                 }
             }
             // Inside caps
@@ -724,19 +831,19 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             this.createCircleWithHole(block, this.measurements.pinHoleRadius, this.measurements.interiorRadius, 0, true);
         }
         if (showInteriorEndCap) {
-            this.triangles.push(new Triangle(end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)), end, end.plus(block.getOnCircle(axleWingAngle, adjustedRadius))));
-            this.triangles.push(new Triangle(end, end.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)), end.plus(block.getOnCircle(axleWingAngle2, adjustedRadius))));
+            this.triangles.push(new Triangle(end.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)), end, end.plus(block.getOnCircle(axleWingAngle, adjustedRadius))));
+            this.triangles.push(new Triangle(end, end.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)), end.plus(block.getOnCircle(axleWingAngle2, adjustedRadius))));
         }
         if (showInteriorStartCap) {
-            this.triangles.push(new Triangle(start, start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)), start.plus(block.getOnCircle(axleWingAngle, adjustedRadius))));
-            this.triangles.push(new Triangle(start.plus(block.horizontal().times(holeSize)).plus(block.vertical().times(holeSize)), start, start.plus(block.getOnCircle(axleWingAngle2, adjustedRadius))));
+            this.triangles.push(new Triangle(start, start.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)), start.plus(block.getOnCircle(axleWingAngle, adjustedRadius))));
+            this.triangles.push(new Triangle(start.plus(block.horizontal.times(holeSize)).plus(block.vertical.times(holeSize)), start, start.plus(block.getOnCircle(axleWingAngle2, adjustedRadius))));
         }
     };
     PartMeshGenerator.prototype.isFaceVisible = function (position, direction) {
         var block = this.tinyBlocks.getOrNull(position);
         return block != null
             && !this.isTinyBlock(block.position.plus(direction))
-            && !block.isAttachment()
+            && !block.isAttachment
             && block.isFaceVisible(direction);
     };
     PartMeshGenerator.prototype.createTinyFace = function (position, size, direction) {
@@ -1170,7 +1277,7 @@ var Editor = /** @class */ (function () {
     Editor.prototype.remove = function () {
         this.part.clearBlock(this.handles.getSelectedBlock(), this.editorState.orientation);
         if (this.createFullSizedBlocks) {
-            this.part.clearBlock(this.handles.getSelectedBlock().plus(forward(this.editorState.orientation)), this.editorState.orientation);
+            this.part.clearBlock(this.handles.getSelectedBlock().plus(this.editorState.forward), this.editorState.orientation);
         }
         this.updateMesh();
     };
@@ -1203,7 +1310,7 @@ var Editor = /** @class */ (function () {
     Editor.prototype.updateBlock = function () {
         this.part.placeBlockForced(this.handles.getSelectedBlock(), new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
         if (this.createFullSizedBlocks) {
-            this.part.placeBlockForced(this.handles.getSelectedBlock().plus(forward(this.editorState.orientation)), new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
+            this.part.placeBlockForced(this.handles.getSelectedBlock().plus(this.editorState.forward), new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
         }
         this.updateMesh();
     };
@@ -1355,7 +1462,7 @@ var Handles = /** @class */ (function () {
             return this.block.plus(Vector3.one()).times(0.5);
         }
         else {
-            return this.block.plus(Vector3.one()).times(0.5).minus(forward(this.orientation).times(0.25));
+            return this.block.plus(Vector3.one()).times(0.5).minus(FORWARD[this.orientation].times(0.25));
         }
     };
     Handles.prototype.getBlock = function (worldPosition) {
@@ -1363,7 +1470,7 @@ var Handles = /** @class */ (function () {
             return worldPosition.times(2).minus(Vector3.one().times(0.5)).floor();
         }
         else {
-            return worldPosition.times(2).minus(Vector3.one().minus(forward(this.orientation)).times(0.5)).floor();
+            return worldPosition.times(2).minus(Vector3.one().minus(FORWARD[this.orientation]).times(0.5)).floor();
         }
     };
     Handles.prototype.render = function (camera) {
@@ -1511,7 +1618,7 @@ var Handles = /** @class */ (function () {
         var targetPosition = this.getBlockCenter(this.block);
         var targetSize = Vector3.one();
         if (!this.fullSize) {
-            targetSize = targetSize.minus(forward(this.orientation).times(0.5));
+            targetSize = targetSize.minus(FORWARD[this.orientation].times(0.5));
         }
         if (!animate) {
             this.position = targetPosition;
@@ -2115,16 +2222,10 @@ var Block = /** @class */ (function () {
         this.orientation = orientation;
         this.type = type;
         this.rounded = rounded;
+        this.right = RIGHT[this.orientation];
+        this.up = UP[this.orientation];
+        this.forward = FORWARD[this.orientation];
     }
-    Block.prototype.right = function () {
-        return right(this.orientation);
-    };
-    Block.prototype.up = function () {
-        return up(this.orientation);
-    };
-    Block.prototype.forward = function () {
-        return forward(this.orientation);
-    };
     return Block;
 }());
 ///<reference path="../geometry/Vector3.ts" />
@@ -2149,10 +2250,10 @@ var Part = /** @class */ (function () {
             var block = this.blocks.get(position);
             for (var _b = 0, CUBE_1 = CUBE; _b < CUBE_1.length; _b++) {
                 var local = CUBE_1[_b];
-                if (block.forward().dot(local) == 1) {
+                if (block.forward.dot(local) == 1) {
                     continue;
                 }
-                result.set(position.plus(local), SmallBlock.createFromLocalCoordinates(block.right().dot(local), block.up().dot(local), position.plus(local), block));
+                result.set(position.plus(local), SmallBlock.createFromLocalCoordinates(block.right.dot(local), block.up.dot(local), position.plus(local), block));
             }
         }
         return result;
@@ -2164,7 +2265,7 @@ var Part = /** @class */ (function () {
                 continue;
             }
             var block = this.blocks.get(position.minus(local));
-            if (block.forward().dot(local) == 1) {
+            if (block.forward.dot(local) == 1) {
                 return false;
             }
         }
@@ -2177,7 +2278,7 @@ var Part = /** @class */ (function () {
                 continue;
             }
             var block = this.blocks.get(position.minus(local));
-            if (block.forward().dot(local) != 1) {
+            if (block.forward.dot(local) != 1) {
                 this.blocks.remove(position.minus(local));
             }
         }
@@ -2185,7 +2286,7 @@ var Part = /** @class */ (function () {
     Part.prototype.clearBlock = function (position, orientation) {
         for (var _i = 0, CUBE_4 = CUBE; _i < CUBE_4.length; _i++) {
             var local = CUBE_4[_i];
-            if (forward(orientation).dot(local) != 1) {
+            if (FORWARD[orientation].dot(local) != 1) {
                 this.clearSingle(position.plus(local));
             }
         }
@@ -2193,7 +2294,7 @@ var Part = /** @class */ (function () {
     Part.prototype.isBlockPlaceable = function (position, orientation, doubleSize) {
         for (var _i = 0, CUBE_5 = CUBE; _i < CUBE_5.length; _i++) {
             var local = CUBE_5[_i];
-            if (!doubleSize && forward(orientation).dot(local) == 1) {
+            if (!doubleSize && FORWARD[orientation].dot(local) == 1) {
                 continue;
             }
             if (!this.isSmallBlockFree(position.plus(local))) {
@@ -2217,7 +2318,7 @@ var Part = /** @class */ (function () {
             this.placeBlockForced(position, block);
             if (createFullSizeBlocks) {
                 var block2 = new Block(orientation, type, true);
-                this.placeBlockForced(position.plus(forward(orientation)), block2);
+                this.placeBlockForced(position.plus(FORWARD[orientation]), block2);
             }
         }
     };
@@ -2261,31 +2362,36 @@ var Part = /** @class */ (function () {
         return part;
     };
     Part.prototype.getBoundingBox = function () {
-        var min = this.blocks.keys()[0].copy();
-        var max = min.copy();
+        var defaultPosition = this.blocks.keys()[0];
+        var minX = defaultPosition.x;
+        var minY = defaultPosition.y;
+        var minZ = defaultPosition.z;
+        var maxX = defaultPosition.x;
+        var maxY = defaultPosition.y;
+        var maxZ = defaultPosition.z;
         for (var _i = 0, _a = this.blocks.keys(); _i < _a.length; _i++) {
             var position = _a[_i];
-            var forward = this.blocks.get(position).forward();
-            if (position.x < min.x) {
-                min.x = position.x;
+            var forward = this.blocks.get(position).forward;
+            if (position.x < minX) {
+                minX = position.x;
             }
-            if (position.y < min.y) {
-                min.y = position.y;
+            if (position.y < minY) {
+                minY = position.y;
             }
-            if (position.z < min.z) {
-                min.z = position.z;
+            if (position.z < minZ) {
+                minZ = position.z;
             }
-            if (position.x + (1.0 - forward.x) > max.x) {
-                max.x = position.x + (1.0 - forward.x);
+            if (position.x + (1.0 - forward.x) > maxX) {
+                maxX = position.x + (1.0 - forward.x);
             }
-            if (position.y + (1.0 - forward.y) > max.y) {
-                max.y = position.y + (1.0 - forward.y);
+            if (position.y + (1.0 - forward.y) > maxY) {
+                maxY = position.y + (1.0 - forward.y);
             }
-            if (position.z + (1.0 - forward.z) > max.z) {
-                max.z = position.z + (1.0 - forward.z);
+            if (position.z + (1.0 - forward.z) > maxZ) {
+                maxZ = position.z + (1.0 - forward.z);
             }
         }
-        return [min, max];
+        return [new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ)];
     };
     Part.prototype.getCenter = function () {
         if (!this.blocks.any()) {
@@ -2304,41 +2410,33 @@ var Part = /** @class */ (function () {
     };
     return Part;
 }());
+var PerpendicularRoundedAdapter = /** @class */ (function () {
+    function PerpendicularRoundedAdapter() {
+    }
+    return PerpendicularRoundedAdapter;
+}());
 var SmallBlock = /** @class */ (function (_super) {
     __extends(SmallBlock, _super);
     function SmallBlock(quadrant, positon, source) {
         var _this = _super.call(this, source.orientation, source.type, source.rounded) || this;
+        _this.perpendicularRoundedAdapter = null;
         _this.quadrant = quadrant;
         _this.position = positon;
         _this.hasInterior = source.type != BlockType.Solid;
+        _this.localX = localX(_this.quadrant);
+        _this.localY = localY(_this.quadrant);
+        _this.directionX = _this.localX == 1 ? 1 : -1;
+        _this.directionY = _this.localY == 1 ? 1 : -1;
+        _this.horizontal = _this.right.times(_this.directionX);
+        _this.vertical = _this.up.times(_this.directionY);
+        _this.isAttachment = _this.type == BlockType.Pin || _this.type == BlockType.Axle;
         return _this;
     }
     SmallBlock.createFromLocalCoordinates = function (localX, localY, position, source) {
         return new SmallBlock(SmallBlock.getQuadrantFromLocal(localX, localY), position, source);
     };
-    SmallBlock.prototype.localX = function () {
-        return localX(this.quadrant);
-    };
-    SmallBlock.prototype.localY = function () {
-        return localY(this.quadrant);
-    };
-    SmallBlock.prototype.directionX = function () {
-        return this.localX() == 1 ? 1 : -1;
-    };
-    SmallBlock.prototype.directionY = function () {
-        return this.localY() == 1 ? 1 : -1;
-    };
     SmallBlock.prototype.odd = function () {
         return this.quadrant == Quadrant.BottomRight || this.quadrant == Quadrant.TopLeft;
-    };
-    SmallBlock.prototype.horizontal = function () {
-        return this.right().times(this.directionX());
-    };
-    SmallBlock.prototype.vertical = function () {
-        return this.up().times(this.directionY());
-    };
-    SmallBlock.prototype.isAttachment = function () {
-        return this.type == BlockType.Pin || this.type == BlockType.Axle;
     };
     SmallBlock.getQuadrantFromLocal = function (x, y) {
         if (x == 0) {
@@ -2360,7 +2458,7 @@ var SmallBlock = /** @class */ (function (_super) {
     };
     SmallBlock.prototype.getOnCircle = function (angle, radius) {
         if (radius === void 0) { radius = 1; }
-        return this.right().times(Math.sin(angle + getAngle(this.quadrant)) * radius).plus(this.up().times(Math.cos(angle + getAngle(this.quadrant)) * radius));
+        return this.right.times(Math.sin(angle + getAngle(this.quadrant)) * radius).plus(this.up.times(Math.cos(angle + getAngle(this.quadrant)) * radius));
     };
     return SmallBlock;
 }(Block));
@@ -2372,29 +2470,20 @@ var TinyBlock = /** @class */ (function (_super) {
         _this.merged = false;
         _this.visibleFaces = null;
         _this.visibleFaces = [true, true, true, true, true, true];
+        _this.perpendicularRoundedAdapter = source.perpendicularRoundedAdapter;
+        _this.angle = getAngle(_this.quadrant);
+        _this.smallBlockPosition = new Vector3(Math.floor((position.x + 1) / 3), Math.floor((position.y + 1) / 3), Math.floor((position.z + 1) / 3));
+        var localPosition = position.minus(_this.smallBlockPosition.times(3));
+        _this.isCenter = localPosition.dot(_this.up) == 0 && localPosition.dot(_this.right) == 0;
         return _this;
     }
-    TinyBlock.prototype.angle = function () {
-        return getAngle(this.quadrant);
-    };
-    TinyBlock.prototype.smallBlockPosition = function () {
-        return new Vector3(Math.floor((this.position.x + 1) / 3), Math.floor((this.position.y + 1) / 3), Math.floor((this.position.z + 1) / 3));
-    };
-    TinyBlock.prototype.localPositon = function () {
-        return this.position.minus(this.smallBlockPosition().times(3));
-    };
-    // Returns true if this tiny block is not inside the margin on the right and up axes
-    // Being insdide the margin along the forward axis is ok.
-    TinyBlock.prototype.isCenter = function () {
-        return this.localPositon().dot(this.up()) == 0 && this.localPositon().dot(this.right()) == 0;
-    };
     TinyBlock.prototype.getCylinderOrigin = function (meshGenerator) {
-        return this.forward().times(meshGenerator.tinyIndexToWorld(this.forward().dot(this.position)))
-            .plus(this.right().times((this.smallBlockPosition().dot(this.right()) + (1 - this.localX())) * 0.5))
-            .plus(this.up().times((this.smallBlockPosition().dot(this.up()) + (1 - this.localY())) * 0.5));
+        return this.forward.times(meshGenerator.tinyIndexToWorld(this.forward.dot(this.position)))
+            .plus(this.right.times((this.smallBlockPosition.dot(this.right) + (1 - this.localX)) * 0.5))
+            .plus(this.up.times((this.smallBlockPosition.dot(this.up) + (1 - this.localY)) * 0.5));
     };
     TinyBlock.prototype.getDepth = function (meshGenerator) {
-        return meshGenerator.tinyIndexToWorld(this.forward().dot(this.position) + this.mergedBlocks) - meshGenerator.tinyIndexToWorld(this.forward().dot(this.position));
+        return meshGenerator.tinyIndexToWorld(this.forward.dot(this.position) + this.mergedBlocks) - meshGenerator.tinyIndexToWorld(this.forward.dot(this.position));
     };
     TinyBlock.prototype.isFaceVisible = function (direction) {
         if (direction.x > 0 && direction.y == 0 && direction.z == 0) {
@@ -2475,48 +2564,21 @@ var ORIENTATION = {
     "y": Orientation.Y,
     "z": Orientation.Z
 };
-function forward(orientation) {
-    switch (orientation) {
-        case Orientation.X: {
-            return new Vector3(1, 0, 0);
-        }
-        case Orientation.Y: {
-            return new Vector3(0, 1, 0);
-        }
-        case Orientation.Z: {
-            return new Vector3(0, 0, 1);
-        }
-    }
-    throw new Error("Unknown orientation: " + orientation);
-}
-function right(orientation) {
-    switch (orientation) {
-        case Orientation.X: {
-            return new Vector3(0, 1, 0);
-        }
-        case Orientation.Y: {
-            return new Vector3(0, 0, 1);
-        }
-        case Orientation.Z: {
-            return new Vector3(1, 0, 0);
-        }
-    }
-    throw new Error("Unknown orientation: " + orientation);
-}
-function up(orientation) {
-    switch (orientation) {
-        case Orientation.X: {
-            return new Vector3(0, 0, 1);
-        }
-        case Orientation.Y: {
-            return new Vector3(1, 0, 0);
-        }
-        case Orientation.Z: {
-            return new Vector3(0, 1, 0);
-        }
-    }
-    throw new Error("Unknown orientation: " + orientation);
-}
+var FORWARD = {
+    0: new Vector3(1, 0, 0),
+    1: new Vector3(0, 1, 0),
+    2: new Vector3(0, 0, 1)
+};
+var RIGHT = {
+    0: new Vector3(0, 1, 0),
+    1: new Vector3(0, 0, 1),
+    2: new Vector3(1, 0, 0)
+};
+var UP = {
+    0: new Vector3(0, 0, 1),
+    1: new Vector3(1, 0, 0),
+    2: new Vector3(0, 1, 0)
+};
 var Quadrant;
 (function (Quadrant) {
     Quadrant[Quadrant["TopLeft"] = 0] = "TopLeft";

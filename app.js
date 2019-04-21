@@ -655,30 +655,31 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         var horizontalOuter = block.horizontal.times(this.measurements.axleSizeOuter);
         var verticalInner = block.vertical.times(this.measurements.axleSizeInner);
         var verticalOuter = block.vertical.times(this.measurements.axleSizeOuter);
-        this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(horizontalInner).plus(verticalOuter), end.plus(horizontalInner).plus(verticalOuter), end.plus(horizontalInner).plus(verticalInner), block.odd());
-        this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(horizontalOuter).plus(verticalInner), end.plus(horizontalOuter).plus(verticalInner), end.plus(horizontalInner).plus(verticalInner), !block.odd());
-        this.createQuad(end.plus(horizontalOuter), start.plus(horizontalOuter), start.plus(horizontalOuter).plus(verticalInner), end.plus(horizontalOuter).plus(verticalInner), block.odd());
-        this.createQuad(end.plus(verticalOuter), start.plus(verticalOuter), start.plus(verticalOuter).plus(horizontalInner), end.plus(verticalOuter).plus(horizontalInner), !block.odd());
+        var odd = block.odd();
+        this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(horizontalInner).plus(verticalOuter), end.plus(horizontalInner).plus(verticalOuter), end.plus(horizontalInner).plus(verticalInner), odd);
+        this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(horizontalOuter).plus(verticalInner), end.plus(horizontalOuter).plus(verticalInner), end.plus(horizontalInner).plus(verticalInner), !odd);
+        this.createQuad(end.plus(horizontalOuter), start.plus(horizontalOuter), start.plus(horizontalOuter).plus(verticalInner), end.plus(horizontalOuter).plus(verticalInner), odd);
+        this.createQuad(end.plus(verticalOuter), start.plus(verticalOuter), start.plus(verticalOuter).plus(horizontalInner), end.plus(verticalOuter).plus(horizontalInner), !odd);
         if (nextBlock == null) {
-            this.createQuad(end.plus(horizontalInner).plus(verticalInner), end.plus(verticalInner), end, end.plus(horizontalInner), block.odd());
-            this.createQuad(end.plus(horizontalInner), end.plus(horizontalOuter), end.plus(horizontalOuter).plus(verticalInner), end.plus(horizontalInner).plus(verticalInner), block.odd());
-            this.createQuad(end.plus(verticalInner), end.plus(verticalOuter), end.plus(verticalOuter).plus(horizontalInner), end.plus(verticalInner).plus(horizontalInner), !block.odd());
+            this.createQuad(end.plus(horizontalInner).plus(verticalInner), end.plus(verticalInner), end, end.plus(horizontalInner), odd);
+            this.createQuad(end.plus(horizontalInner), end.plus(horizontalOuter), end.plus(horizontalOuter).plus(verticalInner), end.plus(horizontalInner).plus(verticalInner), odd);
+            this.createQuad(end.plus(verticalInner), end.plus(verticalOuter), end.plus(verticalOuter).plus(horizontalInner), end.plus(verticalInner).plus(horizontalInner), !odd);
         }
         if (previousBlock == null) {
-            this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(verticalInner), start, start.plus(horizontalInner), !block.odd());
-            this.createQuad(start.plus(horizontalInner), start.plus(horizontalOuter), start.plus(horizontalOuter).plus(verticalInner), start.plus(horizontalInner).plus(verticalInner), !block.odd());
-            this.createQuad(start.plus(verticalInner), start.plus(verticalOuter), start.plus(verticalOuter).plus(horizontalInner), start.plus(verticalInner).plus(horizontalInner), block.odd());
+            this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(verticalInner), start, start.plus(horizontalInner), !odd);
+            this.createQuad(start.plus(horizontalInner), start.plus(horizontalOuter), start.plus(horizontalOuter).plus(verticalInner), start.plus(horizontalInner).plus(verticalInner), !odd);
+            this.createQuad(start.plus(verticalInner), start.plus(verticalOuter), start.plus(verticalOuter).plus(horizontalInner), start.plus(verticalInner).plus(horizontalInner), odd);
         }
         var blockSizeWithoutMargin = 0.5 - this.measurements.edgeMargin;
         if (nextBlock != null && nextBlock.type != block.type && !nextBlock.rounded) {
-            this.createQuad(end.plus(block.horizontal.times(blockSizeWithoutMargin)), end.plus(horizontalOuter), end.plus(horizontalOuter).plus(verticalInner), end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), block.odd());
-            this.createQuad(end.plus(block.vertical.times(blockSizeWithoutMargin)), end.plus(verticalOuter), end.plus(verticalOuter).plus(horizontalInner), end.plus(block.vertical.times(blockSizeWithoutMargin)).plus(horizontalInner), !block.odd());
-            this.createQuad(end.plus(horizontalInner).plus(verticalInner), end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(block.vertical.times(blockSizeWithoutMargin)), end.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), !block.odd());
+            this.createQuad(end.plus(block.horizontal.times(blockSizeWithoutMargin)), end.plus(horizontalOuter), end.plus(horizontalOuter).plus(verticalInner), end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), odd);
+            this.createQuad(end.plus(block.vertical.times(blockSizeWithoutMargin)), end.plus(verticalOuter), end.plus(verticalOuter).plus(horizontalInner), end.plus(block.vertical.times(blockSizeWithoutMargin)).plus(horizontalInner), !odd);
+            this.createQuad(end.plus(horizontalInner).plus(verticalInner), end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), end.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(block.vertical.times(blockSizeWithoutMargin)), end.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), !odd);
         }
         if (previousBlock != null && previousBlock.type != block.type && !previousBlock.rounded) {
-            this.createQuad(start.plus(block.horizontal.times(blockSizeWithoutMargin)), start.plus(horizontalOuter), start.plus(horizontalOuter).plus(verticalInner), start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), !block.odd());
-            this.createQuad(start.plus(block.vertical.times(blockSizeWithoutMargin)), start.plus(verticalOuter), start.plus(verticalOuter).plus(horizontalInner), start.plus(block.vertical.times(blockSizeWithoutMargin)).plus(horizontalInner), block.odd());
-            this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(block.vertical.times(blockSizeWithoutMargin)), start.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), block.odd());
+            this.createQuad(start.plus(block.horizontal.times(blockSizeWithoutMargin)), start.plus(horizontalOuter), start.plus(horizontalOuter).plus(verticalInner), start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), !odd);
+            this.createQuad(start.plus(block.vertical.times(blockSizeWithoutMargin)), start.plus(verticalOuter), start.plus(verticalOuter).plus(horizontalInner), start.plus(block.vertical.times(blockSizeWithoutMargin)).plus(horizontalInner), odd);
+            this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(block.vertical.times(blockSizeWithoutMargin)), start.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), odd);
         }
         if (nextBlock != null && nextBlock.type != block.type && nextBlock.rounded) {
             this.createAxleToCircleAdapter(end, block, nextBlock.type == BlockType.Pin ? this.measurements.axlePinAdapterRadius : blockSizeWithoutMargin);
@@ -699,9 +700,10 @@ var PartMeshGenerator = /** @class */ (function (_super) {
         var horizontalOuter = block.horizontal.times(this.measurements.axleSizeOuter);
         var verticalInner = block.vertical.times(this.measurements.axleSizeInner);
         var verticalOuter = block.vertical.times(this.measurements.axleSizeOuter);
+        var odd = block.odd();
         for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
             var focus = center.copy();
-            if (i < this.measurements.subdivisionsPerQuarter / 2 == !block.odd()) {
+            if (i < this.measurements.subdivisionsPerQuarter / 2 == !odd) {
                 focus = focus.plus(horizontalInner).plus(verticalOuter);
             }
             else {
@@ -709,9 +711,9 @@ var PartMeshGenerator = /** @class */ (function (_super) {
             }
             this.triangles.push(new Triangle(focus, center.plus(block.getOnCircle(Math.PI / 2 * i / this.measurements.subdivisionsPerQuarter, radius)), center.plus(block.getOnCircle(Math.PI / 2 * (i + 1) / this.measurements.subdivisionsPerQuarter, radius)), flipped));
         }
-        this.triangles.push(new Triangle(center.plus(horizontalInner).plus(verticalOuter), center.plus(verticalOuter), center.plus(block.vertical.times(radius)), block.odd() != flipped));
-        this.triangles.push(new Triangle(center.plus(verticalInner).plus(horizontalOuter), center.plus(horizontalOuter), center.plus(block.horizontal.times(radius)), block.odd() == flipped));
-        this.createQuad(center.plus(verticalInner).plus(horizontalInner), center.plus(verticalOuter).plus(horizontalInner), center.plus(block.getOnCircle(45 * DEG_TO_RAD, radius)), center.plus(verticalInner).plus(horizontalOuter), block.odd() != flipped);
+        this.triangles.push(new Triangle(center.plus(horizontalInner).plus(verticalOuter), center.plus(verticalOuter), center.plus(block.vertical.times(radius)), odd != flipped));
+        this.triangles.push(new Triangle(center.plus(verticalInner).plus(horizontalOuter), center.plus(horizontalOuter), center.plus(block.horizontal.times(radius)), odd == flipped));
+        this.createQuad(center.plus(verticalInner).plus(horizontalInner), center.plus(verticalOuter).plus(horizontalInner), center.plus(block.getOnCircle(45 * DEG_TO_RAD, radius)), center.plus(verticalInner).plus(horizontalOuter), odd != flipped);
     };
     PartMeshGenerator.prototype.showInteriorCap = function (currentBlock, neighbor) {
         if (neighbor == null) {
@@ -1212,8 +1214,7 @@ var Editor = /** @class */ (function () {
             this.part = Part.fromString(catalog.items[Math.floor(Math.random() * catalog.items.length)].string);
         }
         this.displayMeasurements();
-        this.editorState = new Block(Orientation.X, BlockType.PinHole, true);
-        this.createFullSizedBlocks = true;
+        this.editorState = new EditorState();
         this.canvas = document.getElementById('canvas');
         this.camera = new Camera(this.canvas);
         this.partRenderer = new MeshRenderer();
@@ -1276,8 +1277,8 @@ var Editor = /** @class */ (function () {
     };
     Editor.prototype.remove = function () {
         this.part.clearBlock(this.handles.getSelectedBlock(), this.editorState.orientation);
-        if (this.createFullSizedBlocks) {
-            this.part.clearBlock(this.handles.getSelectedBlock().plus(this.editorState.forward), this.editorState.orientation);
+        if (this.editorState.fullSize) {
+            this.part.clearBlock(this.handles.getSelectedBlock().plus(FORWARD[this.editorState.orientation]), this.editorState.orientation);
         }
         this.updateMesh();
     };
@@ -1287,12 +1288,12 @@ var Editor = /** @class */ (function () {
     };
     Editor.prototype.setOrientation = function (orientatioName) {
         this.editorState.orientation = ORIENTATION[orientatioName];
-        this.handles.setMode(this.createFullSizedBlocks, this.editorState.orientation);
+        this.handles.setMode(this.editorState.fullSize, this.editorState.orientation);
         this.updateBlock();
     };
     Editor.prototype.setSize = function (sizeName) {
-        this.createFullSizedBlocks = sizeName == "full";
-        this.handles.setMode(this.createFullSizedBlocks, this.editorState.orientation);
+        this.editorState.fullSize = sizeName == "full";
+        this.handles.setMode(this.editorState.fullSize, this.editorState.orientation);
         this.camera.render();
     };
     Editor.prototype.setRounded = function (roundedName) {
@@ -1309,8 +1310,8 @@ var Editor = /** @class */ (function () {
     };
     Editor.prototype.updateBlock = function () {
         this.part.placeBlockForced(this.handles.getSelectedBlock(), new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
-        if (this.createFullSizedBlocks) {
-            this.part.placeBlockForced(this.handles.getSelectedBlock().plus(this.editorState.forward), new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
+        if (this.editorState.fullSize) {
+            this.part.placeBlockForced(this.handles.getSelectedBlock().plus(FORWARD[this.editorState.orientation]), new Block(this.editorState.orientation, this.editorState.type, this.editorState.rounded));
         }
         this.updateMesh();
     };
@@ -1413,6 +1414,15 @@ var Editor = /** @class */ (function () {
         this.updateMesh();
     };
     return Editor;
+}());
+var EditorState = /** @class */ (function () {
+    function EditorState() {
+        this.orientation = Orientation.X;
+        this.type = BlockType.PinHole;
+        this.fullSize = true;
+        this.rounded = true;
+    }
+    return EditorState;
 }());
 var ARROW_RADIUS_INNER = 0.05;
 var ARROW_RADIUS_OUTER = 0.15;
@@ -2427,8 +2437,8 @@ var SmallBlock = /** @class */ (function (_super) {
         _this.localY = localY(_this.quadrant);
         _this.directionX = _this.localX == 1 ? 1 : -1;
         _this.directionY = _this.localY == 1 ? 1 : -1;
-        _this.horizontal = _this.right.times(_this.directionX);
-        _this.vertical = _this.up.times(_this.directionY);
+        _this.horizontal = _this.localX == 1 ? RIGHT[_this.orientation] : LEFT[_this.orientation];
+        _this.vertical = _this.localY == 1 ? UP[_this.orientation] : DOWN[_this.orientation];
         _this.isAttachment = _this.type == BlockType.Pin || _this.type == BlockType.Axle;
         return _this;
     }
@@ -2578,6 +2588,16 @@ var UP = {
     0: new Vector3(0, 0, 1),
     1: new Vector3(1, 0, 0),
     2: new Vector3(0, 1, 0)
+};
+var LEFT = {
+    0: new Vector3(0, -1, 0),
+    1: new Vector3(0, 0, -1),
+    2: new Vector3(-1, 0, 0)
+};
+var DOWN = {
+    0: new Vector3(0, 0, -1),
+    1: new Vector3(-1, 0, 0),
+    2: new Vector3(0, -1, 0)
 };
 var Quadrant;
 (function (Quadrant) {

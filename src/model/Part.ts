@@ -145,31 +145,36 @@ class Part {
 	}
 
 	private getBoundingBox(): [Vector3, Vector3] {
-		let min = this.blocks.keys()[0].copy();
-		let max = min.copy();
+		let defaultPosition = this.blocks.keys()[0];
+		var minX = defaultPosition.x;
+		var minY = defaultPosition.y;
+		var minZ = defaultPosition.z;
+		var maxX = defaultPosition.x;
+		var maxY = defaultPosition.y;
+		var maxZ = defaultPosition.z;
 
 		for (var position of this.blocks.keys()) {
-			var forward = this.blocks.get(position).forward();
-			if (position.x < min.x) {
-				min.x = position.x;
+			var forward = this.blocks.get(position).forward;
+			if (position.x < minX) {
+				minX = position.x;
 			}
-			if (position.y < min.y) {
-				min.y = position.y;
+			if (position.y < minY) {
+				minY = position.y;
 			}
-			if (position.z < min.z) {
-				min.z = position.z;
+			if (position.z < minZ) {
+				minZ = position.z;
 			}
-			if (position.x + (1.0 - forward.x) > max.x) {
-				max.x = position.x + (1.0 - forward.x);
+			if (position.x + (1.0 - forward.x) > maxX) {
+				maxX = position.x + (1.0 - forward.x);
 			}
-			if (position.y + (1.0 - forward.y) > max.y) {
-				max.y = position.y + (1.0 - forward.y);
+			if (position.y + (1.0 - forward.y) > maxY) {
+				maxY = position.y + (1.0 - forward.y);
 			}
-			if (position.z + (1.0 - forward.z) > max.z) {
-				max.z = position.z + (1.0 - forward.z);
+			if (position.z + (1.0 - forward.z) > maxZ) {
+				maxZ = position.z + (1.0 - forward.z);
 			}
 		}
-		return [min, max];
+		return [new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ)];
 	}
 
 	public getCenter(): Vector3 {

@@ -12,7 +12,8 @@ class PartMeshGenerator extends MeshGenerator {
         this.checkInteriors();
 		this.mergeSimilarBlocks();
 		this.renderPerpendicularRoundedAdapters();
-        this.renderTinyBlocks();
+		this.renderRoundedExteriors();
+		this.renderInteriors();
         this.renderAttachments();
         this.renderTinyBlockFaces();
     }
@@ -305,7 +306,7 @@ class PartMeshGenerator extends MeshGenerator {
 
     private mergeSimilarBlocks() {
         for (var block of this.tinyBlocks.values()) {
-			if (block.merged) {
+			if (block.isExteriorMerged) {
 				continue;
 			}
 			var amount = 0;
@@ -317,8 +318,9 @@ class PartMeshGenerator extends MeshGenerator {
 				var nextBlock = this.tinyBlocks.get(pos);
 				if (nextBlock.orientation != block.orientation
 					|| nextBlock.quadrant != block.quadrant
-					|| nextBlock.type != block.type
+					|| nextBlock.isAttachment != block.isAttachment
 					|| nextBlock.hasInterior != block.hasInterior
+					|| (nextBlock.isAttachment && (nextBlock.type != block.type))
 					|| nextBlock.rounded != block.rounded
 					|| this.isTinyBlock(block.position.plus(block.right)) != this.isTinyBlock(nextBlock.position.plus(block.right))
 					|| this.isTinyBlock(block.position.minus(block.right)) != this.isTinyBlock(nextBlock.position.minus(block.right))
@@ -327,13 +329,38 @@ class PartMeshGenerator extends MeshGenerator {
 					|| this.preventMergingForPerpendicularRoundedBlock(this.tinyBlocks.get(block.position.plus(block.forward.times(amount))), nextBlock)) {
 						break;
 				}
-				amount += nextBlock.mergedBlocks;
-				nextBlock.merged = true;
-				if (nextBlock.mergedBlocks != 1) {
+				amount += nextBlock.exteriorMergedBlocks;
+				nextBlock.isExteriorMerged = true;
+				if (nextBlock.exteriorMergedBlocks != 1) {
 					break;
 				}
 			}
-			block.mergedBlocks += amount;
+			block.exteriorMergedBlocks += amount;
+		}
+
+		for (var block of this.tinyBlocks.values()) {
+			if (block.isInteriorMerged || !block.hasInterior) {
+				continue;
+			}
+			var amount = 0;
+			while (true) {
+				var pos = block.position.plus(block.forward.times(amount + 1));
+				if (!this.tinyBlocks.containsKey(pos)) {
+					break;
+				}
+				var nextBlock = this.tinyBlocks.get(pos);
+				if (nextBlock.orientation != block.orientation
+					|| nextBlock.quadrant != block.quadrant
+					|| nextBlock.type != block.type) {
+						break;
+				}
+				amount += nextBlock.interiorMergedBlocks;
+				nextBlock.isInteriorMerged = true;
+				if (nextBlock.interiorMergedBlocks != 1) {
+					break;
+				}
+			}
+			block.interiorMergedBlocks += amount;
 		}
     }
 
@@ -345,20 +372,23 @@ class PartMeshGenerator extends MeshGenerator {
         this.tinyBlocks.set(position, new TinyBlock(position, source));
     }
 	
-    private getNextBlock(block: TinyBlock): TinyBlock {
-        return this.tinyBlocks.getOrNull(block.position.plus(block.forward.times(block.mergedBlocks)));
+    private getNextBlock(block: TinyBlock, interior: boolean): TinyBlock {
+		var mergedAmount = interior ? block.interiorMergedBlocks : block.exteriorMergedBlocks;
+        return this.tinyBlocks.getOrNull(block.position.plus(block.forward.times(mergedAmount)));
     }
 
     private getPreviousBlock(block: TinyBlock): TinyBlock {
         return this.tinyBlocks.getOrNull(block.position.minus(block.forward));
     }
 
-    private hasOpenEnd(block: TinyBlock): boolean {
-        var pos = block.position;
-        return !this.tinyBlocks.containsKey(pos.plus(block.forward.times(block.mergedBlocks)))
-            && !this.tinyBlocks.containsKey(pos.plus(block.forward.times(block.mergedBlocks)).minus(block.horizontal.times(3)))
-            && !this.tinyBlocks.containsKey(pos.plus(block.forward.times(block.mergedBlocks)).minus(block.vertical.times(3)))
-            && !this.tinyBlocks.containsKey(pos.plus(block.forward.times(block.mergedBlocks)).minus(block.horizontal.times(3)).minus(block.vertical.times(3)));
+    private hasOpenEnd(block: TinyBlock, interior: boolean): boolean {
+		var pos = block.position;
+		var mergedAmount = interior ? block.interiorMergedBlocks : block.exteriorMergedBlocks;
+        
+        return !this.tinyBlocks.containsKey(pos.plus(block.forward.times(mergedAmount)))
+            && !this.tinyBlocks.containsKey(pos.plus(block.forward.times(mergedAmount)).minus(block.horizontal.times(3)))
+            && !this.tinyBlocks.containsKey(pos.plus(block.forward.times(mergedAmount)).minus(block.vertical.times(3)))
+            && !this.tinyBlocks.containsKey(pos.plus(block.forward.times(mergedAmount)).minus(block.horizontal.times(3)).minus(block.vertical.times(3)));
     }
 
     private hasOpenStart(block: TinyBlock): boolean {
@@ -444,25 +474,25 @@ class PartMeshGenerator extends MeshGenerator {
 		return localForward == 0 || (localForward > 0) == block.perpendicularRoundedAdapter.facesForward;
 	}
 
-    private renderTinyBlocks() {
+    private renderRoundedExteriors() {
 		var blockSizeWithoutMargin = 0.5 - this.measurements.edgeMargin;
 		
         for (let block of this.tinyBlocks.values()) {
-            if (block.merged || !block.isCenter || block.isAttachment) {
+            if (block.isExteriorMerged || !block.isCenter || block.isAttachment) {
                 continue;
             }
 
-            var nextBlock = this.getNextBlock(block);
+            var nextBlock = this.getNextBlock(block, false);
             var previousBlock = this.getPreviousBlock(block);
-            var distance = block.getDepth(this);
+            var distance = block.getExteriorDepth(this);
 
-            var hasOpenEnd = this.hasOpenEnd(block);
+            var hasOpenEnd = this.hasOpenEnd(block, false);
             var hasOpenStart = this.hasOpenStart(block);
 
             // Back cap
             if (nextBlock == null && (block.rounded || block.hasInterior)) {
 				this.createCircleWithHole(block, block.hasInterior && hasOpenEnd ? this.measurements.interiorRadius : 0, blockSizeWithoutMargin, distance, false, !block.rounded);
-				this.hideStartEndFaces(block.position.plus(block.forward.times(block.mergedBlocks - 1)), block, true);
+				this.hideStartEndFaces(block.position.plus(block.forward.times(block.exteriorMergedBlocks - 1)), block, true);
             }
 
             // Front cap
@@ -476,7 +506,7 @@ class PartMeshGenerator extends MeshGenerator {
 					this.createCylinder(block, 0, blockSizeWithoutMargin, distance);
 				}
                 // Rounded corners
-				for (var i = 0; i < block.mergedBlocks; i++) {
+				for (var i = 0; i < block.exteriorMergedBlocks; i++) {
 					this.hideOutsideFaces(this.tinyBlocks.get(block.position.plus(block.forward.times(i))));
 				}
 
@@ -488,21 +518,26 @@ class PartMeshGenerator extends MeshGenerator {
                     this.createCircleWithHole(block, blockSizeWithoutMargin, blockSizeWithoutMargin, 0, false, true);
                 }
             }
-            
-            // Interior
-            if (block.hasInterior) {
-                if (block.type == BlockType.PinHole) {
-                    this.renderPinHoleInterior(block);
-                } else if (block.type == BlockType.AxleHole) {
-                    this.renderAxleHoleInterior(block);
-                }
-            }
         }
-    }
+	}
+	
+	private renderInteriors() {
+		for (let block of this.tinyBlocks.values()) {
+            if (block.isInteriorMerged || !block.isCenter || !block.hasInterior) {
+                continue;
+			}
+			
+			if (block.type == BlockType.PinHole) {
+				this.renderPinHoleInterior(block);
+			} else if (block.type == BlockType.AxleHole) {
+				this.renderAxleHoleInterior(block);
+			}
+        }
+	}
 
     private renderAttachments() {
         for (var block of this.tinyBlocks.values()) {
-            if (block.merged || !block.isCenter) {
+            if (block.isExteriorMerged || !block.isCenter) {
                 continue;
             }
 
@@ -540,10 +575,10 @@ class PartMeshGenerator extends MeshGenerator {
 	}
 
     private renderPin(block: TinyBlock) {
-		var nextBlock = this.getNextBlock(block);
+		var nextBlock = this.getNextBlock(block, false);
 		var previousBlock = this.getPreviousBlock(block);
 
-		var distance = block.getDepth(this);
+		var distance = block.getExteriorDepth(this);
 
 		var startOffset = (previousBlock != null && previousBlock.type == BlockType.Axle) ? this.measurements.axlePinAdapterSize : 0;
 		if (previousBlock == null) {
@@ -583,11 +618,11 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private renderAxle(block: TinyBlock) {
-		var nextBlock = this.getNextBlock(block);
+		var nextBlock = this.getNextBlock(block, false);
 		var previousBlock = this.getPreviousBlock(block);
 		
 		var start = block.getCylinderOrigin(this);
-		var end = start.plus(block.forward.times(block.getDepth(this)));
+		var end = start.plus(block.forward.times(block.getExteriorDepth(this)));
 
 		var horizontalInner = block.horizontal.times(this.measurements.axleSizeInner);
 		var horizontalOuter = block.horizontal.times(this.measurements.axleSizeOuter);
@@ -754,11 +789,11 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private renderPinHoleInterior(block: TinyBlock) {
-		var nextBlock = this.getNextBlock(block);
+		var nextBlock = this.getNextBlock(block, true);
         var previousBlock = this.getPreviousBlock(block);
-        var distance = block.getDepth(this);
+        var distance = block.getInteriorDepth(this);
 
-        var hasOpenEnd = this.hasOpenEnd(block);
+        var hasOpenEnd = this.hasOpenEnd(block, true);
         var hasOpenStart = this.hasOpenStart(block);
         var showInteriorEndCap = this.showInteriorCap(block, nextBlock) || (nextBlock == null && !hasOpenEnd);
 		var showInteriorStartCap = this.showInteriorCap(block, previousBlock) || (previousBlock == null && !hasOpenStart);
@@ -791,15 +826,15 @@ class PartMeshGenerator extends MeshGenerator {
     }
 
     private renderAxleHoleInterior(block: TinyBlock) {
-        var nextBlock = this.getNextBlock(block);
+        var nextBlock = this.getNextBlock(block, true);
         var previousBlock = this.getPreviousBlock(block);
 
-        var hasOpenEnd = this.hasOpenEnd(block);
+        var hasOpenEnd = this.hasOpenEnd(block, true);
         var hasOpenStart = this.hasOpenStart(block);
         var showInteriorEndCap = this.showInteriorCap(block, nextBlock) || (nextBlock == null && !hasOpenEnd);
         var showInteriorStartCap = this.showInteriorCap(block, previousBlock) || (previousBlock == null && !hasOpenStart);
         
-		var distance = block.getDepth(this);
+		var distance = block.getInteriorDepth(this);
 		var holeSize = this.measurements.axleHoleSize;
         
         var start = block.getCylinderOrigin(this).plus(showInteriorStartCap ? block.forward.times(this.measurements.interiorEndMargin) : Vector3.zero());

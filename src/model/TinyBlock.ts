@@ -1,6 +1,9 @@
 ﻿class TinyBlock extends SmallBlock {
-	public mergedBlocks = 1;
-	public merged = false;
+	public exteriorMergedBlocks = 1;
+	public isExteriorMerged = false;
+	
+	public interiorMergedBlocks = 1;
+	public isInteriorMerged = false;
 
 	private readonly visibleFaces: [boolean, boolean, boolean, boolean, boolean, boolean] = null;
 
@@ -28,8 +31,12 @@
 			.plus(this.up.times((this.smallBlockPosition.dot(this.up) + (1 - this.localY)) * 0.5));
 	}
 
-	public getDepth(meshGenerator: MeshGenerator): number {
-		return meshGenerator.tinyIndexToWorld(this.forward.dot(this.position) + this.mergedBlocks) - meshGenerator.tinyIndexToWorld(this.forward.dot(this.position));
+	public getExteriorDepth(meshGenerator: MeshGenerator): number {
+		return meshGenerator.tinyIndexToWorld(this.forward.dot(this.position) + this.exteriorMergedBlocks) - meshGenerator.tinyIndexToWorld(this.forward.dot(this.position));
+	}
+	
+	public getInteriorDepth(meshGenerator: MeshGenerator): number {
+		return meshGenerator.tinyIndexToWorld(this.forward.dot(this.position) + this.interiorMergedBlocks) - meshGenerator.tinyIndexToWorld(this.forward.dot(this.position));
 	}
 
 	public isFaceVisible(direction: Vector3): boolean {

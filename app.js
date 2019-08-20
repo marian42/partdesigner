@@ -1114,6 +1114,8 @@ class Measurements {
         this.axleSizeOuter = Math.min(Math.sqrt(Math.pow(Math.min(0.5 - this.edgeMargin, this.attachmentAdapterRadius), 2.0) - Math.pow(this.axleSizeInner, 2.0)), this.axleSizeOuter);
         this.axleSizeInner = Math.min(this.axleSizeOuter, this.axleSizeInner);
         this.attachmentAdapterSize = Math.min((0.5 - this.edgeMargin) / 2, this.attachmentAdapterSize);
+        this.ballBaseRadius = Math.min(this.ballBaseRadius, this.interiorRadius);
+        this.ballRadius = Math.max(Math.min(this.ballRadius, 0.5 - this.attachmentAdapterSize), this.ballBaseRadius);
     }
 }
 const DEFAULT_MEASUREMENTS = new Measurements();
@@ -1772,7 +1774,9 @@ const NAMED_MEASUREMENTS = [
     new NamedMeasurement("attachmentAdapterRadius", true, true),
     new NamedMeasurement("interiorEndMargin", true, false),
     new NamedMeasurement("lipSubdivisions", false, false),
-    new NamedMeasurement("subdivisionsPerQuarter", false, false)
+    new NamedMeasurement("subdivisionsPerQuarter", false, false),
+    new NamedMeasurement("ballRadius", true, true),
+    new NamedMeasurement("ballBaseRadius", true, true)
 ];
 var RenderStyle;
 (function (RenderStyle) {

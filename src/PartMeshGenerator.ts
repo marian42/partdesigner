@@ -780,11 +780,15 @@ class PartMeshGenerator extends MeshGenerator {
 				var out1 = block.getOnCircle(j / 2 * Math.PI / this.measurements.subdivisionsPerQuarter);
 				var out2 = block.getOnCircle((j + 1) / 2 * Math.PI / this.measurements.subdivisionsPerQuarter);
 	
-				this.createQuad(
+				this.createQuadWithNormals(
 					ballCenterStart.plus(out2.times(radiusStart)),
 					ballCenterStart.plus(out1.times(radiusStart)),
 					ballCenterEnd.plus(out1.times(radiusEnd)),
-					ballCenterEnd.plus(out2.times(radiusEnd))
+					ballCenterEnd.plus(out2.times(radiusEnd)),
+					out2.times(-Math.cos(angleStart)).minus(block.forward.times(Math.sin(angleStart))),
+					out1.times(-Math.cos(angleStart)).minus(block.forward.times(Math.sin(angleStart))),
+					out1.times(-Math.cos(angleEnd)).minus(block.forward.times(Math.sin(angleEnd))),
+					out2.times(-Math.cos(angleEnd)).minus(block.forward.times(Math.sin(angleEnd)))
 				);
 			}
 		}

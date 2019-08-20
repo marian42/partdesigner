@@ -827,10 +827,10 @@ class PartMeshGenerator extends MeshGenerator {
 			this.hideStartEndFaces(previousBlock.position, block, true);
 		}
 		if (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.BallJoint) {
-			this.createCylinder(block, distance - this.measurements.attachmentAdapterSize, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize);
+			this.createCircleWithHole(block, this.measurements.ballBaseRadius, this.measurements.attachmentAdapterRadius, distance - this.measurements.attachmentAdapterSize, true);
 		}
 		if (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.BallJoint) {
-			this.createCircleWithHole(block, this.measurements.ballBaseRadius, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize);			
+			this.createCircleWithHole(block, this.measurements.ballBaseRadius, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize);
 			this.createCylinder(block, -this.measurements.attachmentAdapterSize, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize * 2);
 		}
     }

@@ -80,22 +80,6 @@ class Part {
 		this.blocks.set(position, block);
 	}
 
-	public randomize(createFullSizeBlocks = false) {
-		this.blocks.clear();
-		for (var i = 0; i < 40; i++) {
-			var position = new Vector3(Math.floor(3 * Math.random()), Math.floor(5 * Math.random()), Math.floor(5 * Math.random())).times(createFullSizeBlocks ? 2 : 1);
-			var orientation = (Math.random() > 0.333 ? (Math.random() > 0.5 ? Orientation.X : Orientation.Y) : Orientation.Z);
-			var type = getRandomBlockType();
-			var block = new Block(orientation, type, true);
-
-			this.placeBlockForced(position, block);
-			if (createFullSizeBlocks) {
-				var block2 = new Block(orientation, type, true);
-				this.placeBlockForced(position.plus(FORWARD[orientation]), block2);
-			}
-		}
-	}
-
 	public toString(): string {
 		var result = "";
 

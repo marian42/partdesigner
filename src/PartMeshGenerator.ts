@@ -767,10 +767,10 @@ class PartMeshGenerator extends MeshGenerator {
 		
 		var ballCenterDistance: number;
 		if (nextBlock == null) {
-			var offset = (block.position.dot(block.forward) - 1) % 3 - 1;
+			var offset = mod(block.position.dot(block.forward) - 1, 3) - 1;
 			ballCenterDistance = 0.5 - offset * this.measurements.edgeMargin;
 		} else {
-			var offset = (block.position.dot(block.forward) + block.exteriorMergedBlocks - 1) % 3 - 1;
+			var offset = mod(block.position.dot(block.forward) + block.exteriorMergedBlocks - 1, 3) - 1;
 			ballCenterDistance = distance - 0.5 - offset * this.measurements.edgeMargin;
 		}
 

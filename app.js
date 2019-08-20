@@ -586,6 +586,10 @@ class PartMeshGenerator extends MeshGenerator {
                     break;
                 case BlockType.Axle:
                     this.renderAxle(block);
+                    break;
+                case BlockType.BallJoint:
+                    this.renderBallJoint(block);
+                    break;
             }
         }
     }
@@ -605,11 +609,11 @@ class PartMeshGenerator extends MeshGenerator {
         var nextBlock = this.getNextBlock(block, false);
         var previousBlock = this.getPreviousBlock(block);
         var distance = block.getExteriorDepth(this);
-        var startOffset = (previousBlock != null && previousBlock.type == BlockType.Axle) ? this.measurements.axlePinAdapterSize : 0;
+        var startOffset = (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.Pin) ? this.measurements.attachmentAdapterSize : 0;
         if (previousBlock == null) {
             startOffset += 2 * this.measurements.pinLipRadius;
         }
-        var endOffset = (nextBlock != null && nextBlock.type == BlockType.Axle) ? this.measurements.axlePinAdapterSize : 0;
+        var endOffset = (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.Pin) ? this.measurements.attachmentAdapterSize : 0;
         if (nextBlock == null) {
             endOffset += 2 * this.measurements.pinLipRadius;
         }
@@ -630,13 +634,12 @@ class PartMeshGenerator extends MeshGenerator {
             this.createCircleWithHole(block, this.measurements.pinRadius, 0.5 - this.measurements.edgeMargin, 0, false, !previousBlock.rounded);
             this.hideStartEndFaces(previousBlock.position, block, true);
         }
-        if (nextBlock != null && nextBlock.type == BlockType.Axle) {
-            this.createCircleWithHole(block, this.measurements.pinRadius, this.measurements.axlePinAdapterRadius, distance - this.measurements.axlePinAdapterSize, true);
-            this.createCylinder(block, distance - this.measurements.axlePinAdapterSize, this.measurements.axlePinAdapterRadius, this.measurements.axlePinAdapterSize);
+        if (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.Pin) {
+            this.createCircleWithHole(block, this.measurements.pinRadius, this.measurements.attachmentAdapterRadius, distance - this.measurements.attachmentAdapterSize, true);
         }
-        if (previousBlock != null && previousBlock.type == BlockType.Axle) {
-            this.createCircleWithHole(block, this.measurements.pinRadius, this.measurements.axlePinAdapterRadius, this.measurements.axlePinAdapterSize);
-            this.createCylinder(block, 0, this.measurements.axlePinAdapterRadius, this.measurements.axlePinAdapterSize);
+        if (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.Pin) {
+            this.createCircleWithHole(block, this.measurements.pinRadius, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize);
+            this.createCylinder(block, -this.measurements.attachmentAdapterSize, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize * 2);
         }
     }
     renderAxle(block) {
@@ -644,6 +647,12 @@ class PartMeshGenerator extends MeshGenerator {
         var previousBlock = this.getPreviousBlock(block);
         var start = block.getCylinderOrigin(this);
         var end = start.plus(block.forward.times(block.getExteriorDepth(this)));
+        if (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.Axle) {
+            start = start.plus(block.forward.times(this.measurements.attachmentAdapterSize));
+        }
+        if (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.Axle) {
+            end = end.minus(block.forward.times(this.measurements.attachmentAdapterSize));
+        }
         var horizontalInner = block.horizontal.times(this.measurements.axleSizeInner);
         var horizontalOuter = block.horizontal.times(this.measurements.axleSizeOuter);
         var verticalInner = block.vertical.times(this.measurements.axleSizeInner);
@@ -675,16 +684,85 @@ class PartMeshGenerator extends MeshGenerator {
             this.createQuad(start.plus(horizontalInner).plus(verticalInner), start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(verticalInner), start.plus(block.horizontal.times(blockSizeWithoutMargin)).plus(block.vertical.times(blockSizeWithoutMargin)), start.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), odd);
         }
         if (nextBlock != null && nextBlock.type != block.type && nextBlock.rounded) {
-            this.createAxleToCircleAdapter(end, block, nextBlock.type == BlockType.Pin ? this.measurements.axlePinAdapterRadius : blockSizeWithoutMargin);
+            this.createAxleToCircleAdapter(end, block, nextBlock.isAttachment ? this.measurements.attachmentAdapterRadius : blockSizeWithoutMargin);
         }
         if (previousBlock != null && previousBlock.type != block.type && previousBlock.rounded) {
-            this.createAxleToCircleAdapter(start, block, previousBlock.type == BlockType.Pin ? this.measurements.axlePinAdapterRadius : blockSizeWithoutMargin, true);
+            this.createAxleToCircleAdapter(start, block, previousBlock.isAttachment ? this.measurements.attachmentAdapterRadius : blockSizeWithoutMargin, true);
         }
         if (nextBlock != null && !nextBlock.isAttachment) {
             this.hideStartEndFaces(nextBlock.position, block, false);
         }
         if (previousBlock != null && !previousBlock.isAttachment) {
             this.hideStartEndFaces(previousBlock.position, block, true);
+        }
+        if (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.Axle) {
+            this.createCylinder(block, -this.measurements.attachmentAdapterSize, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize * 2);
+        }
+    }
+    renderBallJoint(block) {
+        var nextBlock = this.getNextBlock(block, false);
+        var previousBlock = this.getPreviousBlock(block);
+        var distance = block.getExteriorDepth(this);
+        var startOffset = (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.BallJoint) ? this.measurements.attachmentAdapterSize : 0;
+        if (previousBlock == null) {
+            startOffset += 2 * this.measurements.pinLipRadius;
+        }
+        var endOffset = (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.BallJoint) ? this.measurements.attachmentAdapterSize : 0;
+        if (nextBlock == null) {
+            endOffset += 2 * this.measurements.pinLipRadius;
+        }
+        var ballCenterDistance;
+        if (nextBlock == null) {
+            var offset = mod(block.position.dot(block.forward) - 1, 3) - 1;
+            ballCenterDistance = 0.5 - offset * this.measurements.edgeMargin;
+        }
+        else {
+            var offset = mod(block.position.dot(block.forward) + block.exteriorMergedBlocks - 1, 3) - 1;
+            ballCenterDistance = distance - 0.5 - offset * this.measurements.edgeMargin;
+        }
+        var ballCenter = block.getCylinderOrigin(this).plus(block.forward.times(ballCenterDistance));
+        var angle = Math.acos(this.measurements.ballBaseRadius / this.measurements.ballRadius);
+        for (var i = 0; i < this.measurements.subdivisionsPerQuarter; i++) {
+            var angleStart = lerp(-angle, +angle, i / this.measurements.subdivisionsPerQuarter);
+            var angleEnd = lerp(-angle, +angle, (i + 1) / this.measurements.subdivisionsPerQuarter);
+            var ballCenterStart = ballCenter.plus(block.forward.times(Math.sin(angleStart) * this.measurements.ballRadius));
+            var ballCenterEnd = ballCenter.plus(block.forward.times(Math.sin(angleEnd) * this.measurements.ballRadius));
+            var radiusStart = this.measurements.ballRadius * Math.cos(angleStart);
+            var radiusEnd = this.measurements.ballRadius * Math.cos(angleEnd);
+            for (var j = 0; j < this.measurements.subdivisionsPerQuarter; j++) {
+                var out1 = block.getOnCircle(j / 2 * Math.PI / this.measurements.subdivisionsPerQuarter);
+                var out2 = block.getOnCircle((j + 1) / 2 * Math.PI / this.measurements.subdivisionsPerQuarter);
+                this.createQuadWithNormals(ballCenterStart.plus(out2.times(radiusStart)), ballCenterStart.plus(out1.times(radiusStart)), ballCenterEnd.plus(out1.times(radiusEnd)), ballCenterEnd.plus(out2.times(radiusEnd)), out2.times(-Math.cos(angleStart)).minus(block.forward.times(Math.sin(angleStart))), out1.times(-Math.cos(angleStart)).minus(block.forward.times(Math.sin(angleStart))), out1.times(-Math.cos(angleEnd)).minus(block.forward.times(Math.sin(angleEnd))), out2.times(-Math.cos(angleEnd)).minus(block.forward.times(Math.sin(angleEnd))));
+            }
+        }
+        var ballStart = ballCenterDistance - Math.sin(angle) * this.measurements.ballRadius;
+        var ballEnd = ballCenterDistance + Math.sin(angle) * this.measurements.ballRadius;
+        if (nextBlock == null) {
+            this.createCircle(block, this.measurements.ballBaseRadius, ballEnd, true);
+        }
+        else {
+            this.createCylinder(block, ballEnd, this.measurements.ballBaseRadius, distance - endOffset - ballEnd);
+        }
+        if (previousBlock == null) {
+            this.createCircle(block, this.measurements.ballBaseRadius, ballStart);
+        }
+        else {
+            this.createCylinder(block, startOffset, this.measurements.ballBaseRadius, ballStart - startOffset);
+        }
+        if (nextBlock != null && !nextBlock.isAttachment) {
+            this.createCircleWithHole(block, this.measurements.ballBaseRadius, 0.5 - this.measurements.edgeMargin, distance, true, !nextBlock.rounded);
+            this.hideStartEndFaces(nextBlock.position, block, false);
+        }
+        if (previousBlock != null && !previousBlock.isAttachment) {
+            this.createCircleWithHole(block, this.measurements.ballBaseRadius, 0.5 - this.measurements.edgeMargin, 0, false, !previousBlock.rounded);
+            this.hideStartEndFaces(previousBlock.position, block, true);
+        }
+        if (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.BallJoint) {
+            this.createCircleWithHole(block, this.measurements.ballBaseRadius, this.measurements.attachmentAdapterRadius, distance - this.measurements.attachmentAdapterSize, true);
+        }
+        if (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.BallJoint) {
+            this.createCircleWithHole(block, this.measurements.ballBaseRadius, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize);
+            this.createCylinder(block, -this.measurements.attachmentAdapterSize, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize * 2);
         }
     }
     createAxleToCircleAdapter(center, block, radius, flipped = false) {
@@ -1000,6 +1078,9 @@ function countInArray(items, selector) {
 function ease(value) {
     return value < 0.5 ? 2 * value * value : -1 + (4 - 2 * value) * value;
 }
+function mod(a, b) {
+    return ((a % b) + b) % b;
+}
 class Measurements {
     constructor() {
         this.technicUnit = 8;
@@ -1009,11 +1090,13 @@ class Measurements {
         this.pinHoleOffset = 0.7 / this.technicUnit;
         this.axleHoleSize = 1.01 / this.technicUnit;
         this.pinRadius = 2.315 / this.technicUnit;
+        this.ballBaseRadius = 1.6 / this.technicUnit;
+        this.ballRadius = 2.9 / this.technicUnit;
         this.pinLipRadius = 0.17 / this.technicUnit;
         this.axleSizeInner = 0.86 / this.technicUnit;
         this.axleSizeOuter = 2.15 / this.technicUnit;
-        this.axlePinAdapterSize = 0.8 / this.technicUnit;
-        this.axlePinAdapterRadius = 3 / this.technicUnit;
+        this.attachmentAdapterSize = 0.4 / this.technicUnit;
+        this.attachmentAdapterRadius = 3 / this.technicUnit;
         this.interiorEndMargin = 0.2 / this.technicUnit;
         this.lipSubdivisions = 6;
         this.subdivisionsPerQuarter = 8;
@@ -1028,9 +1111,9 @@ class Measurements {
         this.pinHoleOffset = Math.min(0.5 - this.edgeMargin, this.pinHoleOffset);
         this.axleHoleSize = Math.min(this.interiorRadius / 2, this.axleHoleSize);
         this.pinRadius = Math.min(0.5 - this.edgeMargin, this.pinRadius);
-        this.axleSizeOuter = Math.min(Math.sqrt(Math.pow(Math.min(0.5 - this.edgeMargin, this.axlePinAdapterRadius), 2.0) - Math.pow(this.axleSizeInner, 2.0)), this.axleSizeOuter);
+        this.axleSizeOuter = Math.min(Math.sqrt(Math.pow(Math.min(0.5 - this.edgeMargin, this.attachmentAdapterRadius), 2.0) - Math.pow(this.axleSizeInner, 2.0)), this.axleSizeOuter);
         this.axleSizeInner = Math.min(this.axleSizeOuter, this.axleSizeInner);
-        this.axlePinAdapterSize = Math.min(0.5 - this.edgeMargin, this.axlePinAdapterSize);
+        this.attachmentAdapterSize = Math.min((0.5 - this.edgeMargin) / 2, this.attachmentAdapterSize);
     }
 }
 const DEFAULT_MEASUREMENTS = new Measurements();
@@ -1095,8 +1178,8 @@ class Catalog {
             new CatalogItem(3713, "Bushing", "0z22z2"),
             new CatalogItem(32123, "Half Bushing", "0z2"),
             new CatalogItem(43093, "Axle to Pin Connector", "0z32z37z410z4"),
-            new CatalogItem(3704, "Axle 2", "0z42z47z410z4"),
-            new CatalogItem(4519, "Axle 3", "7z410z41ez432z40z42z4"),
+            new CatalogItem(6682, "Pin with Ball", "7z50z32z3"),
+            new CatalogItem(2736, "Axle with Ball", "0z42z47z5"),
             new CatalogItem(6553, "Axle 1.5 with Perpendicular Axle Connector", "1ex210z07z42z40z433x2"),
             new CatalogItem(18651, "Axle 2m with Pin", "1ez432z47z410z40z32z3"),
             new CatalogItem(2853, "Crankshaft", "8z411z40z2"),
@@ -1112,6 +1195,8 @@ class Catalog {
             new CatalogItem(32449, "Beam 4 x 0.5 with Axle Hole each end", "7y11ey14dy20y2"),
             new CatalogItem(11478, "Beam 5 x 0.5 with Axle Holes each end", "7y11ey14dy19cy20y2"),
             new CatalogItem(32017, "Beam 5 x 0.5", "1ey14dy19cy17y10y1"),
+            new CatalogItem(3704, "Axle 2", "0z42z47z410z4"),
+            new CatalogItem(4519, "Axle 3", "7z410z41ez432z40z42z4"),
             new CatalogItem(2825, "Beam 1 x 4 x 0.5 with Boss", "7y11ey14dy20y21y2"),
             new CatalogItem(33299, "Half Beam 3 with Knob and Pin", "2dy342y04y217y2ay21ey3"),
             new CatalogItem(60484, "Beam 3 x 3 T-Shaped", "17x13bx11ex17x10x12ax15bx133x111x13x1"),
@@ -1146,7 +1231,9 @@ class Catalog {
             new CatalogItem(64179, "Beam Frame 5 x 7", "3bcz1466z122z136z1525z15f6z153z176z16dey1527x13c0y12a1x11c2y111bx1a4y17c5y1459y121dy1d1y15f9x1329x1169x129bz1322z19z112z11bay10y17x11ey14dx19cy1113x1215y11y12dy1c9y111x171x1161x1"),
             new CatalogItem(14720, "Beam I Frame", "115y19ex14fx120x19y1157y1fy1d5x173x135x11bey122y1219y131y19cy10y1c9y11y1"),
             new CatalogItem(53533, "Half Beam 3 with Fork", "11y13z38z31by135x073x1d5x17x01ex14dx1"),
-            new CatalogItem(4261, "Steering Arm with Two Half Pins", "31z14bz162y322y319y04y2")
+            new CatalogItem(4261, "Steering Arm with Two Half Pins", "31z14bz162y322y319y04y2"),
+            new CatalogItem(6572, "Half Beam Fork with Ball Joint", "7z010x232x170x23z58z320z050x29fx1116x2"),
+            new CatalogItem(15460, "Hole with 3 Ball Joints", "0z52z57x11ez532z517y526y511x1")
         ];
     }
     onSelectPart(item, event) {
@@ -1681,8 +1768,8 @@ const NAMED_MEASUREMENTS = [
     new NamedMeasurement("pinLipRadius", true, true),
     new NamedMeasurement("axleSizeInner", true, false),
     new NamedMeasurement("axleSizeOuter", true, false),
-    new NamedMeasurement("axlePinAdapterSize", true, false),
-    new NamedMeasurement("axlePinAdapterRadius", true, true),
+    new NamedMeasurement("attachmentAdapterSize", true, true),
+    new NamedMeasurement("attachmentAdapterRadius", true, true),
     new NamedMeasurement("interiorEndMargin", true, false),
     new NamedMeasurement("lipSubdivisions", false, false),
     new NamedMeasurement("subdivisionsPerQuarter", false, false)
@@ -2246,20 +2333,6 @@ class Part {
         this.clearBlock(position, block.orientation);
         this.blocks.set(position, block);
     }
-    randomize(createFullSizeBlocks = false) {
-        this.blocks.clear();
-        for (var i = 0; i < 40; i++) {
-            var position = new Vector3(Math.floor(3 * Math.random()), Math.floor(5 * Math.random()), Math.floor(5 * Math.random())).times(createFullSizeBlocks ? 2 : 1);
-            var orientation = (Math.random() > 0.333 ? (Math.random() > 0.5 ? Orientation.X : Orientation.Y) : Orientation.Z);
-            var type = getRandomBlockType();
-            var block = new Block(orientation, type, true);
-            this.placeBlockForced(position, block);
-            if (createFullSizeBlocks) {
-                var block2 = new Block(orientation, type, true);
-                this.placeBlockForced(position.plus(FORWARD[orientation]), block2);
-            }
-        }
-    }
     toString() {
         var result = "";
         if (!this.blocks.any()) {
@@ -2360,7 +2433,7 @@ class SmallBlock extends Block {
         this.directionY = this.localY == 1 ? 1 : -1;
         this.horizontal = this.localX == 1 ? RIGHT[this.orientation] : LEFT[this.orientation];
         this.vertical = this.localY == 1 ? UP[this.orientation] : DOWN[this.orientation];
-        this.isAttachment = this.type == BlockType.Pin || this.type == BlockType.Axle;
+        this.isAttachment = this.type == BlockType.Pin || this.type == BlockType.Axle || this.type == BlockType.BallJoint;
     }
     static createFromLocalCoordinates(localX, localY, position, source) {
         return new SmallBlock(SmallBlock.getQuadrantFromLocal(localX, localY), position, source);
@@ -2470,18 +2543,17 @@ var BlockType;
     BlockType[BlockType["AxleHole"] = 2] = "AxleHole";
     BlockType[BlockType["Pin"] = 3] = "Pin";
     BlockType[BlockType["Axle"] = 4] = "Axle";
+    BlockType[BlockType["BallJoint"] = 5] = "BallJoint";
+    BlockType[BlockType["BallSocket"] = 6] = "BallSocket";
 })(BlockType || (BlockType = {}));
-function getRandomBlockType() {
-    let types = [BlockType.AxleHole, BlockType.PinHole, BlockType.Solid, BlockType.Pin, BlockType.Axle];
-    let index = Math.floor(types.length * Math.random());
-    return types[index];
-}
 const BLOCK_TYPE = {
     "solid": BlockType.Solid,
     "pinhole": BlockType.PinHole,
     "axlehole": BlockType.AxleHole,
     "pin": BlockType.Pin,
-    "axle": BlockType.Axle
+    "axle": BlockType.Axle,
+    "balljoint": BlockType.BallJoint,
+    "ballsocket": BlockType.BallSocket
 };
 var Orientation;
 (function (Orientation) {

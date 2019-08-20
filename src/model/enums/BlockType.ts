@@ -1,9 +1,11 @@
-enum BlockType {
+﻿enum BlockType {
 	Solid,
 	PinHole,
 	AxleHole,
 	Pin,
-	Axle
+	Axle,
+	BallJoint,
+	BallSocket
 }
 
 const BLOCK_TYPE = {
@@ -11,5 +13,7 @@ const BLOCK_TYPE = {
 	"pinhole": BlockType.PinHole,
 	"axlehole": BlockType.AxleHole,
 	"pin": BlockType.Pin,
-	"axle": BlockType.Axle
+	"axle": BlockType.Axle,
+	"balljoint": BlockType.BallJoint,
+	"ballsocket": BlockType.BallSocket
 }

@@ -12,7 +12,7 @@ class Measurements {
 	pinLipRadius = 0.17 / this.technicUnit;
 	axleSizeInner = 0.86 / this.technicUnit;
 	axleSizeOuter = 2.15 / this.technicUnit;
-	axlePinAdapterSize = 0.8 / this.technicUnit;
+	axlePinAdapterSize = 0.4 / this.technicUnit;
 	axlePinAdapterRadius = 3 / this.technicUnit;
 	interiorEndMargin = 0.2 / this.technicUnit;
 
@@ -32,7 +32,7 @@ class Measurements {
 		this.pinRadius = Math.min(0.5 - this.edgeMargin, this.pinRadius);
 		this.axleSizeOuter = Math.min(Math.sqrt(Math.pow(Math.min(0.5 - this.edgeMargin, this.axlePinAdapterRadius), 2.0) - Math.pow(this.axleSizeInner, 2.0)), this.axleSizeOuter);
 		this.axleSizeInner = Math.min(this.axleSizeOuter, this.axleSizeInner);
-		this.axlePinAdapterSize = Math.min(0.5 - this.edgeMargin, this.axlePinAdapterSize);
+		this.axlePinAdapterSize = Math.min((0.5 - this.edgeMargin) / 2, this.axlePinAdapterSize);
 	}
 }
 

@@ -69,8 +69,8 @@ class Catalog {
 			new CatalogItem(3713, "Bushing", "0z22z2"),
 			new CatalogItem(32123, "Half Bushing", "0z2"),
 			new CatalogItem(43093, "Axle to Pin Connector", "0z32z37z410z4"),
-			new CatalogItem(3704, "Axle 2", "0z42z47z410z4"),
-			new CatalogItem(4519, "Axle 3", "7z410z41ez432z40z42z4"),
+			new CatalogItem(6682, "Pin with Ball", "7z50z32z3"),
+			new CatalogItem(2736, "Axle with Ball", "0z42z47z5"),
 			new CatalogItem(6553, "Axle 1.5 with Perpendicular Axle Connector", "1ex210z07z42z40z433x2"),
 			new CatalogItem(18651, "Axle 2m with Pin", "1ez432z47z410z40z32z3"),
 			new CatalogItem(2853, "Crankshaft", "8z411z40z2"),
@@ -86,6 +86,8 @@ class Catalog {
 			new CatalogItem(32449, "Beam 4 x 0.5 with Axle Hole each end", "7y11ey14dy20y2"),
 			new CatalogItem(11478, "Beam 5 x 0.5 with Axle Holes each end", "7y11ey14dy19cy20y2"),
 			new CatalogItem(32017, "Beam 5 x 0.5", "1ey14dy19cy17y10y1"),
+			new CatalogItem(3704, "Axle 2", "0z42z47z410z4"),
+			new CatalogItem(4519, "Axle 3", "7z410z41ez432z40z42z4"),
 			new CatalogItem(2825, "Beam 1 x 4 x 0.5 with Boss", "7y11ey14dy20y21y2"),
 			new CatalogItem(33299, "Half Beam 3 with Knob and Pin", "2dy342y04y217y2ay21ey3"),
 			new CatalogItem(60484, "Beam 3 x 3 T-Shaped", "17x13bx11ex17x10x12ax15bx133x111x13x1"),
@@ -120,7 +122,9 @@ class Catalog {
 			new CatalogItem(64179, "Beam Frame 5 x 7", "3bcz1466z122z136z1525z15f6z153z176z16dey1527x13c0y12a1x11c2y111bx1a4y17c5y1459y121dy1d1y15f9x1329x1169x129bz1322z19z112z11bay10y17x11ey14dx19cy1113x1215y11y12dy1c9y111x171x1161x1"),
 			new CatalogItem(14720, "Beam I Frame", "115y19ex14fx120x19y1157y1fy1d5x173x135x11bey122y1219y131y19cy10y1c9y11y1"),
 			new CatalogItem(53533, "Half Beam 3 with Fork", "11y13z38z31by135x073x1d5x17x01ex14dx1"),
-			new CatalogItem(4261, "Steering Arm with Two Half Pins", "31z14bz162y322y319y04y2")
+			new CatalogItem(4261, "Steering Arm with Two Half Pins", "31z14bz162y322y319y04y2"),
+			new CatalogItem(6572, "Half Beam Fork with Ball Joint", "7z010x232x170x23z58z320z050x29fx1116x2"),
+			new CatalogItem(15460, "Hole with 3 Ball Joints", "0z52z57x11ez532z517y526y511x1")
 		];
 	}
 

@@ -63,8 +63,8 @@ const NAMED_MEASUREMENTS : NamedMeasurement[] = [
 	new NamedMeasurement("pinLipRadius", true, true),
 	new NamedMeasurement("axleSizeInner", true, false),
 	new NamedMeasurement("axleSizeOuter", true, false),
-	new NamedMeasurement("axlePinAdapterSize", true, true),
-	new NamedMeasurement("axlePinAdapterRadius", true, true),
+	new NamedMeasurement("attachmentAdapterSize", true, true),
+	new NamedMeasurement("attachmentAdapterRadius", true, true),
 	new NamedMeasurement("interiorEndMargin", true, false),
 	new NamedMeasurement("lipSubdivisions", false, false),
 	new NamedMeasurement("subdivisionsPerQuarter", false, false)

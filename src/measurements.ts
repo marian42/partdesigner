@@ -12,8 +12,8 @@ class Measurements {
 	pinLipRadius = 0.17 / this.technicUnit;
 	axleSizeInner = 0.86 / this.technicUnit;
 	axleSizeOuter = 2.15 / this.technicUnit;
-	axlePinAdapterSize = 0.4 / this.technicUnit;
-	axlePinAdapterRadius = 3 / this.technicUnit;
+	attachmentAdapterSize = 0.4 / this.technicUnit;
+	attachmentAdapterRadius = 3 / this.technicUnit;
 	interiorEndMargin = 0.2 / this.technicUnit;
 
 	lipSubdivisions = 6;
@@ -30,9 +30,9 @@ class Measurements {
 		this.pinHoleOffset = Math.min(0.5 - this.edgeMargin, this.pinHoleOffset);
 		this.axleHoleSize = Math.min(this.interiorRadius / 2, this.axleHoleSize);
 		this.pinRadius = Math.min(0.5 - this.edgeMargin, this.pinRadius);
-		this.axleSizeOuter = Math.min(Math.sqrt(Math.pow(Math.min(0.5 - this.edgeMargin, this.axlePinAdapterRadius), 2.0) - Math.pow(this.axleSizeInner, 2.0)), this.axleSizeOuter);
+		this.axleSizeOuter = Math.min(Math.sqrt(Math.pow(Math.min(0.5 - this.edgeMargin, this.attachmentAdapterRadius), 2.0) - Math.pow(this.axleSizeInner, 2.0)), this.axleSizeOuter);
 		this.axleSizeInner = Math.min(this.axleSizeOuter, this.axleSizeInner);
-		this.axlePinAdapterSize = Math.min((0.5 - this.edgeMargin) / 2, this.axlePinAdapterSize);
+		this.attachmentAdapterSize = Math.min((0.5 - this.edgeMargin) / 2, this.attachmentAdapterSize);
 	}
 }
 

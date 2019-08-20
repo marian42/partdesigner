@@ -585,11 +585,11 @@ class PartMeshGenerator extends MeshGenerator {
 
 		var distance = block.getExteriorDepth(this);
 
-		var startOffset = (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.Pin) ? this.measurements.axlePinAdapterSize : 0;
+		var startOffset = (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.Pin) ? this.measurements.attachmentAdapterSize : 0;
 		if (previousBlock == null) {
 			startOffset += 2 * this.measurements.pinLipRadius;
 		}
-		var endOffset = (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.Pin) ? this.measurements.axlePinAdapterSize : 0;
+		var endOffset = (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.Pin) ? this.measurements.attachmentAdapterSize : 0;
 		if (nextBlock == null) {
 			endOffset += 2 * this.measurements.pinLipRadius;
 		}
@@ -613,11 +613,11 @@ class PartMeshGenerator extends MeshGenerator {
 			this.hideStartEndFaces(previousBlock.position, block, true);
 		}
 		if (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.Pin) {
-			this.createCircleWithHole(block, this.measurements.pinRadius, this.measurements.axlePinAdapterRadius, distance - this.measurements.axlePinAdapterSize, true);
+			this.createCircleWithHole(block, this.measurements.pinRadius, this.measurements.attachmentAdapterRadius, distance - this.measurements.attachmentAdapterSize, true);
 		}
 		if (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.Pin) {
-			this.createCircleWithHole(block, this.measurements.pinRadius, this.measurements.axlePinAdapterRadius, this.measurements.axlePinAdapterSize);
-			this.createCylinder(block, -this.measurements.axlePinAdapterSize, this.measurements.axlePinAdapterRadius, this.measurements.axlePinAdapterSize * 2);
+			this.createCircleWithHole(block, this.measurements.pinRadius, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize);
+			this.createCylinder(block, -this.measurements.attachmentAdapterSize, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize * 2);
 		}
 	}
 
@@ -629,10 +629,10 @@ class PartMeshGenerator extends MeshGenerator {
 		var end = start.plus(block.forward.times(block.getExteriorDepth(this)));
 
 		if (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.Axle) {
-			start = start.plus(block.forward.times(this.measurements.axlePinAdapterSize));
+			start = start.plus(block.forward.times(this.measurements.attachmentAdapterSize));
 		}
 		if (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.Axle) {
-			end = end.minus(block.forward.times(this.measurements.axlePinAdapterSize));
+			end = end.minus(block.forward.times(this.measurements.attachmentAdapterSize));
 		}
 
 		var horizontalInner = block.horizontal.times(this.measurements.axleSizeInner);
@@ -733,10 +733,10 @@ class PartMeshGenerator extends MeshGenerator {
 				start.plus(horizontalInner).plus(block.vertical.times(blockSizeWithoutMargin)), odd);
 		}
 		if (nextBlock != null && nextBlock.type != block.type && nextBlock.rounded) {
-			this.createAxleToCircleAdapter(end, block, nextBlock.isAttachment ? this.measurements.axlePinAdapterRadius : blockSizeWithoutMargin);
+			this.createAxleToCircleAdapter(end, block, nextBlock.isAttachment ? this.measurements.attachmentAdapterRadius : blockSizeWithoutMargin);
 		}
 		if (previousBlock != null && previousBlock.type != block.type && previousBlock.rounded) {
-			this.createAxleToCircleAdapter(start, block, previousBlock.isAttachment ? this.measurements.axlePinAdapterRadius : blockSizeWithoutMargin, true);
+			this.createAxleToCircleAdapter(start, block, previousBlock.isAttachment ? this.measurements.attachmentAdapterRadius : blockSizeWithoutMargin, true);
 		}
 		if (nextBlock != null && !nextBlock.isAttachment) {
 			this.hideStartEndFaces(nextBlock.position, block, false);
@@ -746,7 +746,7 @@ class PartMeshGenerator extends MeshGenerator {
 		}
 		
 		if (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.Axle) {
-			this.createCylinder(block, -this.measurements.axlePinAdapterSize, this.measurements.axlePinAdapterRadius, this.measurements.axlePinAdapterSize * 2);
+			this.createCylinder(block, -this.measurements.attachmentAdapterSize, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize * 2);
 		}
     }
 	
@@ -756,11 +756,11 @@ class PartMeshGenerator extends MeshGenerator {
 
 		var distance = block.getExteriorDepth(this);
 
-		var startOffset = (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.BallJoint) ? this.measurements.axlePinAdapterSize : 0;
+		var startOffset = (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.BallJoint) ? this.measurements.attachmentAdapterSize : 0;
 		if (previousBlock == null) {
 			startOffset += 2 * this.measurements.pinLipRadius;
 		}
-		var endOffset = (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.BallJoint) ? this.measurements.axlePinAdapterSize : 0;
+		var endOffset = (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.BallJoint) ? this.measurements.attachmentAdapterSize : 0;
 		if (nextBlock == null) {
 			endOffset += 2 * this.measurements.pinLipRadius;
 		}
@@ -827,11 +827,11 @@ class PartMeshGenerator extends MeshGenerator {
 			this.hideStartEndFaces(previousBlock.position, block, true);
 		}
 		if (nextBlock != null && nextBlock.isAttachment && nextBlock.type != BlockType.BallJoint) {
-			this.createCylinder(block, distance - this.measurements.axlePinAdapterSize, this.measurements.axlePinAdapterRadius, this.measurements.axlePinAdapterSize);
+			this.createCylinder(block, distance - this.measurements.attachmentAdapterSize, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize);
 		}
 		if (previousBlock != null && previousBlock.isAttachment && previousBlock.type != BlockType.BallJoint) {
-			this.createCircleWithHole(block, this.measurements.ballBaseRadius, this.measurements.axlePinAdapterRadius, this.measurements.axlePinAdapterSize);			
-			this.createCylinder(block, -this.measurements.axlePinAdapterSize, this.measurements.axlePinAdapterRadius, this.measurements.axlePinAdapterSize * 2);
+			this.createCircleWithHole(block, this.measurements.ballBaseRadius, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize);			
+			this.createCylinder(block, -this.measurements.attachmentAdapterSize, this.measurements.attachmentAdapterRadius, this.measurements.attachmentAdapterSize * 2);
 		}
     }
 	

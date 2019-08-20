@@ -67,5 +67,7 @@ const NAMED_MEASUREMENTS : NamedMeasurement[] = [
 	new NamedMeasurement("attachmentAdapterRadius", true, true),
 	new NamedMeasurement("interiorEndMargin", true, false),
 	new NamedMeasurement("lipSubdivisions", false, false),
-	new NamedMeasurement("subdivisionsPerQuarter", false, false)
+	new NamedMeasurement("subdivisionsPerQuarter", false, false),
+	new NamedMeasurement("ballRadius", true, true),
+	new NamedMeasurement("ballBaseRadius", true, true)
 ]

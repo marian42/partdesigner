@@ -755,7 +755,15 @@ class PartMeshGenerator extends MeshGenerator {
 			endOffset += 2 * this.measurements.pinLipRadius;
 		}
 		
-		var ballCenterDistance = 0.5;
+		var ballCenterDistance: number;
+		if (nextBlock == null) {
+			var offset = (block.position.dot(block.forward) - 1) % 3 - 1;
+			ballCenterDistance = 0.5 - offset * this.measurements.edgeMargin;
+		} else {
+			var offset = (block.position.dot(block.forward) + block.exteriorMergedBlocks - 1) % 3 - 1;
+			ballCenterDistance = distance - 0.5 - offset * this.measurements.edgeMargin;
+		}
+
 		var ballCenter = block.getCylinderOrigin(this).plus(block.forward.times(ballCenterDistance));
 		var angle = Math.acos(this.measurements.ballBaseRadius / this.measurements.ballRadius);
 

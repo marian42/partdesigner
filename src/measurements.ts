@@ -8,7 +8,7 @@ class Measurements {
 	axleHoleSize = 1.01 / this.technicUnit;
 	pinRadius = 2.315 / this.technicUnit;
 	ballBaseRadius = 1.6 / this.technicUnit;
-	ballRadius = 2.9 / this.technicUnit;
+	ballRadius = 3.0 / this.technicUnit;
 	pinLipRadius = 0.17 / this.technicUnit;
 	axleSizeInner = 0.86 / this.technicUnit;
 	axleSizeOuter = 2.15 / this.technicUnit;

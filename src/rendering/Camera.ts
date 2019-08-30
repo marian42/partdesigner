@@ -22,8 +22,8 @@ class Camera {
         gl.getExtension('WEBGL_depth_texture');
 
         this.supersample = supersample;        
-        gl.canvas.width = Math.round(gl.canvas.clientWidth * window.devicePixelRatio) * this.supersample;
-        gl.canvas.height = Math.round(gl.canvas.clientHeight * window.devicePixelRatio) * this.supersample;
+        canvas.width = Math.round(canvas.clientWidth * window.devicePixelRatio) * this.supersample;
+        canvas.height = Math.round(canvas.clientHeight * window.devicePixelRatio) * this.supersample;
         this.createBuffers();
     }
 
@@ -75,19 +75,19 @@ class Camera {
     }
     
     public onResize() {
-        gl.canvas.width = Math.round(gl.canvas.clientWidth * window.devicePixelRatio) * this.supersample;
-        gl.canvas.height = Math.round(gl.canvas.clientHeight * window.devicePixelRatio) * this.supersample;
+        gl.canvas.width = Math.round((gl.canvas as HTMLCanvasElement).clientWidth * window.devicePixelRatio) * this.supersample;
+        gl.canvas.height = Math.round((gl.canvas as HTMLCanvasElement).clientHeight * window.devicePixelRatio) * this.supersample;
         this.createBuffers();
         this.render();
     }
 
     public getScreenToWorldRay(event: MouseEvent): Ray {
-        var rect = gl.canvas.getBoundingClientRect();
+        var rect = (gl.canvas as HTMLCanvasElement).getBoundingClientRect();
         var x = event.clientX - rect.left;
         var y = event.clientY - rect.top;
 
-        x = x / gl.canvas.clientWidth * 2 - 1;
-        y = y / gl.canvas.clientHeight * -2 + 1;
+        x = x / (gl.canvas as HTMLCanvasElement).clientWidth * 2 - 1;
+        y = y / (gl.canvas as HTMLCanvasElement).clientHeight * -2 + 1;
 
         let viewSpacePoint = new Vector3(x * this.size / 2 * gl.drawingBufferWidth / gl.drawingBufferHeight, y * this.size / 2, 0);
         let viewSpaceDirection = new Vector3(0, 0, -1);

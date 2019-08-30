@@ -1091,7 +1091,7 @@ class Measurements {
         this.axleHoleSize = 1.01 / this.technicUnit;
         this.pinRadius = 2.315 / this.technicUnit;
         this.ballBaseRadius = 1.6 / this.technicUnit;
-        this.ballRadius = 2.9 / this.technicUnit;
+        this.ballRadius = 3.0 / this.technicUnit;
         this.pinLipRadius = 0.17 / this.technicUnit;
         this.axleSizeInner = 0.86 / this.technicUnit;
         this.axleSizeOuter = 2.15 / this.technicUnit;
@@ -2634,8 +2634,8 @@ class Camera {
         }
         gl.getExtension('WEBGL_depth_texture');
         this.supersample = supersample;
-        gl.canvas.width = Math.round(gl.canvas.clientWidth * window.devicePixelRatio) * this.supersample;
-        gl.canvas.height = Math.round(gl.canvas.clientHeight * window.devicePixelRatio) * this.supersample;
+        canvas.width = Math.round(canvas.clientWidth * window.devicePixelRatio) * this.supersample;
+        canvas.height = Math.round(canvas.clientHeight * window.devicePixelRatio) * this.supersample;
         this.createBuffers();
     }
     createBuffers() {

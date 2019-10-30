@@ -1413,18 +1413,17 @@ class Editor {
                 .times(Matrix4.getTranslation(this.translation.plus(new Vector3(0, 0, -15))));
     }
     onMouseDown(event) {
-        switch (event.button) {
-            case 0:
-                if (this.handles.onMouseDown(event)) {
-                    this.mouseMode = MouseMode.Left;
-                }
-                break;
-            case 1:
-                this.mouseMode = MouseMode.Middle;
-                break;
-            case 2:
-                this.mouseMode = MouseMode.Right;
-                break;
+        const { ctrlKey, shiftKey } = event;
+        if (event.button === 0 && !ctrlKey && !shiftKey) {
+            if (this.handles.onMouseDown(event)) {
+                this.mouseMode = MouseMode.Left;
+            }
+        }
+        else if (event.button === 1 || shiftKey) {
+            this.mouseMode = MouseMode.Middle;
+        }
+        else if (event.button === 2 || ctrlKey) {
+            this.mouseMode = MouseMode.Right;
         }
         event.preventDefault();
     }

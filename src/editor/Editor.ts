@@ -1,8 +1,8 @@
 enum MouseMode {
 	None,
-	Left,
-	Middle,
-	Right
+	Manipulate,
+	Translate,
+	Rotate
 }
 
 class Editor {
@@ -206,12 +206,12 @@ class Editor {
 		const {ctrlKey, shiftKey} = event;
 		if (event.button === 0 && !ctrlKey && !shiftKey) {
 			if (this.handles.onMouseDown(event)) {
-				this.mouseMode = MouseMode.Left;
+				this.mouseMode = MouseMode.Manipulate;
 			}
 		} else if (event.button === 1 || shiftKey) {
-			this.mouseMode = MouseMode.Middle;
+			this.mouseMode = MouseMode.Translate;
 		} else if (event.button === 2 || ctrlKey) {
-			this.mouseMode = MouseMode.Right;
+			this.mouseMode = MouseMode.Rotate;
 		}
 		event.preventDefault();
 	}
@@ -225,15 +225,15 @@ class Editor {
 	private onMouseMove(event: MouseEvent) {
 		switch (this.mouseMode) {
 			case MouseMode.None:
-			case MouseMode.Left:
+			case MouseMode.Manipulate:
 				this.handles.onMouseMove(event);
 				break;
-			case MouseMode.Middle:
+			case MouseMode.Translate:
 				this.translation = this.translation.plus(new Vector3(event.movementX, -event.movementY, 0).times(this.camera.size / gl.drawingBufferHeight));
 				this.updateTransform();
 				this.camera.render();
 				break;
-			case MouseMode.Right:
+			case MouseMode.Rotate:
 				this.rotationX -= event.movementX * 0.6;
 				this.rotationY = clamp(-90, 90, this.rotationY - event.movementY * 0.6);
 				

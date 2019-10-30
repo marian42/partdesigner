@@ -203,14 +203,15 @@ class Editor {
 	}
 
 	private onMouseDown(event: MouseEvent) {
-		switch(event.button) {
-			case 0: 
-				if (this.handles.onMouseDown(event)) {
-					this.mouseMode = MouseMode.Left;
-				}
-				break;
-			case 1: this.mouseMode = MouseMode.Middle; break;
-			case 2: this.mouseMode = MouseMode.Right; break;
+		const {ctrlKey, shiftKey} = event;
+		if(event.button === 0 && !ctrlKey && !shiftKey) {
+			if (this.handles.onMouseDown(event)) {
+				this.mouseMode = MouseMode.Left;
+			}
+		} else if(event.button === 1 || shiftKey) {
+			this.mouseMode = MouseMode.Middle;
+		} else if(event.button === 2 || ctrlKey) {
+			this.mouseMode = MouseMode.Right;
 		}
 		event.preventDefault();
 	}

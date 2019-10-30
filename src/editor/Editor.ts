@@ -208,9 +208,9 @@ class Editor {
 			if (this.handles.onMouseDown(event)) {
 				this.mouseMode = MouseMode.Left;
 			}
-		} else if(event.button === 1 || shiftKey) {
+		} else if (event.button === 1 || shiftKey) {
 			this.mouseMode = MouseMode.Middle;
-		} else if(event.button === 2 || ctrlKey) {
+		} else if (event.button === 2 || ctrlKey) {
 			this.mouseMode = MouseMode.Right;
 		}
 		event.preventDefault();

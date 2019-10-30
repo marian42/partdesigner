@@ -204,7 +204,7 @@ class Editor {
 
 	private onMouseDown(event: MouseEvent) {
 		const {ctrlKey, shiftKey} = event;
-		if(event.button === 0 && !ctrlKey && !shiftKey) {
+		if (event.button === 0 && !ctrlKey && !shiftKey) {
 			if (this.handles.onMouseDown(event)) {
 				this.mouseMode = MouseMode.Left;
 			}

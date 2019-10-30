@@ -1257,9 +1257,9 @@ class CatalogItem {
 var MouseMode;
 (function (MouseMode) {
     MouseMode[MouseMode["None"] = 0] = "None";
-    MouseMode[MouseMode["Left"] = 1] = "Left";
-    MouseMode[MouseMode["Middle"] = 2] = "Middle";
-    MouseMode[MouseMode["Right"] = 3] = "Right";
+    MouseMode[MouseMode["Manipulate"] = 1] = "Manipulate";
+    MouseMode[MouseMode["Translate"] = 2] = "Translate";
+    MouseMode[MouseMode["Rotate"] = 3] = "Rotate";
 })(MouseMode || (MouseMode = {}));
 class Editor {
     constructor() {
@@ -1416,14 +1416,14 @@ class Editor {
         const { ctrlKey, shiftKey } = event;
         if (event.button === 0 && !ctrlKey && !shiftKey) {
             if (this.handles.onMouseDown(event)) {
-                this.mouseMode = MouseMode.Left;
+                this.mouseMode = MouseMode.Manipulate;
             }
         }
         else if (event.button === 1 || shiftKey) {
-            this.mouseMode = MouseMode.Middle;
+            this.mouseMode = MouseMode.Translate;
         }
         else if (event.button === 2 || ctrlKey) {
-            this.mouseMode = MouseMode.Right;
+            this.mouseMode = MouseMode.Rotate;
         }
         event.preventDefault();
     }
@@ -1435,15 +1435,15 @@ class Editor {
     onMouseMove(event) {
         switch (this.mouseMode) {
             case MouseMode.None:
-            case MouseMode.Left:
+            case MouseMode.Manipulate:
                 this.handles.onMouseMove(event);
                 break;
-            case MouseMode.Middle:
+            case MouseMode.Translate:
                 this.translation = this.translation.plus(new Vector3(event.movementX, -event.movementY, 0).times(this.camera.size / gl.drawingBufferHeight));
                 this.updateTransform();
                 this.camera.render();
                 break;
-            case MouseMode.Right:
+            case MouseMode.Rotate:
                 this.rotationX -= event.movementX * 0.6;
                 this.rotationY = clamp(-90, 90, this.rotationY - event.movementY * 0.6);
                 this.updateTransform();

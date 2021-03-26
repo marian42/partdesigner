@@ -115,10 +115,53 @@ class Mesh {
         view.setInt16(offset + 48, 0, true);
     }
 
+    private formatVector(vector: Vector3): string {
+        return (vector.x * 20).toFixed(4) + " " + (-vector.y * 20).toFixed(4) + " " + (-vector.z * 20).toFixed(4);
+    }
+
     public saveSTLFile(scalingFactor: number, filename = "part.stl") {
         let blob = new Blob([this.createSTLFile(scalingFactor)], { type: "application/octet-stream" });
         let link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+    }
+
+    private createPartFile(part: Part, name: string, filename: string): string {
+        var result: string = `0 FILE ` + filename + `
+0 Description: part
+0 Name: 
+0 Author: 
+0 BFC CERTIFY CCW
+1 16 0.0000 -0.5000 0.0000 1.0000 0.0000 0.0000 0.0000 1.0000 0.0000 0.0000 0.0000 1.0000 part.obj_grouped
+0 NOFILE
+0 FILE part.obj_grouped
+0 Description: part.obj_grouped
+0 Name: 
+0 Author: 
+0 ModelType: Part
+0 BFC CERTIFY CCW
+1 16 0.0000 0.0000 0.0000 1.0000 0.0000 0.0000 0.0000 1.0000 0.0000 0.0000 0.0000 1.0000 part.obj
+0 NOFILE
+0 FILE part.obj
+0 Description: part.obj
+0 Name: 
+0 Author: 
+0 BFC CERTIFY CCW
+`;
+
+    for (var triangle of this.triangles) {
+        result += "3 16 " + this.formatVector(triangle.v1) + " " + this.formatVector(triangle.v2) + " " + this.formatVector(triangle.v3) + "\n";
+    }
+
+    result += "0 NOFILE\n";
+    return result;
+    }
+
+    public savePartFile(part: Part, name: string, filename = "part.part") {
+        var content = this.createPartFile(part, name, filename);
+        let link = document.createElement('a');
+        link.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);
         link.download = filename;
         link.click();
     }

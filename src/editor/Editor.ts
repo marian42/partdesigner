@@ -76,7 +76,7 @@ class Editor {
 		this.canvas.addEventListener("wheel", (event: MouseWheelEvent) => this.onScroll(event));
 		document.getElementById("clear").addEventListener("click", (event: MouseEvent) => this.clear());
 		document.getElementById("share").addEventListener("click", (event: MouseEvent) => this.share());
-		document.getElementById("save").addEventListener("click", (event: MouseEvent) => this.saveSTL());
+		document.getElementById("save").addEventListener("click", (event: MouseEvent) => this.saveStudioPart());
 		document.getElementById("remove").addEventListener("click", (event: MouseEvent) => this.remove());
 		document.getElementById("style").addEventListener("change", (event: MouseEvent) => this.setRenderStyle(parseInt((event.srcElement as HTMLSelectElement).value)));
         window.addEventListener("resize", (e: Event) => this.camera.onResize());
@@ -98,6 +98,10 @@ class Editor {
 
 	private saveSTL() {
 		new PartMeshGenerator(this.part, this.measurements).getMesh().saveSTLFile(this.measurements.technicUnit);
+	}
+
+	private saveStudioPart() {
+		new PartMeshGenerator(this.part, this.measurements).getMesh().savePartFile(this.part, "Test Part", "test.part");
 	}
 
 	private initializeEditor(elementId: string, onchange: (value: string) => void) {

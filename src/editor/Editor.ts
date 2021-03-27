@@ -97,11 +97,11 @@ class Editor {
 	}
 
 	private saveSTL() {
-		new PartMeshGenerator(this.part, this.measurements).getMesh().saveSTLFile(this.measurements.technicUnit);
+		STLExporter.saveSTLFile(this.part, this.measurements);
 	}
 
 	private saveStudioPart() {
-		new PartMeshGenerator(this.part, this.measurements).getMesh().savePartFile(this.part, "Test Part", "test.part");
+		StudioPartExporter.savePartFile(this.part, this.measurements);
 	}
 
 	private initializeEditor(elementId: string, onchange: (value: string) => void) {

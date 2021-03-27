@@ -73,7 +73,7 @@ class Editor {
 		this.canvas.addEventListener("mouseup", (event: MouseEvent) => this.onMouseUp(event));
 		this.canvas.addEventListener("mousemove", (event: MouseEvent) => this.onMouseMove(event));
 		this.canvas.addEventListener("contextmenu", (event: Event) => event.preventDefault());
-		this.canvas.addEventListener("wheel", (event: MouseWheelEvent) => this.onScroll(event));
+		this.canvas.addEventListener("wheel", (event: WheelEvent) => this.onScroll(event));
 		document.getElementById("clear").addEventListener("click", (event: MouseEvent) => this.clear());
 		document.getElementById("share").addEventListener("click", (event: MouseEvent) => this.share());
 		document.getElementById("save-stl").addEventListener("click", (event: MouseEvent) => this.saveSTL());

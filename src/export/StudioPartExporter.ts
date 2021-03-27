@@ -130,7 +130,7 @@ class StudioPartExporter {
     }   
 
     public static savePartFile(part: Part, measurements: Measurements, name = "part") {
-        let filename = name.toLowerCase().replace(" ", "_") + ".part";
+        let filename = name.toLowerCase().replaceAll(" ", "_") + ".part";
         let content = StudioPartExporter.createFileContent(part, measurements, name, filename);
         let link = document.createElement('a');
         link.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);

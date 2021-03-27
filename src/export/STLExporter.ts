@@ -42,7 +42,7 @@ class STLExporter {
     }
     
     public static saveSTLFile(part: Part, measurements: Measurements, name="part") {
-        let filename = name.toLowerCase().replace(" ", "_") + ".stl";
+        let filename = name.toLowerCase().replaceAll(" ", "_") + ".stl";
         let blob = new Blob([STLExporter.createBuffer(part, measurements)], { type: "application/octet-stream" });
         let link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);

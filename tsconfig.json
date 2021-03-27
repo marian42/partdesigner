@@ -2,7 +2,7 @@
     "compilerOptions": {
         "outFile": "app.js",
         "sourceMap": true,
-        "target": "es6",
+        "target": "esnext",
     },
 	"compileOnSave": true,
     "include": [

@@ -41,14 +41,11 @@ summary {
     -moz-user-select: none;
     border-bottom: 1px solid rgb(219, 219, 219);
     transition: background-color 0.2s;
+    outline: none;
 }
 
 summary:hover {
     background-color: rgb(184, 184, 184);
-}
-
-details summary::-webkit-details-marker {
-    display:none;
 }
 
 details[open] summary {    
@@ -83,7 +80,7 @@ button {
     border-radius: 5px;
     color: white;
     text-shadow: 0px 1px 6px rgba(0,0,0,0.63);
-    padding: 8px 18px;
+    padding: 8px 16px;
 }
 
 label.radiolabel {

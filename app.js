@@ -1305,7 +1305,8 @@ class Editor {
         this.canvas.addEventListener("wheel", (event) => this.onScroll(event));
         document.getElementById("clear").addEventListener("click", (event) => this.clear());
         document.getElementById("share").addEventListener("click", (event) => this.share());
-        document.getElementById("save").addEventListener("click", (event) => this.saveSTL());
+        document.getElementById("save-stl").addEventListener("click", (event) => this.saveSTL());
+        document.getElementById("save-studio").addEventListener("click", (event) => this.saveStudioPart());
         document.getElementById("remove").addEventListener("click", (event) => this.remove());
         document.getElementById("style").addEventListener("change", (event) => this.setRenderStyle(parseInt(event.srcElement.value)));
         window.addEventListener("resize", (e) => this.camera.onResize());
@@ -1322,7 +1323,10 @@ class Editor {
         this.camera.render();
     }
     saveSTL() {
-        new PartMeshGenerator(this.part, this.measurements).getMesh().saveSTLFile(this.measurements.technicUnit);
+        STLExporter.saveSTLFile(this.part, this.measurements);
+    }
+    saveStudioPart() {
+        StudioPartExporter.savePartFile(this.part, this.measurements);
     }
     initializeEditor(elementId, onchange) {
         var element = document.getElementById(elementId);
@@ -1784,6 +1788,177 @@ var RenderStyle;
     RenderStyle[RenderStyle["Wireframe"] = 2] = "Wireframe";
     RenderStyle[RenderStyle["SolidWireframe"] = 3] = "SolidWireframe";
 })(RenderStyle || (RenderStyle = {}));
+class STLExporter {
+    constructor(size) {
+        this.buffer = new ArrayBuffer(size);
+        this.view = new DataView(this.buffer, 0, size);
+    }
+    writeVector(offset, vector) {
+        this.view.setFloat32(offset, vector.z, true);
+        this.view.setFloat32(offset + 4, vector.x, true);
+        this.view.setFloat32(offset + 8, vector.y, true);
+    }
+    writeTriangle(offset, triangle, scalingFactor) {
+        this.writeVector(offset, triangle.normal());
+        this.writeVector(offset + 12, triangle.v1.times(scalingFactor));
+        this.writeVector(offset + 24, triangle.v2.times(scalingFactor));
+        this.writeVector(offset + 36, triangle.v3.times(scalingFactor));
+        this.view.setInt16(offset + 48, 0, true);
+    }
+    static createBuffer(part, measurements) {
+        let mesh = new PartMeshGenerator(part, measurements).getMesh();
+        let exporter = new STLExporter(84 + 50 * mesh.triangles.length);
+        for (var i = 0; i < 80; i++) {
+            exporter.view.setInt8(i, 0);
+        }
+        var p = 80;
+        exporter.view.setInt32(p, mesh.triangles.length, true);
+        p += 4;
+        for (let triangle of mesh.triangles) {
+            exporter.writeTriangle(p, triangle, measurements.technicUnit);
+            p += 50;
+        }
+        return exporter.buffer;
+    }
+    static saveSTLFile(part, measurements, name = "part") {
+        let filename = name.toLowerCase().replaceAll(" ", "_") + ".stl";
+        let blob = new Blob([STLExporter.createBuffer(part, measurements)], { type: "application/octet-stream" });
+        let link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+    }
+}
+class StudioPartExporter {
+    static formatPoint(vector) {
+        return (vector.x * 20).toFixed(4) + " " + (-vector.y * 20).toFixed(4) + " " + (-vector.z * 20).toFixed(4);
+    }
+    static formatVector(vector) {
+        return (vector.x).toFixed(4) + " " + (-vector.y).toFixed(4) + " " + (-vector.z).toFixed(4);
+    }
+    static formatConnector(position, block, facesForward) {
+        let result = "0 PE_CONN ";
+        switch (block.type) {
+            case BlockType.PinHole:
+                result += "0 2";
+                break;
+            case BlockType.AxleHole:
+                result += "0 6";
+                break;
+            case BlockType.Axle:
+                result += "0 7";
+                break;
+            case BlockType.Pin:
+                result += "0 3";
+                break;
+            case BlockType.BallJoint:
+                result += "1 5";
+                break;
+            default: throw new Error("Unknown block type: " + block.type);
+        }
+        if (facesForward) {
+            result += " "
+                + StudioPartExporter.formatVector(block.right) + " "
+                + StudioPartExporter.formatVector(block.forward) + " "
+                + StudioPartExporter.formatVector(block.up) + " "
+                + StudioPartExporter.formatPoint(position.plus(new Vector3(1, 1, 1).plus(block.forward)).times(0.5));
+        }
+        else {
+            result += " "
+                + StudioPartExporter.formatVector(block.right.times(-1)) + " "
+                + StudioPartExporter.formatVector(block.forward.times(-1)) + " "
+                + StudioPartExporter.formatVector(block.up) + " "
+                + StudioPartExporter.formatPoint(position.plus(new Vector3(1, 1, 1).minus(block.forward)).times(0.5));
+        }
+        result += " 0 0 0.8 0 0\n";
+        return result;
+    }
+    static createFileContent(part, measurements, name, filename) {
+        let smallBlocks = part.createSmallBlocks();
+        let mesh = new PartMeshGenerator(part, measurements).getMesh();
+        var result = `0 FILE ` + filename + `
+0 Description: part
+0 Name: ` + name + `
+0 Author: 
+0 BFC CERTIFY CCW
+1 16 0.0000 -0.5000 0.0000 1.0000 0.0000 0.0000 0.0000 1.0000 0.0000 0.0000 0.0000 1.0000 part.obj_grouped
+0 NOFILE
+0 FILE part.obj_grouped
+0 Description: part.obj_grouped
+0 Name: 
+0 Author: 
+0 ModelType: Part
+0 BFC CERTIFY CCW
+1 16 0.0000 0.0000 0.0000 1.0000 0.0000 0.0000 0.0000 1.0000 0.0000 0.0000 0.0000 1.0000 part.obj
+`;
+        for (let position of part.blocks.keys()) {
+            let startBlock = part.blocks.get(position);
+            if (startBlock.type == BlockType.Solid) {
+                continue;
+            }
+            let previousBlock = part.blocks.getOrNull(position.minus(startBlock.forward));
+            let isFirstInRow = previousBlock == null || previousBlock.orientation != startBlock.orientation || previousBlock.type != startBlock.type;
+            if (!isFirstInRow) {
+                continue;
+            }
+            let facesForward = false;
+            if (startBlock.isAttachment) {
+                for (let x = 0; x <= 1; x++) {
+                    for (let y = 0; y <= 1; y++) {
+                        let supportBlockPosition = position.minus(startBlock.forward).plus(startBlock.right.times(x)).plus(startBlock.up.times(y));
+                        let supportBlock = smallBlocks.getOrNull(supportBlockPosition);
+                        if (supportBlock != null && !supportBlock.isAttachment) {
+                            facesForward = true;
+                            break;
+                        }
+                    }
+                    if (facesForward) {
+                        break;
+                    }
+                }
+            }
+            let block = startBlock;
+            let offset = 0;
+            while (true) {
+                let nextBlock = part.blocks.getOrNull(position.plus(startBlock.forward));
+                let isLastInRow = nextBlock == null || nextBlock.orientation != startBlock.orientation || nextBlock.type != startBlock.type;
+                if (isLastInRow && offset % 2 == 0 && offset > 0) {
+                    result += StudioPartExporter.formatConnector(position.minus(startBlock.forward), block, facesForward);
+                }
+                else if (offset % 2 == 0) {
+                    result += StudioPartExporter.formatConnector(position, block, facesForward);
+                }
+                if (isLastInRow) {
+                    break;
+                }
+                offset += 1;
+                position = position.plus(startBlock.forward);
+                block = nextBlock;
+            }
+        }
+        result += `
+0 NOFILE
+0 FILE part.obj
+0 Description: part.obj
+0 Name: 
+0 Author: 
+0 BFC CERTIFY CCW
+`;
+        for (let triangle of mesh.triangles) {
+            result += "3 16 " + this.formatPoint(triangle.v1) + " " + this.formatPoint(triangle.v2) + " " + this.formatPoint(triangle.v3) + "\n";
+        }
+        result += "0 NOFILE\n";
+        return result;
+    }
+    static savePartFile(part, measurements, name = "part") {
+        let filename = name.toLowerCase().replaceAll(" ", "_") + ".part";
+        let content = StudioPartExporter.createFileContent(part, measurements, name, filename);
+        let link = document.createElement('a');
+        link.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);
+        link.download = filename;
+        link.click();
+    }
+}
 class Matrix4 {
     constructor(elements) {
         this.elements = elements;
@@ -1957,41 +2132,6 @@ class Mesh {
         array.push(vector.x);
         array.push(vector.y);
         array.push(vector.z);
-    }
-    createSTLFile(scalingFactor) {
-        let size = 84 + 50 * this.triangles.length;
-        var buffer = new ArrayBuffer(size);
-        let view = new DataView(buffer, 0, size);
-        for (var i = 0; i < 80; i++) {
-            view.setInt8(i, 0);
-        }
-        var p = 80;
-        view.setInt32(p, this.triangles.length, true);
-        p += 4;
-        for (let triangle of this.triangles) {
-            this.writeTriangle(view, p, triangle, scalingFactor);
-            p += 50;
-        }
-        return buffer;
-    }
-    writeVector(view, offset, vector) {
-        view.setFloat32(offset, vector.z, true);
-        view.setFloat32(offset + 4, vector.x, true);
-        view.setFloat32(offset + 8, vector.y, true);
-    }
-    writeTriangle(view, offset, triangle, scalingFactor) {
-        this.writeVector(view, offset, triangle.normal());
-        this.writeVector(view, offset + 12, triangle.v1.times(scalingFactor));
-        this.writeVector(view, offset + 24, triangle.v2.times(scalingFactor));
-        this.writeVector(view, offset + 36, triangle.v3.times(scalingFactor));
-        view.setInt16(offset + 48, 0, true);
-    }
-    saveSTLFile(scalingFactor, filename = "part.stl") {
-        let blob = new Blob([this.createSTLFile(scalingFactor)], { type: "application/octet-stream" });
-        let link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = filename;
-        link.click();
     }
     getVertexCount() {
         return this.triangles.length * 3;
@@ -2261,6 +2401,7 @@ class Block {
         this.right = RIGHT[this.orientation];
         this.up = UP[this.orientation];
         this.forward = FORWARD[this.orientation];
+        this.isAttachment = this.type == BlockType.Pin || this.type == BlockType.Axle || this.type == BlockType.BallJoint;
     }
 }
 ///<reference path="../geometry/Vector3.ts" />
@@ -2436,7 +2577,6 @@ class SmallBlock extends Block {
         this.directionY = this.localY == 1 ? 1 : -1;
         this.horizontal = this.localX == 1 ? RIGHT[this.orientation] : LEFT[this.orientation];
         this.vertical = this.localY == 1 ? UP[this.orientation] : DOWN[this.orientation];
-        this.isAttachment = this.type == BlockType.Pin || this.type == BlockType.Axle || this.type == BlockType.BallJoint;
     }
     static createFromLocalCoordinates(localX, localY, position, source) {
         return new SmallBlock(SmallBlock.getQuadrantFromLocal(localX, localY), position, source);

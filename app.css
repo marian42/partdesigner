@@ -1,4 +1,4 @@
-﻿html, body {
+html, body {
     font-family: 'Segoe UI', sans-serif;
     margin: 0px;
     height: 100%;
@@ -73,9 +73,7 @@ details[open] summary {
 }
 
 button, label.radiolabel {
-    padding: 8px;
     transition: 0.1s;
-    width: 100%;
     border: 1px solid rgb(21, 98, 212);
 }
 
@@ -85,6 +83,7 @@ button {
     border-radius: 5px;
     color: white;
     text-shadow: 0px 1px 6px rgba(0,0,0,0.63);
+    padding: 8px 18px;
 }
 
 label.radiolabel {
@@ -97,6 +96,8 @@ label.radiolabel {
     vertical-align: middle;
     user-select: none;
     -moz-user-select: none;
+    width: 100%;    
+    padding: 8px;
 }
 
 label.radiolabel:active, button:active {
@@ -268,4 +269,8 @@ input[type=radio]:checked + label.radiolabel.z:hover, label.radiolabel.z:hover {
 .fineprint, .fineprint a, .fineprint a:visited {
     font-size: 13px;
     color: rgb(78, 78, 78);
+}
+
+.part-buttons {
+    margin-bottom: 10px;
 }

@@ -115,8 +115,28 @@ class Mesh {
         view.setInt16(offset + 48, 0, true);
     }
 
-    private formatVector(vector: Vector3): string {
+    private formatPoint(vector: Vector3): string {
         return (vector.x * 20).toFixed(4) + " " + (-vector.y * 20).toFixed(4) + " " + (-vector.z * 20).toFixed(4);
+    }
+
+    private formatVector(vector: Vector3): string {
+        return (vector.x).toFixed(4) + " " + (-vector.y).toFixed(4) + " " + (-vector.z).toFixed(4);
+    }
+
+    private formatConnector(position: Vector3, block: Block): string {
+        let result = "0 PE_CONN ";
+
+        switch (block.type) {
+            case BlockType.PinHole: result += "0 2"; break;
+            case BlockType.AxleHole: result += "0 6"; break;
+            case BlockType.Axle: result += "0 7"; break;
+            case BlockType.Pin: result += "0 3"; break;
+            case BlockType.BallJoint: result += "1 5"; break;
+            default: throw new Error("Unknown block type: " + block.type);
+        }
+
+        result += " " + this.formatVector(block.right) + " " + this.formatVector(block.forward) + " " + this.formatVector(block.up) + " " + this.formatPoint(position.plus(new Vector3(1, 1, 1).plus(block.forward)).times(0.5)) + " 0 0 0.8 0 0\n";
+        return result;
     }
 
     public saveSTLFile(scalingFactor: number, filename = "part.stl") {
@@ -142,6 +162,45 @@ class Mesh {
 0 ModelType: Part
 0 BFC CERTIFY CCW
 1 16 0.0000 0.0000 0.0000 1.0000 0.0000 0.0000 0.0000 1.0000 0.0000 0.0000 0.0000 1.0000 part.obj
+`;
+
+        for (let position of part.blocks.keys()) {
+            let startBlock = part.blocks.get(position);
+
+            if (startBlock.type == BlockType.Solid) {
+                continue;
+            }
+
+            let previousBlock = part.blocks.getOrNull(position.minus(startBlock.forward));
+            let isFirstInRow = previousBlock == null || previousBlock.orientation != startBlock.orientation || previousBlock.type != startBlock.type;
+
+            if (!isFirstInRow) {
+                continue;
+            }
+
+            let block = startBlock;
+            let offset = 0;
+            while (true) {
+                let nextBlock = part.blocks.getOrNull(position.plus(startBlock.forward));
+                let isLastInRow = nextBlock == null || nextBlock.orientation != startBlock.orientation || nextBlock.type != startBlock.type;
+
+                if (isLastInRow && offset % 2 == 0 && offset > 0) {
+                    result += this.formatConnector(position.minus(startBlock.forward), block);
+                } else if (offset % 2 == 0) {
+                    result += this.formatConnector(position, block);
+                }
+
+                if (isLastInRow) {
+                    break;
+                }
+
+                offset += 1;
+                position = position.plus(startBlock.forward);
+                block = nextBlock;
+            }
+        }
+
+        result += `
 0 NOFILE
 0 FILE part.obj
 0 Description: part.obj
@@ -150,8 +209,8 @@ class Mesh {
 0 BFC CERTIFY CCW
 `;
 
-    for (var triangle of this.triangles) {
-        result += "3 16 " + this.formatVector(triangle.v1) + " " + this.formatVector(triangle.v2) + " " + this.formatVector(triangle.v3) + "\n";
+    for (let triangle of this.triangles) {
+        result += "3 16 " + this.formatPoint(triangle.v1) + " " + this.formatPoint(triangle.v2) + " " + this.formatPoint(triangle.v3) + "\n";
     }
 
     result += "0 NOFILE\n";

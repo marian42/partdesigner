@@ -11,7 +11,6 @@
 	public readonly directionY: number;
 	public readonly horizontal: Vector3;
 	public readonly vertical: Vector3;
-	public readonly isAttachment: boolean;
 
 	constructor(quadrant: Quadrant, positon: Vector3, source: Block) {
 		super(source.orientation, source.type, source.rounded);
@@ -26,7 +25,6 @@
 		this.directionY = this.localY == 1 ? 1 : -1;
 		this.horizontal = this.localX == 1 ? RIGHT[this.orientation] : LEFT[this.orientation];
 		this.vertical = this.localY == 1 ? UP[this.orientation] : DOWN[this.orientation];
-		this.isAttachment = this.type == BlockType.Pin || this.type == BlockType.Axle || this.type == BlockType.BallJoint;
 	}
 
 	public static createFromLocalCoordinates(localX: number, localY: number, position: Vector3, source: Block) {

@@ -123,7 +123,7 @@ class Mesh {
         return (vector.x).toFixed(4) + " " + (-vector.y).toFixed(4) + " " + (-vector.z).toFixed(4);
     }
 
-    private formatConnector(position: Vector3, block: Block): string {
+    private formatConnector(position: Vector3, block: Block, facesForward: boolean): string {
         let result = "0 PE_CONN ";
 
         switch (block.type) {
@@ -135,7 +135,22 @@ class Mesh {
             default: throw new Error("Unknown block type: " + block.type);
         }
 
-        result += " " + this.formatVector(block.right) + " " + this.formatVector(block.forward) + " " + this.formatVector(block.up) + " " + this.formatPoint(position.plus(new Vector3(1, 1, 1).plus(block.forward)).times(0.5)) + " 0 0 0.8 0 0\n";
+        if (facesForward) {
+            result += " "
+                + this.formatVector(block.right) + " "
+                + this.formatVector(block.forward) + " "
+                + this.formatVector(block.up) + " "
+                + this.formatPoint(position.plus(new Vector3(1, 1, 1).plus(block.forward)).times(0.5));
+        } else {
+            result += " "
+                + this.formatVector(block.right.times(-1)) + " "
+                + this.formatVector(block.forward.times(-1)) + " "
+                + this.formatVector(block.up) + " "
+                + this.formatPoint(position.plus(new Vector3(1, 1, 1).minus(block.forward)).times(0.5));
+        }
+
+         
+        result += " 0 0 0.8 0 0\n";
         return result;
     }
 
@@ -148,6 +163,8 @@ class Mesh {
     }
 
     private createPartFile(part: Part, name: string, filename: string): string {
+        let smallBlocks = part.createSmallBlocks();
+
         var result: string = `0 FILE ` + filename + `
 0 Description: part
 0 Name: 
@@ -178,6 +195,24 @@ class Mesh {
                 continue;
             }
 
+            let facesForward = false;
+
+            if (startBlock.isAttachment) {
+                for (let x = 0; x <= 1; x++) {
+                    for (let y = 0; y <= 1; y++) {
+                        let supportBlockPosition = position.minus(startBlock.forward).plus(startBlock.right.times(x)).plus(startBlock.up.times(y));
+                        let supportBlock = smallBlocks.getOrNull(supportBlockPosition);
+                        if (supportBlock != null && !supportBlock.isAttachment) {
+                            facesForward = true;
+                            break;
+                        }
+                    }
+                    if (facesForward) {
+                        break;
+                    }
+                }
+            }
+
             let block = startBlock;
             let offset = 0;
             while (true) {
@@ -185,9 +220,9 @@ class Mesh {
                 let isLastInRow = nextBlock == null || nextBlock.orientation != startBlock.orientation || nextBlock.type != startBlock.type;
 
                 if (isLastInRow && offset % 2 == 0 && offset > 0) {
-                    result += this.formatConnector(position.minus(startBlock.forward), block);
+                    result += this.formatConnector(position.minus(startBlock.forward), block, facesForward);
                 } else if (offset % 2 == 0) {
-                    result += this.formatConnector(position, block);
+                    result += this.formatConnector(position, block, facesForward);
                 }
 
                 if (isLastInRow) {
@@ -209,12 +244,12 @@ class Mesh {
 0 BFC CERTIFY CCW
 `;
 
-    for (let triangle of this.triangles) {
-        result += "3 16 " + this.formatPoint(triangle.v1) + " " + this.formatPoint(triangle.v2) + " " + this.formatPoint(triangle.v3) + "\n";
-    }
+        for (let triangle of this.triangles) {
+            result += "3 16 " + this.formatPoint(triangle.v1) + " " + this.formatPoint(triangle.v2) + " " + this.formatPoint(triangle.v3) + "\n";
+        }
 
-    result += "0 NOFILE\n";
-    return result;
+        result += "0 NOFILE\n";
+        return result;
     }
 
     public savePartFile(part: Part, name: string, filename = "part.part") {

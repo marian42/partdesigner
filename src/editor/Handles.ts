@@ -242,6 +242,13 @@ class Handles implements Renderer {
 		}
 	}
 
+	public move(direction: Vector3) {
+		this.position = this.position.plus(direction);
+		this.block = this.getBlock(this.position);
+		this.updateTransforms();
+		this.camera.render();
+	}
+
 	public getSelectedBlock(): Vector3 {
 		return this.block;
 	}

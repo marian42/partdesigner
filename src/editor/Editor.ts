@@ -74,6 +74,7 @@ class Editor {
 		this.canvas.addEventListener("mousemove", (event: MouseEvent) => this.onMouseMove(event));
 		this.canvas.addEventListener("contextmenu", (event: Event) => event.preventDefault());
 		this.canvas.addEventListener("wheel", (event: WheelEvent) => this.onScroll(event));
+		window.addEventListener("keydown", (event: KeyboardEvent) => this.onKeydown(event));
 		document.getElementById("clear").addEventListener("click", (event: MouseEvent) => this.clear());
 		document.getElementById("share").addEventListener("click", (event: MouseEvent) => this.share());
 		document.getElementById("save-stl").addEventListener("click", (event: MouseEvent) => this.saveSTL());
@@ -254,6 +255,31 @@ class Editor {
 		this.camera.render();
 	}
 
+	private onKeydown(event: KeyboardEvent) {
+		const keyActions: { [key: string]: () => void } = {
+			'1': () => this.setType('pinhole'),
+			'2': () => this.setType('axlehole'),
+			'3': () => this.setType('pin'),
+			'4': () => this.setType('axle'),
+			'5': () => this.setType('solid'),
+			'6': () => this.setType('balljoint'),
+			'y': () => this.setOrientation('y'),
+			'z': () => this.setOrientation('z'),
+			'x': () => this.setOrientation('x'),
+			'PageUp': () => this.handles.move(new Vector3(0, 1, 0)),
+			'PageDown': () => this.handles.move(new Vector3(0, -1, 0)),
+			'ArrowLeft': () => this.handles.move(new Vector3(0, 0, 1)),
+			'ArrowRight': () => this.handles.move(new Vector3(0, 0, -1)),
+			'ArrowUp': () => this.handles.move(new Vector3(-1, 0, 0)),
+			'ArrowDown': () => this.handles.move(new Vector3(1, 0, 0)),
+			'Backspace': () => this.remove(),
+			'Delete': () => this.remove(),
+		};
+
+		if (keyActions[event.key]) {
+			keyActions[event.key]();
+		}
+	}
 	private displayMeasurements() {
 		for (var namedMeasurement of NAMED_MEASUREMENTS) {
 			namedMeasurement.applyToDom(this.measurements);

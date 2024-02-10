@@ -36,6 +36,9 @@ class Editor {
 		var url = new URL(document.URL);
 		if (url.searchParams.has("part")) {
 			this.part = Part.fromString(url.searchParams.get("part"));
+			if (url.searchParams.has("name")) {
+				this.setName(url.searchParams.get("name"));
+			}
 		} else {
 			this.part = Part.fromString(catalog.items[Math.floor(Math.random() * catalog.items.length)].string);
 		}
@@ -125,7 +128,12 @@ class Editor {
 	}
 
 	private share() {
-		window.history.pushState({}, document.title, "?part=" + this.part.toString());
+		var name = this.getName();
+		var url = "?part=" + this.part.toString();
+		if (name.length != 0) {
+			url += '&name=' + encodeURIComponent(name);
+		}
+		window.history.pushState({}, document.title, url);
 	}
 
 	private remove() {
@@ -323,5 +331,10 @@ class Editor {
 		} else {
 			document.title = name + ' ⋅ Part Designer';
 		}
+	}
+
+	public setName(name: string) {
+		document.title = name + ' ⋅ Part Designer';
+		this.getNameTextbox().value = name;
 	}
 }

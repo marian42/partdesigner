@@ -48,6 +48,7 @@ class Editor {
 		this.editorState = new EditorState();
 
 		this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
+		this.canvas.tabIndex = 0;
 		this.camera = new Camera(this.canvas);
 		
 		this.partRenderer = new MeshRenderer();
@@ -220,6 +221,7 @@ class Editor {
 	}
 
 	private onMouseDown(event: MouseEvent) {
+		this.canvas.focus();
 		const {ctrlKey, shiftKey} = event;
 		if (event.button === 0 && !ctrlKey && !shiftKey) {
 			if (this.handles.onMouseDown(event)) {
@@ -287,7 +289,7 @@ class Editor {
 			'Delete': () => this.remove(),
 		};
 
-		if (keyActions[event.key]) {
+		if (event.key in keyActions && document.activeElement == this.canvas) {
 			keyActions[event.key]();
 		}
 	}

@@ -1,0 +1,34 @@
+name: GitHub Pages Deployment
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '14'
+
+    - name: Install TypeScript
+      run: npm install -g typescript
+
+    - name: Compile TypeScript
+      run: tsc
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: .
+        publish_branch: gh-pages
+        exclude_assets: .github,src,.gitignore,app.js.map,LICENSE,README.md,tsconfig.json
+        full_commit_message: Deploy to Github Pages

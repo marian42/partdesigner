@@ -75,3 +75,12 @@ function ease(value: number): number {
 function mod(a: number, b: number): number {
 	return ((a % b) + b) % b;
 }
+
+function containsPoint(list: Vector3[], query: Vector3): boolean {
+	for (var item of list) {
+		if (query.equals(item)) {
+			return true;
+		}
+	}
+	return false;
+}

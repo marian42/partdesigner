@@ -87,6 +87,43 @@
 	public static lerp(a: Vector3, b: Vector3, progress: number): Vector3 {
 		return a.plus(b.minus(a).times(progress));
 	}
+
+	public static isCollinear(a: Vector3, b: Vector3) {
+		var factor: number | null = null;
+		if (a.x == 0 || b.x == 0) {
+			if (Math.abs(a.x + b.x) > 0.001) {
+				return false;
+			}
+		} else {
+			factor = a.x / b.x;
+		}
+
+		if (a.y == 0 || b.y == 0) {
+			if (Math.abs(a.y + b.y) > 0.001) {
+				return false;
+			}
+		} else {
+			if (factor == null) {
+				factor = a.y / b.y;
+			} else if (Math.abs(factor - a.y / b.y) > 0.001) {
+				return false;
+			}
+		}
+
+		if (a.z == 0 || b.z == 0) {
+			if (Math.abs(a.z + b.z) > 0.001) {
+				return false;
+			}
+		} else if (factor != null && Math.abs(factor - a.z / b.z) > 0.001) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public static interpolate(a: Vector3, b: Vector3, t: number) {
+		return a.times(1.0 - t).plus(b.times(t));
+	}
 }
 
 const RIGHT_FACE_VERTICES = [

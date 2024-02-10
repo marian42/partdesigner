@@ -1310,6 +1310,7 @@ class Editor {
         this.displayMeasurements();
         this.editorState = new EditorState();
         this.canvas = document.getElementById('canvas');
+        this.canvas.tabIndex = 0;
         this.camera = new Camera(this.canvas);
         this.partRenderer = new MeshRenderer();
         this.partRenderer.color = new Vector3(0.67, 0.7, 0.71);
@@ -1454,6 +1455,7 @@ class Editor {
                 .times(Matrix4.getTranslation(this.translation.plus(new Vector3(0, 0, -15))));
     }
     onMouseDown(event) {
+        this.canvas.focus();
         const { ctrlKey, shiftKey } = event;
         if (event.button === 0 && !ctrlKey && !shiftKey) {
             if (this.handles.onMouseDown(event)) {
@@ -1517,7 +1519,7 @@ class Editor {
             'Backspace': () => this.remove(),
             'Delete': () => this.remove(),
         };
-        if (keyActions[event.key]) {
+        if (event.key in keyActions && document.activeElement == this.canvas) {
             keyActions[event.key]();
         }
     }

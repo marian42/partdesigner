@@ -15,7 +15,19 @@ class Triangle {
         }
     }
 
-    normal(): Vector3 {
+    public normal(): Vector3 {
         return this.v3.minus(this.v1).cross(this.v2.minus(this.v1)).normalized();
+    }
+
+    public getOnEdge1(progress: number): Vector3 {
+        return Vector3.interpolate(this.v1, this.v2, progress);
+    }
+
+    public getOnEdge2(progress: number): Vector3 {
+        return Vector3.interpolate(this.v2, this.v3, progress);
+    }
+    
+    public getOnEdge3(progress: number): Vector3 {
+        return Vector3.interpolate(this.v3, this.v1, progress);
     }
 }

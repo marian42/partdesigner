@@ -95,45 +95,45 @@ class STLExporter {
 
             for (var i = 0; i < edge1Hits.length - 1; i++) {
                 result.push(new Triangle(
-                    Vector3.interpolate(triangle.v1, triangle.v2, edge1Hits[i]),
-                    Vector3.interpolate(triangle.v1, triangle.v2, edge1Hits[i + 1]),
-                    Vector3.interpolate(triangle.v3, triangle.v1, edge3Hits[edge3Hits.length - 1])
+                    triangle.getOnEdge1(edge1Hits[i]),
+                    triangle.getOnEdge1(edge1Hits[i + 1]),
+                    triangle.getOnEdge3(edge3Hits[edge3Hits.length - 1])
                 ));
             }
             for (var i = 0; i < edge2Hits.length - 1; i++) {
                 result.push(new Triangle(
-                    Vector3.interpolate(triangle.v2, triangle.v3, edge2Hits[i]),
-                    Vector3.interpolate(triangle.v2, triangle.v3, edge2Hits[i + 1]),
-                    Vector3.interpolate(triangle.v1, triangle.v2, edge1Hits[edge1Hits.length - 1])
+                    triangle.getOnEdge2(edge2Hits[i]),
+                    triangle.getOnEdge2(edge2Hits[i + 1]),
+                    triangle.getOnEdge1(edge1Hits[edge1Hits.length - 1])
                 ));
             }
             for (var i = 0; i < edge3Hits.length - 1; i++) {
                 result.push(new Triangle(
-                    Vector3.interpolate(triangle.v3, triangle.v1, edge3Hits[i]),
-                    Vector3.interpolate(triangle.v3, triangle.v1, edge3Hits[i + 1]),
-                    Vector3.interpolate(triangle.v2, triangle.v3, edge2Hits[edge2Hits.length - 1])
-                ))
+                    triangle.getOnEdge3(edge3Hits[i]),
+                    triangle.getOnEdge3(edge3Hits[i + 1]),
+                    triangle.getOnEdge2(edge2Hits[edge2Hits.length - 1])
+                ));
             }
             if (edge1Hits.length > 1 && edge2Hits.length == 1) {
                 result.push(new Triangle(
-                    Vector3.interpolate(triangle.v1, triangle.v2, edge1Hits[edge1Hits.length - 1]),
-                    Vector3.interpolate(triangle.v2, triangle.v3, edge2Hits[0]),
-                    Vector3.interpolate(triangle.v3, triangle.v1, edge3Hits[edge3Hits.length - 1]),
-                ))
+                    triangle.getOnEdge1(edge1Hits[edge1Hits.length - 1]),
+                    triangle.getOnEdge2(edge2Hits[0]),
+                    triangle.getOnEdge3(edge3Hits[edge3Hits.length - 1])
+                ));
             }
             else if (edge2Hits.length > 1 && edge3Hits.length == 1) {
                 result.push(new Triangle(
-                    Vector3.interpolate(triangle.v2, triangle.v3, edge2Hits[edge2Hits.length - 1]),
-                    Vector3.interpolate(triangle.v3, triangle.v1, edge3Hits[0]),
-                    Vector3.interpolate(triangle.v1, triangle.v2, edge1Hits[edge1Hits.length - 1]),
-                ))
+                    triangle.getOnEdge2(edge2Hits[edge2Hits.length - 1]),
+                    triangle.getOnEdge3(edge3Hits[0]),
+                    triangle.getOnEdge1(edge1Hits[edge1Hits.length - 1])
+                ));
             }
             else if (edge3Hits.length > 1 && edge1Hits.length == 1) {
                 result.push(new Triangle(
-                    Vector3.interpolate(triangle.v3, triangle.v1, edge3Hits[edge3Hits.length - 1]),
-                    Vector3.interpolate(triangle.v1, triangle.v2, edge1Hits[0]),
-                    Vector3.interpolate(triangle.v2, triangle.v3, edge2Hits[edge2Hits.length - 1]),
-                ))
+                    triangle.getOnEdge3(edge3Hits[edge3Hits.length - 1]),
+                    triangle.getOnEdge1(edge1Hits[0]),
+                    triangle.getOnEdge2(edge2Hits[edge2Hits.length - 1])
+                ));
             }
         }
 

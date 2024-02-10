@@ -1343,16 +1343,18 @@ class Editor {
         this.initializeEditor("size", (sizeName) => this.setSize(sizeName));
         this.initializeEditor("rounded", (roundedName) => this.setRounded(roundedName));
         document.getElementById("blockeditor").addEventListener("toggle", (event) => this.onNodeEditorClick(event));
+        this.getNameTextbox().addEventListener("change", (event) => this.onPartNameChange(event));
+        this.getNameTextbox().addEventListener("keyup", (event) => this.onPartNameChange(event));
     }
     onNodeEditorClick(event) {
         this.handles.visible = event.srcElement.open;
         this.camera.render();
     }
     saveSTL() {
-        STLExporter.saveSTLFile(this.part, this.measurements);
+        STLExporter.saveSTLFile(this.part, this.measurements, this.getName());
     }
     saveStudioPart() {
-        StudioPartExporter.savePartFile(this.part, this.measurements);
+        StudioPartExporter.savePartFile(this.part, this.measurements, this.getName());
     }
     initializeEditor(elementId, onchange) {
         var element = document.getElementById(elementId);
@@ -1527,6 +1529,25 @@ class Editor {
         this.measurements = new Measurements();
         this.displayMeasurements();
         this.updateMesh();
+    }
+    getNameTextbox() {
+        return document.getElementById('partName');
+    }
+    getName() {
+        var name = this.getNameTextbox().value.trim();
+        if (name.length == 0) {
+            name = 'Part';
+        }
+        return name;
+    }
+    onPartNameChange(event) {
+        var name = this.getNameTextbox().value.trim();
+        if (name.length == 0) {
+            document.title = 'Part Designer';
+        }
+        else {
+            document.title = name + ' ⋅ Part Designer';
+        }
     }
 }
 class EditorState {

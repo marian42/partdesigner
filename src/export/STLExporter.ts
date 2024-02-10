@@ -14,7 +14,7 @@ class STLExporter {
     }
 
     private writeTriangle(offset: number, triangle: Triangle, scalingFactor: number) {
-        this.writeVector(offset, triangle.normal());
+        this.writeVector(offset, triangle.normal().times(-1));
         this.writeVector(offset + 12, triangle.v1.times(scalingFactor));
         this.writeVector(offset + 24, triangle.v2.times(scalingFactor));
         this.writeVector(offset + 36, triangle.v3.times(scalingFactor));

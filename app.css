@@ -271,3 +271,16 @@ input[type=radio]:checked + label.radiolabel.z:hover, label.radiolabel.z:hover {
 .part-buttons {
     margin-bottom: 10px;
 }
+
+.key {
+    display: inline-block;
+    padding: 3px 5px;
+    line-height: 10px;
+    font: 10px monospace;
+    color: #555;
+    vertical-align: middle;
+    background-color: #eee;
+    border: solid 1px #ccc;
+    border-radius: 3px;
+    box-shadow: inset 0 -1px 0 #bbb;
+}

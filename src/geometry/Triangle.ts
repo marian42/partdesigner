@@ -1,7 +1,7 @@
 class Triangle {
-    public v1: Vector3;
-    public v2: Vector3;
-    public v3: Vector3;
+    public readonly v1: Vector3;
+    public readonly v2: Vector3;
+    public readonly v3: Vector3;
 
     constructor(v1: Vector3, v2: Vector3, v3: Vector3, flipped = false) {
         if (flipped) {

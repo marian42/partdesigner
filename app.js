@@ -15,8 +15,9 @@ window.onpopstate = function (event) {
     }
 };
 class MeshGenerator {
+    triangles = [];
+    measurements;
     constructor(measurements) {
-        this.triangles = [];
         this.measurements = measurements;
     }
     getMesh() {
@@ -104,6 +105,8 @@ class MeshGenerator {
     }
 }
 class PartMeshGenerator extends MeshGenerator {
+    smallBlocks;
+    tinyBlocks;
     constructor(part, measurements) {
         super(measurements);
         this.smallBlocks = part.createSmallBlocks();
@@ -1081,26 +1084,32 @@ function ease(value) {
 function mod(a, b) {
     return ((a % b) + b) % b;
 }
-class Measurements {
-    constructor() {
-        this.technicUnit = 8;
-        this.edgeMargin = 0.2 / this.technicUnit;
-        this.interiorRadius = 3.2 / this.technicUnit;
-        this.pinHoleRadius = 2.6 / this.technicUnit;
-        this.pinHoleOffset = 0.7 / this.technicUnit;
-        this.axleHoleSize = 1.01 / this.technicUnit;
-        this.pinRadius = 2.315 / this.technicUnit;
-        this.ballBaseRadius = 1.6 / this.technicUnit;
-        this.ballRadius = 3.0 / this.technicUnit;
-        this.pinLipRadius = 0.17 / this.technicUnit;
-        this.axleSizeInner = 0.86 / this.technicUnit;
-        this.axleSizeOuter = 2.15 / this.technicUnit;
-        this.attachmentAdapterSize = 0.4 / this.technicUnit;
-        this.attachmentAdapterRadius = 3 / this.technicUnit;
-        this.interiorEndMargin = 0.2 / this.technicUnit;
-        this.lipSubdivisions = 6;
-        this.subdivisionsPerQuarter = 8;
+function containsPoint(list, query) {
+    for (var item of list) {
+        if (query.equals(item)) {
+            return true;
+        }
     }
+    return false;
+}
+class Measurements {
+    technicUnit = 8;
+    edgeMargin = 0.2 / this.technicUnit;
+    interiorRadius = 3.2 / this.technicUnit;
+    pinHoleRadius = 2.6 / this.technicUnit;
+    pinHoleOffset = 0.7 / this.technicUnit;
+    axleHoleSize = 1.01 / this.technicUnit;
+    pinRadius = 2.315 / this.technicUnit;
+    ballBaseRadius = 1.6 / this.technicUnit;
+    ballRadius = 3.0 / this.technicUnit;
+    pinLipRadius = 0.17 / this.technicUnit;
+    axleSizeInner = 0.86 / this.technicUnit;
+    axleSizeOuter = 2.15 / this.technicUnit;
+    attachmentAdapterSize = 0.4 / this.technicUnit;
+    attachmentAdapterRadius = 3 / this.technicUnit;
+    interiorEndMargin = 0.2 / this.technicUnit;
+    lipSubdivisions = 6;
+    subdivisionsPerQuarter = 8;
     enforceConstraints() {
         this.lipSubdivisions = Math.max(2, Math.ceil(this.lipSubdivisions));
         this.subdivisionsPerQuarter = Math.max(2, Math.ceil(this.subdivisionsPerQuarter / 2) * 2);
@@ -1120,8 +1129,10 @@ class Measurements {
 }
 const DEFAULT_MEASUREMENTS = new Measurements();
 class Catalog {
+    container;
+    initialized = false;
+    items;
     constructor() {
-        this.initialized = false;
         this.container = document.getElementById("catalog");
         this.createCatalogItems();
         document.getElementById("catalog").addEventListener("toggle", (event) => this.onToggleCatalog(event));
@@ -1246,8 +1257,11 @@ class Catalog {
     }
 }
 class CatalogItem {
+    part = null;
+    id;
+    string;
+    name;
     constructor(id, name, string) {
-        this.part = null;
         this.id = id;
         this.name = name;
         this.string = string;
@@ -1262,15 +1276,26 @@ var MouseMode;
     MouseMode[MouseMode["Rotate"] = 3] = "Rotate";
 })(MouseMode || (MouseMode = {}));
 class Editor {
+    camera;
+    partRenderer;
+    partNormalDepthRenderer;
+    contourEffect;
+    wireframeRenderer;
+    part;
+    canvas;
+    translation = new Vector3(0, 0, 0);
+    center;
+    rotationX = 45;
+    rotationY = -20;
+    zoom = 5;
+    zoomStep = 0.9;
+    mouseMode = MouseMode.None;
+    lastMousePosition;
+    handles;
+    editorState;
+    style = RenderStyle.Contour;
+    measurements = new Measurements();
     constructor() {
-        this.translation = new Vector3(0, 0, 0);
-        this.rotationX = 45;
-        this.rotationY = -20;
-        this.zoom = 5;
-        this.zoomStep = 0.9;
-        this.mouseMode = MouseMode.None;
-        this.style = RenderStyle.Contour;
-        this.measurements = new Measurements();
         var url = new URL(document.URL);
         if (url.searchParams.has("part")) {
             this.part = Part.fromString(url.searchParams.get("part"));
@@ -1480,12 +1505,10 @@ class Editor {
     }
 }
 class EditorState {
-    constructor() {
-        this.orientation = Orientation.X;
-        this.type = BlockType.PinHole;
-        this.fullSize = true;
-        this.rounded = true;
-    }
+    orientation = Orientation.X;
+    type = BlockType.PinHole;
+    fullSize = true;
+    rounded = true;
 }
 const ARROW_RADIUS_INNER = 0.05;
 const ARROW_RADIUS_OUTER = 0.15;
@@ -1504,25 +1527,24 @@ var Axis;
     Axis[Axis["Z"] = 3] = "Z";
 })(Axis || (Axis = {}));
 class Handles {
-    constructor(camera) {
-        this.meshRenderers = [];
-        this.handleAlpha = Vector3.one().times(UNSELECTED_ALPHA);
-        this.grabbedAxis = Axis.None;
-        this.visible = true;
-        this.fullSize = true;
-        this.orientation = Orientation.X;
-        this.box = new WireframeBox();
-        let mesh = Handles.getArrowMesh(20);
-        this.xNegative = this.createRenderer(mesh, new Vector3(1, 0, 0));
-        this.xPositive = this.createRenderer(mesh, new Vector3(1, 0, 0));
-        this.yNegative = this.createRenderer(mesh, new Vector3(0, 1, 0));
-        this.yPositive = this.createRenderer(mesh, new Vector3(0, 1, 0));
-        this.zNegative = this.createRenderer(mesh, new Vector3(0, 0, 1));
-        this.zPositive = this.createRenderer(mesh, new Vector3(0, 0, 1));
-        this.block = Vector3.zero();
-        this.setMode(true, Orientation.X, false);
-        this.camera = camera;
-    }
+    xNegative;
+    xPositive;
+    yNegative;
+    yPositive;
+    zNegative;
+    zPositive;
+    meshRenderers = [];
+    position;
+    block;
+    camera;
+    handleAlpha = Vector3.one().times(UNSELECTED_ALPHA);
+    grabbedAxis = Axis.None;
+    grabbedPosition;
+    visible = true;
+    box;
+    fullSize = true;
+    orientation = Orientation.X;
+    size;
     createRenderer(mesh, color) {
         let renderer = new MeshRenderer();
         renderer.setMesh(mesh);
@@ -1545,6 +1567,19 @@ class Handles {
         else {
             return worldPosition.times(2).minus(Vector3.one().minus(FORWARD[this.orientation]).times(0.5)).floor();
         }
+    }
+    constructor(camera) {
+        this.box = new WireframeBox();
+        let mesh = Handles.getArrowMesh(20);
+        this.xNegative = this.createRenderer(mesh, new Vector3(1, 0, 0));
+        this.xPositive = this.createRenderer(mesh, new Vector3(1, 0, 0));
+        this.yNegative = this.createRenderer(mesh, new Vector3(0, 1, 0));
+        this.yPositive = this.createRenderer(mesh, new Vector3(0, 1, 0));
+        this.zNegative = this.createRenderer(mesh, new Vector3(0, 0, 1));
+        this.zPositive = this.createRenderer(mesh, new Vector3(0, 0, 1));
+        this.block = Vector3.zero();
+        this.setMode(true, Orientation.X, false);
+        this.camera = camera;
     }
     render(camera) {
         if (!this.visible) {
@@ -1719,6 +1754,11 @@ class Handles {
     }
 }
 class NamedMeasurement {
+    name;
+    relative;
+    displayDouble;
+    domElement;
+    resetElement;
     constructor(name, relative, displayDouble) {
         this.name = name;
         this.relative = relative;
@@ -1789,6 +1829,8 @@ var RenderStyle;
     RenderStyle[RenderStyle["SolidWireframe"] = 3] = "SolidWireframe";
 })(RenderStyle || (RenderStyle = {}));
 class STLExporter {
+    buffer;
+    view;
     constructor(size) {
         this.buffer = new ArrayBuffer(size);
         this.view = new DataView(this.buffer, 0, size);
@@ -1799,22 +1841,104 @@ class STLExporter {
         this.view.setFloat32(offset + 8, vector.y, true);
     }
     writeTriangle(offset, triangle, scalingFactor) {
-        this.writeVector(offset, triangle.normal());
+        this.writeVector(offset, triangle.normal().times(-1));
         this.writeVector(offset + 12, triangle.v1.times(scalingFactor));
         this.writeVector(offset + 24, triangle.v2.times(scalingFactor));
         this.writeVector(offset + 36, triangle.v3.times(scalingFactor));
         this.view.setInt16(offset + 48, 0, true);
     }
+    static fixOpenEdges(triangles) {
+        var points = [];
+        for (var triangle of triangles) {
+            if (!containsPoint(points, triangle.v1)) {
+                points.push(triangle.v1);
+            }
+            if (!containsPoint(points, triangle.v2)) {
+                points.push(triangle.v2);
+            }
+            if (!containsPoint(points, triangle.v3)) {
+                points.push(triangle.v3);
+            }
+        }
+        var result = [];
+        for (var triangle of triangles) {
+            var edge1Hits = [0];
+            var edge2Hits = [0];
+            var edge3Hits = [0];
+            var edge1Direction = triangle.v2.minus(triangle.v1);
+            var edge2Direction = triangle.v3.minus(triangle.v2);
+            var edge3Direction = triangle.v1.minus(triangle.v3);
+            let edge1LengthSquared = Math.pow(edge1Direction.magnitude(), 2);
+            let edge2LengthSquared = Math.pow(edge2Direction.magnitude(), 2);
+            let edge3LengthSquared = Math.pow(edge3Direction.magnitude(), 2);
+            for (var point of points) {
+                var vertex1Relative = point.minus(triangle.v1);
+                var vertex2Relative = point.minus(triangle.v2);
+                var vertex3Relative = point.minus(triangle.v3);
+                if (Vector3.isCollinear(edge1Direction, vertex1Relative)) {
+                    let progress = vertex1Relative.dot(edge1Direction) / edge1LengthSquared;
+                    if (progress > 0.0001 && progress < 0.999) {
+                        edge1Hits.push(progress);
+                        continue;
+                    }
+                    continue;
+                }
+                if (Vector3.isCollinear(edge2Direction, vertex2Relative)) {
+                    let progress = vertex2Relative.dot(edge2Direction) / edge2LengthSquared;
+                    if (progress > 0.0001 && progress < 0.999) {
+                        edge2Hits.push(progress);
+                        continue;
+                    }
+                    continue;
+                }
+                if (Vector3.isCollinear(edge3Direction, vertex3Relative)) {
+                    let progress = vertex3Relative.dot(edge3Direction) / edge3LengthSquared;
+                    if (progress > 0.0001 && progress < 0.999) {
+                        edge3Hits.push(progress);
+                        continue;
+                    }
+                    continue;
+                }
+            }
+            if (edge1Hits.length == 1 && edge2Hits.length == 1 && edge3Hits.length == 1) {
+                result.push(triangle);
+                continue;
+            }
+            edge1Hits.sort();
+            edge2Hits.sort();
+            edge3Hits.sort();
+            for (var i = 0; i < edge1Hits.length - 1; i++) {
+                result.push(new Triangle(triangle.getOnEdge1(edge1Hits[i]), triangle.getOnEdge1(edge1Hits[i + 1]), triangle.getOnEdge3(edge3Hits[edge3Hits.length - 1])));
+            }
+            for (var i = 0; i < edge2Hits.length - 1; i++) {
+                result.push(new Triangle(triangle.getOnEdge2(edge2Hits[i]), triangle.getOnEdge2(edge2Hits[i + 1]), triangle.getOnEdge1(edge1Hits[edge1Hits.length - 1])));
+            }
+            for (var i = 0; i < edge3Hits.length - 1; i++) {
+                result.push(new Triangle(triangle.getOnEdge3(edge3Hits[i]), triangle.getOnEdge3(edge3Hits[i + 1]), triangle.getOnEdge2(edge2Hits[edge2Hits.length - 1])));
+            }
+            if (edge1Hits.length > 1 && edge2Hits.length == 1) {
+                result.push(new Triangle(triangle.getOnEdge1(edge1Hits[edge1Hits.length - 1]), triangle.getOnEdge2(edge2Hits[0]), triangle.getOnEdge3(edge3Hits[edge3Hits.length - 1])));
+            }
+            else if (edge2Hits.length > 1 && edge3Hits.length == 1) {
+                result.push(new Triangle(triangle.getOnEdge2(edge2Hits[edge2Hits.length - 1]), triangle.getOnEdge3(edge3Hits[0]), triangle.getOnEdge1(edge1Hits[edge1Hits.length - 1])));
+            }
+            else if (edge3Hits.length > 1 && edge1Hits.length == 1) {
+                result.push(new Triangle(triangle.getOnEdge3(edge3Hits[edge3Hits.length - 1]), triangle.getOnEdge1(edge1Hits[0]), triangle.getOnEdge2(edge2Hits[edge2Hits.length - 1])));
+            }
+        }
+        return result;
+    }
     static createBuffer(part, measurements) {
         let mesh = new PartMeshGenerator(part, measurements).getMesh();
-        let exporter = new STLExporter(84 + 50 * mesh.triangles.length);
+        let triangles = STLExporter.fixOpenEdges(mesh.triangles);
+        let exporter = new STLExporter(84 + 50 * triangles.length);
         for (var i = 0; i < 80; i++) {
             exporter.view.setInt8(i, 0);
         }
         var p = 80;
-        exporter.view.setInt32(p, mesh.triangles.length, true);
+        exporter.view.setInt32(p, triangles.length, true);
         p += 4;
-        for (let triangle of mesh.triangles) {
+        for (let triangle of triangles) {
             exporter.writeTriangle(p, triangle, measurements.technicUnit);
             p += 50;
         }
@@ -1960,6 +2084,7 @@ class StudioPartExporter {
     }
 }
 class Matrix4 {
+    elements;
     constructor(elements) {
         this.elements = elements;
     }
@@ -2069,9 +2194,10 @@ class Matrix4 {
     }
 }
 class Mesh {
+    triangles;
+    vertexBuffer = null;
+    normalBuffer = null;
     constructor(triangles) {
-        this.vertexBuffer = null;
-        this.normalBuffer = null;
         this.triangles = triangles;
     }
     createVertexBuffer() {
@@ -2138,6 +2264,10 @@ class Mesh {
     }
 }
 class Quaternion {
+    x;
+    y;
+    z;
+    w;
     constructor(x, y, z, w) {
         this.x = x;
         this.y = y;
@@ -2169,6 +2299,8 @@ class Quaternion {
     }
 }
 class Ray {
+    point;
+    direction;
     constructor(point, direction) {
         this.point = point;
         this.direction = direction;
@@ -2194,6 +2326,9 @@ class Ray {
     }
 }
 class Triangle {
+    v1;
+    v2;
+    v3;
     constructor(v1, v2, v3, flipped = false) {
         if (flipped) {
             this.v1 = v2;
@@ -2209,8 +2344,20 @@ class Triangle {
     normal() {
         return this.v3.minus(this.v1).cross(this.v2.minus(this.v1)).normalized();
     }
+    getOnEdge1(progress) {
+        return Vector3.interpolate(this.v1, this.v2, progress);
+    }
+    getOnEdge2(progress) {
+        return Vector3.interpolate(this.v2, this.v3, progress);
+    }
+    getOnEdge3(progress) {
+        return Vector3.interpolate(this.v3, this.v1, progress);
+    }
 }
 class TriangleWithNormals extends Triangle {
+    n1;
+    n2;
+    n3;
     constructor(v1, v2, v3, n1, n2, n3) {
         super(v1, v2, v3);
         this.n1 = n1;
@@ -2219,6 +2366,9 @@ class TriangleWithNormals extends Triangle {
     }
 }
 class Vector3 {
+    x;
+    y;
+    z;
     constructor(x, y, z) {
         this.x = x;
         this.y = y;
@@ -2283,6 +2433,42 @@ class Vector3 {
     static lerp(a, b, progress) {
         return a.plus(b.minus(a).times(progress));
     }
+    static isCollinear(a, b) {
+        var factor = null;
+        if (a.x == 0 || b.x == 0) {
+            if (Math.abs(a.x + b.x) > 0.001) {
+                return false;
+            }
+        }
+        else {
+            factor = a.x / b.x;
+        }
+        if (a.y == 0 || b.y == 0) {
+            if (Math.abs(a.y + b.y) > 0.001) {
+                return false;
+            }
+        }
+        else {
+            if (factor == null) {
+                factor = a.y / b.y;
+            }
+            else if (Math.abs(factor - a.y / b.y) > 0.001) {
+                return false;
+            }
+        }
+        if (a.z == 0 || b.z == 0) {
+            if (Math.abs(a.z + b.z) > 0.001) {
+                return false;
+            }
+        }
+        else if (factor != null && Math.abs(factor - a.z / b.z) > 0.001) {
+            return false;
+        }
+        return true;
+    }
+    static interpolate(a, b, t) {
+        return a.times(1.0 - t).plus(b.times(t));
+    }
 }
 const RIGHT_FACE_VERTICES = [
     new Vector3(1, 1, 0),
@@ -2329,9 +2515,7 @@ const FACE_DIRECTIONS = [
     new Vector3(0, 0, -1)
 ];
 class VectorDictionary {
-    constructor() {
-        this.data = {};
-    }
+    data = {};
     containsKey(key) {
         return key.x in this.data && key.y in this.data[key.x] && key.z in this.data[key.x][key.y];
     }
@@ -2394,6 +2578,13 @@ class VectorDictionary {
     }
 }
 class Block {
+    orientation;
+    type;
+    rounded;
+    right;
+    up;
+    forward;
+    isAttachment;
     constructor(orientation, type, rounded) {
         this.orientation = orientation;
         this.type = type;
@@ -2416,9 +2607,7 @@ let CUBE = [
     new Vector3(1, 1, 1)
 ];
 class Part {
-    constructor() {
-        this.blocks = new VectorDictionary();
-    }
+    blocks = new VectorDictionary();
     createSmallBlocks() {
         var result = new VectorDictionary();
         for (let position of this.blocks.keys()) {
@@ -2563,11 +2752,25 @@ class Part {
     }
 }
 class PerpendicularRoundedAdapter {
+    isVertical;
+    neighbor;
+    directionToNeighbor;
+    facesForward;
+    sourceBlock;
 }
 class SmallBlock extends Block {
+    quadrant;
+    position;
+    hasInterior;
+    perpendicularRoundedAdapter = null;
+    localX;
+    localY;
+    directionX;
+    directionY;
+    horizontal;
+    vertical;
     constructor(quadrant, positon, source) {
         super(source.orientation, source.type, source.rounded);
-        this.perpendicularRoundedAdapter = null;
         this.quadrant = quadrant;
         this.position = positon;
         this.hasInterior = source.type != BlockType.Solid;
@@ -2607,13 +2810,16 @@ class SmallBlock extends Block {
     }
 }
 class TinyBlock extends SmallBlock {
+    exteriorMergedBlocks = 1;
+    isExteriorMerged = false;
+    interiorMergedBlocks = 1;
+    isInteriorMerged = false;
+    visibleFaces = null;
+    angle;
+    isCenter;
+    smallBlockPosition;
     constructor(position, source) {
         super(source.quadrant, position, source);
-        this.exteriorMergedBlocks = 1;
-        this.isExteriorMerged = false;
-        this.interiorMergedBlocks = 1;
-        this.isInteriorMerged = false;
-        this.visibleFaces = null;
         this.visibleFaces = [true, true, true, true, true, true];
         this.perpendicularRoundedAdapter = source.perpendicularRoundedAdapter;
         this.angle = getAngle(this.quadrant);
@@ -2761,12 +2967,15 @@ function getAngle(quadrant) {
     throw new Error("Unknown quadrant: " + quadrant);
 }
 class Camera {
+    renderers = [];
+    transform = Matrix4.getIdentity();
+    size = 5;
+    frameBuffer;
+    normalTexture;
+    depthTexture;
+    clearColor = new Vector3(0.95, 0.95, 0.95);
+    supersample = 1;
     constructor(canvas, supersample = 1) {
-        this.renderers = [];
-        this.transform = Matrix4.getIdentity();
-        this.size = 5;
-        this.clearColor = new Vector3(0.95, 0.95, 0.95);
-        this.supersample = 1;
         gl = canvas.getContext("webgl");
         if (gl == null) {
             throw new Error("WebGL is not supported.");
@@ -2836,8 +3045,10 @@ class Camera {
     }
 }
 class ContourPostEffect {
+    shader;
+    vertices;
+    enabled = true;
     constructor() {
-        this.enabled = true;
         this.shader = new Shader(COUNTOUR_VERTEX, CONTOUR_FRAGMENT);
         this.shader.setAttribute("vertexPosition");
         this.shader.setUniform("normalTexture");
@@ -2871,10 +3082,15 @@ class ContourPostEffect {
     }
 }
 class MeshRenderer {
+    shader;
+    vertices;
+    normals;
+    vertexCount;
+    transform;
+    color = new Vector3(1, 0, 0);
+    alpha = 1;
+    enabled = true;
     constructor() {
-        this.color = new Vector3(1, 0, 0);
-        this.alpha = 1;
-        this.enabled = true;
         this.shader = new Shader(VERTEX_SHADER, FRAGMENT_SHADER);
         this.shader.setAttribute("vertexPosition");
         this.shader.setAttribute("normal");
@@ -2908,8 +3124,13 @@ class MeshRenderer {
     }
 }
 class NormalDepthRenderer {
+    shader;
+    vertices;
+    normals;
+    transform;
+    vertexCount;
+    enabled = true;
     constructor() {
-        this.enabled = true;
         this.prepareShaders();
         this.transform = Matrix4.getIdentity();
     }
@@ -2947,18 +3168,8 @@ class NormalDepthRenderer {
     }
 }
 class Shader {
-    constructor(vertexSource, fragmentSource) {
-        this.attributes = {};
-        const vertexShader = this.loadShader(gl.VERTEX_SHADER, vertexSource);
-        const fragmentShader = this.loadShader(gl.FRAGMENT_SHADER, fragmentSource);
-        this.program = gl.createProgram();
-        gl.attachShader(this.program, vertexShader);
-        gl.attachShader(this.program, fragmentShader);
-        gl.linkProgram(this.program);
-        if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-            throw new Error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(this.program));
-        }
-    }
+    program;
+    attributes = {};
     loadShader(type, source) {
         let shader = gl.createShader(type);
         gl.shaderSource(shader, source);
@@ -2972,6 +3183,17 @@ class Shader {
         }
         return shader;
     }
+    constructor(vertexSource, fragmentSource) {
+        const vertexShader = this.loadShader(gl.VERTEX_SHADER, vertexSource);
+        const fragmentShader = this.loadShader(gl.FRAGMENT_SHADER, fragmentSource);
+        this.program = gl.createProgram();
+        gl.attachShader(this.program, vertexShader);
+        gl.attachShader(this.program, fragmentShader);
+        gl.linkProgram(this.program);
+        if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+            throw new Error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(this.program));
+        }
+    }
     setAttribute(name) {
         this.attributes[name] = gl.getAttribLocation(this.program, name);
     }
@@ -2980,13 +3202,16 @@ class Shader {
     }
 }
 class WireframeBox {
+    shader;
+    positions;
+    transform;
+    visible = true;
+    color = new Vector3(0.0, 0.0, 1.0);
+    alpha = 0.8;
+    colorOccluded = new Vector3(0.0, 0.0, 0.0);
+    alphaOccluded = 0.15;
+    scale = Vector3.one();
     constructor() {
-        this.visible = true;
-        this.color = new Vector3(0.0, 0.0, 1.0);
-        this.alpha = 0.8;
-        this.colorOccluded = new Vector3(0.0, 0.0, 0.0);
-        this.alphaOccluded = 0.15;
-        this.scale = Vector3.one();
         this.shader = new Shader(SIMPLE_VERTEX_SHADER, COLOR_FRAGMENT_SHADER);
         this.shader.setAttribute("vertexPosition");
         this.shader.setUniform("projectionMatrix");
@@ -3033,10 +3258,14 @@ class WireframeBox {
     }
 }
 class WireframeRenderer {
+    shader;
+    vertices;
+    vertexCount;
+    transform;
+    enabled = true;
+    color = new Vector3(0.0, 0.0, 0.0);
+    alpha = 0.5;
     constructor() {
-        this.enabled = true;
-        this.color = new Vector3(0.0, 0.0, 0.0);
-        this.alpha = 0.5;
         this.shader = new Shader(SIMPLE_VERTEX_SHADER, COLOR_FRAGMENT_SHADER);
         this.shader.setAttribute("vertexPosition");
         this.shader.setUniform("projectionMatrix");

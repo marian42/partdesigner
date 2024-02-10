@@ -1160,7 +1160,7 @@ class Catalog {
         for (var item of this.items) {
             var catalogLink = document.createElement("a");
             catalogLink.className = "catalogItem";
-            catalogLink.href = "?part=" + item.string;
+            catalogLink.href = "?part=" + item.string + "&name=" + encodeURIComponent(item.name);
             catalogLink.title = item.name;
             this.container.appendChild(catalogLink);
             var itemCanvas = document.createElement("canvas");
@@ -1252,8 +1252,9 @@ class Catalog {
     onSelectPart(item, event) {
         editor.part = Part.fromString(item.string);
         editor.updateMesh(true);
-        window.history.pushState({}, document.title, "?part=" + item.string);
+        window.history.pushState({}, document.title, "?part=" + item.string + "&name=" + encodeURIComponent(item.name));
         event.preventDefault();
+        editor.setName(item.name);
     }
 }
 class CatalogItem {
@@ -1299,6 +1300,9 @@ class Editor {
         var url = new URL(document.URL);
         if (url.searchParams.has("part")) {
             this.part = Part.fromString(url.searchParams.get("part"));
+            if (url.searchParams.has("name")) {
+                this.setName(url.searchParams.get("name"));
+            }
         }
         else {
             this.part = Part.fromString(catalog.items[Math.floor(Math.random() * catalog.items.length)].string);
@@ -1370,7 +1374,12 @@ class Editor {
         this.updateMesh();
     }
     share() {
-        window.history.pushState({}, document.title, "?part=" + this.part.toString());
+        var name = this.getName();
+        var url = "?part=" + this.part.toString();
+        if (name.length != 0) {
+            url += '&name=' + encodeURIComponent(name);
+        }
+        window.history.pushState({}, document.title, url);
     }
     remove() {
         this.part.clearBlock(this.handles.getSelectedBlock(), this.editorState.orientation);
@@ -1548,6 +1557,10 @@ class Editor {
         else {
             document.title = name + ' ⋅ Part Designer';
         }
+    }
+    setName(name) {
+        document.title = name + ' ⋅ Part Designer';
+        this.getNameTextbox().value = name;
     }
 }
 class EditorState {

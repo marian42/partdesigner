@@ -232,7 +232,7 @@ input[type=radio]:checked + label.radiolabel.z:hover, label.radiolabel.z:hover {
     color: rgb(21, 98, 212);
 }
 
-.group .measurement {
+.group input[type=text] {
     padding: 7px;
     border-radius: 5px 0px 0px 5px;
     border: 1px solid rgb(47, 130, 255);
@@ -241,10 +241,13 @@ input[type=radio]:checked + label.radiolabel.z:hover, label.radiolabel.z:hover {
     display: table-cell;
     width: 100%;
     box-sizing: border-box;
+}
+
+.group .measurement {
     text-align: right;
 }
 
-.group .measurement:last-child {
+.group input[type=text]:last-child {
     border-radius: 5px;
     border-right: none;
     border: 1px solid rgb(47, 130, 255);

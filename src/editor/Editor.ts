@@ -91,6 +91,9 @@ class Editor {
 		this.initializeEditor("rounded", (roundedName: string) => this.setRounded(roundedName));
 
 		document.getElementById("blockeditor").addEventListener("toggle", (event: MouseEvent) => this.onNodeEditorClick(event));
+
+		this.getNameTextbox().addEventListener("change", (event: Event) => this.onPartNameChange(event));
+		this.getNameTextbox().addEventListener("keyup", (event: Event) => this.onPartNameChange(event));
 	}
 
 	private onNodeEditorClick(event: MouseEvent) {
@@ -99,11 +102,11 @@ class Editor {
 	}
 
 	private saveSTL() {
-		STLExporter.saveSTLFile(this.part, this.measurements);
+		STLExporter.saveSTLFile(this.part, this.measurements, this.getName());
 	}
 
 	private saveStudioPart() {
-		StudioPartExporter.savePartFile(this.part, this.measurements);
+		StudioPartExporter.savePartFile(this.part, this.measurements, this.getName());
 	}
 
 	private initializeEditor(elementId: string, onchange: (value: string) => void) {
@@ -299,5 +302,26 @@ class Editor {
 		this.measurements = new Measurements();
 		this.displayMeasurements();
 		this.updateMesh();
+	}
+
+	public getNameTextbox(): HTMLInputElement {
+		return document.getElementById('partName') as HTMLInputElement;
+	}
+
+	public getName(): string {
+		var name = this.getNameTextbox().value.trim();
+		if (name.length == 0) {
+			name = 'Part';
+		}
+		return name;
+	}
+
+	private onPartNameChange(event: Event) {
+		var name = this.getNameTextbox().value.trim();
+		if (name.length == 0) {
+			document.title = 'Part Designer';
+		} else {
+			document.title = name + ' ⋅ Part Designer';
+		}
 	}
 }

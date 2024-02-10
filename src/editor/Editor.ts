@@ -248,7 +248,7 @@ class Editor {
 		}
 	}
 
-	private onScroll(event: MouseWheelEvent) {
+	private onScroll(event: WheelEvent) {
 		this.zoom *= event.deltaY < 0 ? this.zoomStep : 1 / this.zoomStep;
 		this.camera.size = this.zoom;
 		this.camera.render();

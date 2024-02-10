@@ -1328,6 +1328,7 @@ class Editor {
         this.canvas.addEventListener("mousemove", (event) => this.onMouseMove(event));
         this.canvas.addEventListener("contextmenu", (event) => event.preventDefault());
         this.canvas.addEventListener("wheel", (event) => this.onScroll(event));
+        window.addEventListener("keydown", (event) => this.onKeydown(event));
         document.getElementById("clear").addEventListener("click", (event) => this.clear());
         document.getElementById("share").addEventListener("click", (event) => this.share());
         document.getElementById("save-stl").addEventListener("click", (event) => this.saveSTL());
@@ -1484,6 +1485,30 @@ class Editor {
         this.zoom *= event.deltaY < 0 ? this.zoomStep : 1 / this.zoomStep;
         this.camera.size = this.zoom;
         this.camera.render();
+    }
+    onKeydown(event) {
+        const keyActions = {
+            '1': () => this.setType('pinhole'),
+            '2': () => this.setType('axlehole'),
+            '3': () => this.setType('pin'),
+            '4': () => this.setType('axle'),
+            '5': () => this.setType('solid'),
+            '6': () => this.setType('balljoint'),
+            'y': () => this.setOrientation('y'),
+            'z': () => this.setOrientation('z'),
+            'x': () => this.setOrientation('x'),
+            'PageUp': () => this.handles.move(new Vector3(0, 1, 0)),
+            'PageDown': () => this.handles.move(new Vector3(0, -1, 0)),
+            'ArrowLeft': () => this.handles.move(new Vector3(0, 0, 1)),
+            'ArrowRight': () => this.handles.move(new Vector3(0, 0, -1)),
+            'ArrowUp': () => this.handles.move(new Vector3(-1, 0, 0)),
+            'ArrowDown': () => this.handles.move(new Vector3(1, 0, 0)),
+            'Backspace': () => this.remove(),
+            'Delete': () => this.remove(),
+        };
+        if (keyActions[event.key]) {
+            keyActions[event.key]();
+        }
     }
     displayMeasurements() {
         for (var namedMeasurement of NAMED_MEASUREMENTS) {
@@ -1697,6 +1722,12 @@ class Handles {
             this.grabbedAxis = Axis.None;
             this.animatePositionAndSize(this.getBlockCenter(this.block), this.size, false, 100);
         }
+    }
+    move(direction) {
+        this.position = this.position.plus(direction);
+        this.block = this.getBlock(this.position);
+        this.updateTransforms();
+        this.camera.render();
     }
     getSelectedBlock() {
         return this.block;

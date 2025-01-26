@@ -1296,6 +1296,7 @@ class Editor {
     editorState;
     style = RenderStyle.Contour;
     measurements = new Measurements();
+    previousMousePostion;
     constructor() {
         var url = new URL(document.URL);
         if (url.searchParams.has("part")) {
@@ -1464,6 +1465,7 @@ class Editor {
         }
         else if (event.button === 1 || shiftKey) {
             this.mouseMode = MouseMode.Translate;
+            this.previousMousePostion = [event.clientX, event.clientY];
         }
         else if (event.button === 2 || ctrlKey) {
             this.mouseMode = MouseMode.Rotate;
@@ -1482,7 +1484,8 @@ class Editor {
                 this.handles.onMouseMove(event);
                 break;
             case MouseMode.Translate:
-                this.translation = this.translation.plus(new Vector3(event.movementX, -event.movementY, 0).times(this.camera.size / gl.drawingBufferHeight));
+                this.translation = this.translation.plus(new Vector3(event.clientX - this.previousMousePostion[0], -(event.clientY - this.previousMousePostion[1]), 0).times(this.camera.size / this.canvas.clientHeight));
+                this.previousMousePostion = [event.clientX, event.clientY];
                 this.updateTransform();
                 this.camera.render();
                 break;
